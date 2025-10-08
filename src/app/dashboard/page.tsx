@@ -23,7 +23,7 @@ export default function DashboardPage() {
     if (userData) {
       setUser(JSON.parse(userData));
     } else {
-      router.push('/user-login'); // Redirect if not logged in
+      router.push('/user-login');
     }
 
     if (progressData) {
@@ -32,7 +32,6 @@ export default function DashboardPage() {
   }, [router]);
 
   const handleLogout = () => {
-    // Clear both user session and quiz progress on logout
     localStorage.removeItem('quizUser');
     localStorage.removeItem('quizUnlockedLevels');
     router.push('/');
@@ -40,7 +39,6 @@ export default function DashboardPage() {
 
   const handleResetProgress = () => {
     if (window.confirm('Are you sure you want to reset your quiz progress? This will lock all levels except the first one.')) {
-      // Clear progress from storage and update the state
       localStorage.removeItem('quizUnlockedLevels');
       setUnlockedLevels([1]);
       alert('Your progress has been reset.');
@@ -48,7 +46,7 @@ export default function DashboardPage() {
   };
 
   if (!user) {
-    return null; // Or a loading spinner
+    return null;
   }
 
   return (

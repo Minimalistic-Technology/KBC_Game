@@ -53,7 +53,6 @@ export default function QuizPage() {
     }
   }, [currentQuestionIndex, currentQuestions.length]);
 
-  // Timer Logic
   useEffect(() => {
     if (isAnswered || showResults || currentQuestions.length === 0) {
       return;

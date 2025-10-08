@@ -22,7 +22,6 @@ export default function UserLoginPage() {
       return;
     }
     
-    // In a real app, you'd verify credentials. Here, we just save the user.
     localStorage.setItem('quizUser', JSON.stringify({ username }));
     router.push('/dashboard');
   };
