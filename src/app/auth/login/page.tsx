@@ -22,12 +22,6 @@ export default function LoginPage() {
       return;
     }
     
-    // In a real app, you would get an error from your API
-    if (email === 'fail@test.com') {
-        setError("Invalid credentials. Please try again.");
-        return;
-    }
-    
     console.log("Simulating login for:", email);
     router.push('/admin');
   };

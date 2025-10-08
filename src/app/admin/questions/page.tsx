@@ -6,7 +6,6 @@ import { Question } from '@/lib/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PlusCircle, Trash2, CheckCircle, X, Plus, KeyRound } from 'lucide-react';
 
-// The initial data is still loaded for the first 3 levels.
 const allUnshuffledQuestions = [ 
   ...level1Questions.map(q => ({ ...q, level: 1 })), 
   ...level2Questions.map(q => ({ ...q, level: 2 })), 
@@ -24,16 +23,18 @@ const itemVariants = {
 };
 
 export default function AdminQuestionsPage() {
-  // State for password protection
+  //password protection state
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const CORRECT_PASSWORD = '1234';
 
+  // Questions state
   const [questions, setQuestions] = useState(allUnshuffledQuestions);
   const [activeLevel, setActiveLevel] = useState<number | 'all'>('all');
   const [filteredQuestions, setFilteredQuestions] = useState(questions);
   
+  // New question form state
   const [levels, setLevels] = useState([1, 2, 3]);
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [newQuestionText, setNewQuestionText] = useState('');
@@ -41,7 +42,6 @@ export default function AdminQuestionsPage() {
   const [newCorrectAnswer, setNewCorrectAnswer] = useState('A');
   const [newLevel, setNewLevel] = useState(1);
 
-  // Removed the useEffect that checked sessionStorage to ensure password is required every time.
 
   useEffect(() => {
     const shuffledData = allUnshuffledQuestions.map(q => ({
@@ -63,7 +63,6 @@ export default function AdminQuestionsPage() {
     e.preventDefault();
     if (password === CORRECT_PASSWORD) {
       setIsAuthenticated(true);
-      // Removed sessionStorage.setItem to stop remembering the session.
       setError('');
     } else {
       setError('Incorrect password. Please try again.');
@@ -109,7 +108,6 @@ export default function AdminQuestionsPage() {
     setLevels(prevLevels => [...prevLevels, nextLevel]);
   };
 
-  // If not authenticated, show the password prompt
   if (!isAuthenticated) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -145,7 +143,6 @@ export default function AdminQuestionsPage() {
     );
   }
 
-  // If authenticated, show the main questions page
   return (
     <div>
       <div className="flex justify-between items-center mb-6">

@@ -16,7 +16,6 @@ export default function AdminLayout({
   const router = useRouter();
 
   const handleLogout = () => {
-    // In a real app, you would also clear any session cookies/tokens
     router.push('/auth/login');
   };
 
@@ -25,7 +24,6 @@ export default function AdminLayout({
     { href: '/admin/questions', label: 'Questions', icon: FileQuestion },
   ];
   
-  // Sidebar component for reuse
   const SidebarContent = () => (
      <div className="flex flex-col h-full">
         <div className="h-20 flex items-center px-6 border-b border-slate-200">
