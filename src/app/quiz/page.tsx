@@ -31,6 +31,8 @@ export default function QuizPage() {
   const startQuiz = useCallback(() => {
     const shuffledQuestions = level1Questions.map(q => ({
       ...q,
+      level: 1, // Added to satisfy the Question type
+      bankId: 'level1', // Added to satisfy the Question type
       options: shuffleArray(q.options)
     }));
     

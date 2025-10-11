@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import AuthLayout from '../_components/AuthLayout';
-import Link from 'next/link';
 import Banner from '../_components/Banner';
 import Input from '../_components/Input';
 import PasswordStrengthMeter from '../_components/PasswordStrengthMeter';

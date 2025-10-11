@@ -39,7 +39,7 @@ export default function ForgotPasswordPage() {
     <AuthLayout title="Forgot Password">
       <form onSubmit={handleSubmit} className="space-y-4">
         {success && <Banner type="success" message={success} />}
-        <p className="text-sm text-slate-600 text-center">Enter your email and we'll send a link to reset your password.</p>
+        <p className="text-sm text-slate-600 text-center">Enter your email and we’ll send a link to reset your password.</p>
         
         <Input label="Email Address" id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} error={error} required />
         
