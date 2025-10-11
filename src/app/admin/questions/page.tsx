@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react'; // 1. Import Suspense
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { PlusCircle, Edit, Trash2, FileQuestion, Image as ImageIcon, CheckCircle } from 'lucide-react';
 import { Question, QuestionBank } from '@/lib/types';
-import { initialBanks, allQuestions,} from '@/lib/data'; // Adjust path as needed
+import { initialBanks, allQuestions } from '@/lib/data'; // Adjust path as needed
 
-// Question Detail Sidebar Component
+// Question Detail Sidebar Component (No changes needed here)
 const QuestionDetailSidebar = ({ question, onDelete }: { question: Question | null, onDelete: (id: number) => void }) => {
     if (!question) {
         return (
@@ -60,8 +60,8 @@ const QuestionDetailSidebar = ({ question, onDelete }: { question: Question | nu
 };
 
 
-//Main Page
-export default function QuestionsListPage() {
+// 2. The component with the client-side logic
+function QuestionsPageContent() {
   const [questions, setQuestions] = useState(allQuestions);
   const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
   const [activeBank, setActiveBank] = useState<QuestionBank | null | undefined>(null);
@@ -151,5 +151,14 @@ export default function QuestionsListPage() {
       {/*Details*/}
       <QuestionDetailSidebar question={selectedQuestion} onDelete={handleDelete} />
     </div>
+  );
+}
+
+// 3. The new page component that acts as a wrapper
+export default function QuestionsListPage() {
+  return (
+    <Suspense fallback={<div className="text-center p-12">Loading questions...</div>}>
+      <QuestionsPageContent />
+    </Suspense>
   );
 }
