@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { PlusCircle, Edit, Trash2, FileQuestion, Image as ImageIcon, CheckCircle } from 'lucide-react';
-import { initialBanks, allQuestions, Question, QuestionBank } from '@/lib/data'; // Adjust path as needed
+import { Question, QuestionBank } from '@/lib/types';
+import { initialBanks, allQuestions,} from '@/lib/data'; // Adjust path as needed
 
 // Question Detail Sidebar Component
 const QuestionDetailSidebar = ({ question, onDelete }: { question: Question | null, onDelete: (id: number) => void }) => {

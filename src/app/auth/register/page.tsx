@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import AuthLayout from '../_components/AuthLayout';
 import Link from 'next/link';
 import Banner from '../_components/Banner';

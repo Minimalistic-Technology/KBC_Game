@@ -1,4 +1,4 @@
-import { Activity, ArrowUpRight, DollarSign, Users, Package } from 'lucide-react';
+import { Activity, Users, Package } from 'lucide-react';
 
 const StatCard = ({ title, value, icon: Icon, change, changeType }: any) => {
   return (
@@ -25,19 +25,13 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-slate-900">Dashboard</h1>
-        <p className="text-slate-700 mt-1">An overview of your platform's performance.</p>
+        <p className="text-slate-700 mt-1">An overview of your platform’s performance.</p>
       </div>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {/* Stats Cards dummy data(if required) */}
+        
         <StatCard 
-          title="Total Revenue" 
-          value="$45,231" 
-          icon={DollarSign} 
-          change="+20.1%" 
-          changeType="increase" 
-        />
-        <StatCard 
-          title="Active Users" 
+          title="User" 
           value="2,350" 
           icon={Users} 
           change="+180.1%" 
