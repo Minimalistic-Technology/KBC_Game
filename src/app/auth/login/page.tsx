@@ -12,18 +12,45 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setLoading(true);
 
     if (!email || !password) {
       setError("Please fill in both fields.");
+      setLoading(false);
       return;
     }
-    
-    console.log("Simulating login for:", email);
-    router.push('/admin');
+
+    try {
+      const res = await fetch(`http://localhost:5000/auth/admins/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+        credentials: 'include', 
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Login failed. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      // Login successful
+      console.log("Login success:", data.message);
+      router.push('/admin');
+    } catch (err) {
+      setError("Something went wrong. Please try again later.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
