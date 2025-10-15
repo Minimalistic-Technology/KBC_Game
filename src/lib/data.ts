@@ -1,12 +1,9 @@
 // lib/data.ts
 
-import { Question1, QuestionBank, Question } from './types';
-
-
+import { Question, QuestionBank, Question1 } from './types';
 
 /**
  * Shuffles an array and returns a new shuffled array.
- * This is now exported to be used on the client-side.
  */
 export function shuffleArray<T>(array: T[]): T[] {
   const shuffled = [...array];
@@ -17,8 +14,7 @@ export function shuffleArray<T>(array: T[]): T[] {
   return shuffled;
 }
 
-// Export the raw, unshuffled question data directly.
-
+// --- QUESTION DATA FOR OTHER PAGES ---
 export const level1Questions: Question1[] = [
   { id: 1, question: 'Who was India\'s first female Prime Minister?', options: ['Indira Gandhi', 'Sarojini Naidu', 'Pratibha Patil', 'Sonia Gandhi'], answer: 'Indira Gandhi' },
   { id: 2, question: 'Which city is known as the “Manchester of India” due to its textile industry?', options: ['Ahmedabad', 'Mumbai', 'Coimbatore', 'Surat'], answer: 'Ahmedabad' },
@@ -88,9 +84,6 @@ export const level3Questions: Question1[] = [
     { id: 30, question: 'In computing, what does \'URL\' stand for?', options: ['Uniform Resource Locator', 'Universal Record Link', 'Uniform Record Locator', 'Universal Resource Link'], answer: 'Uniform Resource Locator' },
 ];
 
-// --- TYPES ---
-
-
 // --- MOCK BANK DATA ---
 export const initialBanks: QuestionBank[] = [
   {
@@ -98,9 +91,10 @@ export const initialBanks: QuestionBank[] = [
     title: 'General Knowledge Kickstart',
     slug: 'general-knowledge-kickstart',
     description: 'Easy to medium questions to warm up.',
-    status: 'published',
+    status: 'Published',
     tags: ['GK', 'Beginner'],
     questionCount: 9,
+    prize: 5000,
     defaultTimer: 30,
     scheduledFor: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
     prizeLadder: [
@@ -114,9 +108,10 @@ export const initialBanks: QuestionBank[] = [
     title: 'Science & Technology',
     slug: 'science-and-technology',
     description: 'Challenging questions about the world of science.',
-    status: 'draft',
+    status: 'Draft',
     tags: ['Science', 'Tech'],
     questionCount: 9,
+    prize: 10000,
     defaultTimer: 45,
     scheduledFor: null,
     prizeLadder: [
@@ -126,27 +121,27 @@ export const initialBanks: QuestionBank[] = [
   },
 ];
 
-// --- MOCK QUESTION DATA ---
+// --- MOCK QUESTION DATA FOR ADMIN/GAME PAGES ---
 export const allQuestions: Question[] = [ 
   // Questions for Bank 'q1' (General Knowledge)
-  { id: 101, level: 1, bankId: 'q1', question: 'What is the capital of France?', options: ['Berlin', 'Madrid', 'Paris', 'Rome'], answer: 'Paris' },
-  { id: 102, level: 1, bankId: 'q1', question: 'Which planet is known as the Red Planet?', options: ['Earth', 'Mars', 'Jupiter', 'Venus'], answer: 'Mars' },
-  { id: 103, level: 1, bankId: 'q1', question: 'Who wrote "To Kill a Mockingbird"?', options: ['Harper Lee', 'Mark Twain', 'J.K. Rowling', 'F. Scott Fitzgerald'], answer: 'Harper Lee' },
-  { id: 201, level: 2, bankId: 'q1', question: 'What is the largest ocean on Earth?', options: ['Atlantic', 'Indian', 'Arctic', 'Pacific'], answer: 'Pacific' },
-  { id: 202, level: 2, bankId: 'q1', question: 'In what year did the Titanic sink?', options: ['1905', '1912', '1918', '1923'], answer: '1912' },
-  { id: 203, level: 2, bankId: 'q1', question: 'What is the chemical symbol for gold?', options: ['Ag', 'Au', 'Pb', 'Fe'], answer: 'Au' },
-  { id: 301, level: 3, bankId: 'q1', question: 'Who was the first person to step on the moon?', options: ['Buzz Aldrin', 'Yuri Gagarin', 'Neil Armstrong', 'Michael Collins'], answer: 'Neil Armstrong' },
-  { id: 302, level: 3, bankId: 'q1', question: 'What is the hardest natural substance on Earth?', options: ['Gold', 'Iron', 'Diamond', 'Platinum'], answer: 'Diamond' },
-  { id: 303, level: 3, bankId: 'q1', question: 'Which country is known as the Land of the Rising Sun?', options: ['China', 'Japan', 'Thailand', 'South Korea'], answer: 'Japan' },
+  { id: 101, level: 1, bankId: 'q1', question: 'What is the capital of France?', options: ['Berlin', 'Madrid', 'Paris', 'Rome'], answer: 'Paris', status: 'Published', tags: ['Geography'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': true } },
+  { id: 102, level: 1, bankId: 'q1', question: 'Which planet is known as the Red Planet?', options: ['Earth', 'Mars', 'Jupiter', 'Venus'], answer: 'Mars', status: 'Published', tags: ['Science'], mediaUrl: 'https://placehold.co/600x400/DD2222/FFF?text=Mars', lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': true } },
+  { id: 103, level: 1, bankId: 'q1', question: 'Who wrote "To Kill a Mockingbird"?', options: ['Harper Lee', 'Mark Twain', 'J.K. Rowling', 'F. Scott Fitzgerald'], answer: 'Harper Lee', status: 'Published', tags: ['Literature'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': true } },
+  { id: 201, level: 2, bankId: 'q1', question: 'What is the largest ocean on Earth?', options: ['Atlantic', 'Indian', 'Arctic', 'Pacific'], answer: 'Pacific', status: 'Published', tags: ['Geography'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': true } },
+  { id: 202, level: 2, bankId: 'q1', question: 'In what year did the Titanic sink?', options: ['1905', '1912', '1918', '1923'], answer: '1912', status: 'Published', tags: ['History'], mediaUrl: 'https://placehold.co/600x400/225599/FFF?text=Titanic', lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': true } },
+  { id: 203, level: 2, bankId: 'q1', question: 'What is the chemical symbol for gold?', options: ['Ag', 'Au', 'Pb', 'Fe'], answer: 'Au', status: 'Published', tags: ['Science'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': true } },
+  { id: 301, level: 3, bankId: 'q1', question: 'Who was the first person to step on the moon?', options: ['Buzz Aldrin', 'Yuri Gagarin', 'Neil Armstrong', 'Michael Collins'], answer: 'Neil Armstrong', status: 'Published', tags: ['History'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': false, 'Flip Question': true } },
+  { id: 302, level: 3, bankId: 'q1', question: 'What is the hardest natural substance on Earth?', options: ['Gold', 'Iron', 'Diamond', 'Platinum'], answer: 'Diamond', status: 'Published', tags: ['Science'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': false, 'Flip Question': true } },
+  { id: 303, level: 3, bankId: 'q1', question: 'Which country is known as the Land of the Rising Sun?', options: ['China', 'Japan', 'Thailand', 'South Korea'], answer: 'Japan', status: 'Published', tags: ['Geography'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': false, 'Flip Question': true } },
   
   // Questions for Bank 'q2' (Science & Tech)
-  { id: 104, level: 1, bankId: 'q2', question: 'What does CPU stand for?', options: ['Central Processing Unit', 'Computer Personal Unit', 'Central Process Unit', 'Control Process Unit'], answer: 'Central Processing Unit' },
-  { id: 105, level: 1, bankId: 'q2', question: 'What is the chemical formula for water?', options: ['O2', 'H2O', 'CO2', 'NaCl'], answer: 'H2O' },
-  { id: 106, level: 1, bankId: 'q2', question: 'Which force keeps us on the ground?', options: ['Magnetism', 'Friction', 'Gravity', 'Tension'], answer: 'Gravity' },
-  { id: 204, level: 2, bankId: 'q2', question: 'What is the powerhouse of the cell?', options: ['Nucleus', 'Ribosome', 'Mitochondrion', 'Chloroplast'], answer: 'Mitochondrion' },
-  { id: 205, level: 2, bankId: 'q2', question: 'What does "www" stand for in a website browser?', options: ['World Wide Web', 'Web World Wide', 'World Web Wide', 'Wide World Web'], answer: 'World Wide Web' },
-  { id: 206, level: 2, bankId: 'q2', question: 'How many planets are in our solar system?', options: ['7', '8', '9', '10'], answer: '8' },
-  { id: 304, level: 3, bankId: 'q2', question: 'Who is credited with inventing the telephone?', options: ['Thomas Edison', 'Nikola Tesla', 'Alexander Graham Bell', 'Guglielmo Marconi'], answer: 'Alexander Graham Bell' },
-  { id: 305, level: 3, bankId: 'q2', question: 'What is the speed of light?', options: ['300,000 km/s', '150,000 km/s', '500,000 km/s', '1,000,000 km/s'], answer: '300,000 km/s' },
-  { id: 306, level: 3, bankId: 'q2', question: 'What is the main component of the sun?', options: ['Oxygen', 'Nitrogen', 'Hydrogen', 'Carbon'], answer: 'Hydrogen' },
+  { id: 104, level: 1, bankId: 'q2', question: 'What does CPU stand for?', options: ['Central Processing Unit', 'Computer Personal Unit', 'Central Process Unit', 'Control Process Unit'], answer: 'Central Processing Unit', status: 'Draft', tags: ['Tech'], mediaUrl: 'https://placehold.co/600x400/555/FFF?text=CPU', lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': true } },
+  { id: 105, level: 1, bankId: 'q2', question: 'What is the chemical formula for water?', options: ['O2', 'H2O', 'CO2', 'NaCl'], answer: 'H2O', status: 'Draft', tags: ['Science'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': true } },
+  { id: 106, level: 1, bankId: 'q2', question: 'Which force keeps us on the ground?', options: ['Magnetism', 'Friction', 'Gravity', 'Tension'], answer: 'Gravity', status: 'Draft', tags: ['Science'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': true } },
+  { id: 204, level: 2, bankId: 'q2', question: 'What is the powerhouse of the cell?', options: ['Nucleus', 'Ribosome', 'Mitochondrion', 'Chloroplast'], answer: 'Mitochondrion', status: 'Draft', tags: ['Biology'], mediaUrl: 'https://placehold.co/600x400/8A2BE2/FFF?text=Mitochondrion', lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': true } },
+  { id: 205, level: 2, bankId: 'q2', question: 'What does "www" stand for in a website browser?', options: ['World Wide Web', 'Web World Wide', 'World Web Wide', 'Wide World Web'], answer: 'World Wide Web', status: 'Draft', tags: ['Tech'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': true } },
+  { id: 206, level: 2, bankId: 'q2', question: 'How many planets are in our solar system?', options: ['7', '8', '9', '10'], answer: '8', status: 'Draft', tags: ['Science'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': true } },
+  { id: 304, level: 3, bankId: 'q2', question: 'Who is credited with inventing the telephone?', options: ['Thomas Edison', 'Nikola Tesla', 'Alexander Graham Bell', 'Guglielmo Marconi'], answer: 'Alexander Graham Bell', status: 'Draft', tags: ['History', 'Tech'], lifelines: { '50:50': true, 'Audience Poll': false, 'Expert Advice': false, 'Flip Question': true } },
+  { id: 305, level: 3, bankId: 'q2', question: 'What is the speed of light?', options: ['300,000 km/s', '150,000 km/s', '500,000 km/s', '1,000,000 km/s'], answer: '300,000 km/s', status: 'Draft', tags: ['Science'], lifelines: { '50:50': true, 'Audience Poll': false, 'Expert Advice': false, 'Flip Question': true } },
+  { id: 306, level: 3, bankId: 'q2', question: 'What is the main component of the sun?', options: ['Oxygen', 'Nitrogen', 'Hydrogen', 'Carbon'], answer: 'Hydrogen', status: 'Draft', tags: ['Science'], lifelines: { '50:50': true, 'Audience Poll': false, 'Expert Advice': false, 'Flip Question': true } },
 ];
