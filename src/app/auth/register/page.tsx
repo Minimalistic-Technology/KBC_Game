@@ -7,7 +7,20 @@ import Banner from '../_components/Banner';
 import Input from '../_components/Input';
 import PasswordStrengthMeter from '../_components/PasswordStrengthMeter';
 
-export default function RegisterPage() {
+import axios from 'axios';
+import { useQuery, QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const queryClient = new QueryClient();
+
+export default function RegisterPageWrapper() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <RegisterPage />
+    </QueryClientProvider>
+  );
+}
+
+ function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -16,7 +29,7 @@ export default function RegisterPage() {
     message: '',
     type: '',
   });
-  const [loading, setLoading] = useState(false);
+  
 
   const validateField = (name: string, value: string) => {
     switch (name) {
@@ -38,57 +51,61 @@ export default function RegisterPage() {
     setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
   };
 
+  const registerAdmin = async () => {
+    const { data } = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL_DEV}/auth/admins/register`,
+      { email, password },
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+    return data;
+  };
+
+  const { refetch, isFetching, isError, error, data } = useQuery({
+    queryKey: ['register', email],
+    queryFn: registerAdmin,
+    enabled: false,
+    retry: false,
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBanner({ message: '', type: '' });
-    setLoading(true);
 
     const emailError = validateField('email', email);
     const passwordError = validateField('password', password);
     const confirmError = validateField('confirm', confirmPassword);
     setErrors({ email: emailError, password: passwordError, confirm: confirmError });
 
-    if (emailError || passwordError || confirmError) {
-      setLoading(false);
-      return;
-    }
+    if (emailError || passwordError || confirmError) return;
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL_DEV}/auth/admins/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
+      const result = await refetch();
+
+      if (!result.data?.message) {
+        setBanner({ message: 'Registration failed.', type: 'error' });
+        return;
+      }
+
+      setBanner({
+        message: 'Registration successful! Please check your email to verify your account.',
+        type: 'success',
       });
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        setBanner({ message: data.message || 'Registration failed.', type: 'error' });
-      } else {
-        setBanner({
-          message: 'Registration successful! Please check your email to verify your account.',
-          type: 'success',
-        });
-        setEmail('');
-        setPassword('');
-        setConfirmPassword('');
-      }
-    } catch (error) {
-      console.error(error);
+      setEmail('');
+      setPassword('');
+      setConfirmPassword('');
+    } catch (err) {
+      console.error(err);
       setBanner({ message: 'Something went wrong. Try again later.', type: 'error' });
-    } finally {
-      setLoading(false);
     }
   };
 
   return (
     <AuthLayout title="Create Admin Account">
-      
-      {banner.message && banner.type && (
+      {(banner.message && banner.type) && (
         <Banner type={banner.type as 'success' | 'error'} message={banner.message} />
       )}
 
-      {/* Hide form when registration is successful */}
       {banner.type !== 'success' && (
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
@@ -126,12 +143,13 @@ export default function RegisterPage() {
             required
           />
 
+         
           <button
             type="submit"
-            disabled={loading}
+            disabled={isFetching}
             className="w-full !mt-6 p-3 font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50"
           >
-            {loading ? 'Registering...' : 'Register'}
+            {isFetching ? 'Registering...' : 'Register'}
           </button>
 
           <p className="text-center text-sm text-slate-500">
