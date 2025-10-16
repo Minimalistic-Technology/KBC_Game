@@ -12,6 +12,7 @@ import {
   Package2,
   User,
   LogOut,
+  BarChart3, // <-- Import new icon
 } from 'lucide-react';
 
 const NavLink = ({ href, icon: Icon, children, isCollapsed }: any) => {
@@ -36,7 +37,7 @@ const NavLink = ({ href, icon: Icon, children, isCollapsed }: any) => {
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const router = useRouter(); // Add useRouter for navigation
+  const router = useRouter();
 
   const handleSignOut = () => {
     router.push('/auth/login');
@@ -62,6 +63,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </NavLink>
           <NavLink href="/admin/question-banks" icon={Package} isCollapsed={isCollapsed}>
             Question Banks
+          </NavLink>
+          {/* --- New Scoreboard Link --- */}
+          <NavLink href="/admin/scoreboard" icon={BarChart3} isCollapsed={isCollapsed}>
+            Scoreboard
           </NavLink>
         </nav>
 
