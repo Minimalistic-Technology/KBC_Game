@@ -97,7 +97,7 @@ export default function QuestionBanksPage() {
             </div>
             <button onClick={() => handleOpenEditor(null)} className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 h-10 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700">
                 <Plus className="h-5 w-5" />
-                <span>Create New Bank</span>
+                <span>Create New Questions Bank</span>
             </button>
         </div>
         
