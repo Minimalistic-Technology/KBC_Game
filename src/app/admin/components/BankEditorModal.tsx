@@ -83,19 +83,11 @@ export const BankEditorModal = ({ bank, onSave, onClose }: { bank: QuestionBank,
                             </FormInput>
                         </div>
 
-                        {/* --- NEW: SAFE POINT SECTION --- */}
                         <div className="p-4 border rounded-lg bg-slate-50">
                             <h4 className="font-semibold text-slate-900 mb-3">Game Rules</h4>
                             <div className="flex items-center justify-between p-3 rounded-md bg-white border">
                                 <label htmlFor="onlySafePoints" className="font-medium text-slate-800 cursor-pointer">Enable Safe Points Only</label>
-                                <input
-                                    id="onlySafePoints"
-                                    name="onlySafePoints"
-                                    type="checkbox"
-                                    checked={!!formData.onlySafePoints}
-                                    onChange={handleChange}
-                                    className="h-5 w-5 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300"
-                                />
+                                <input id="onlySafePoints" name="onlySafePoints" type="checkbox" checked={!!formData.onlySafePoints} onChange={handleChange} className="h-5 w-5 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300" />
                             </div>
                             <p className="text-xs text-slate-500 mt-2 px-1">If enabled, players will not lose winnings for a wrong answer.</p>
                         </div>
@@ -118,12 +110,15 @@ export const BankEditorModal = ({ bank, onSave, onClose }: { bank: QuestionBank,
                             )}
                         </FormInput>
 
-                        <div className="p-4 border rounded-lg bg-slate-50 space-y-4">
+                        {/* --- UPDATED: Publishing section simplified --- */}
+                        <div className="p-4 border rounded-lg bg-slate-50">
                             <h4 className="font-semibold text-slate-900">Publishing</h4>
-                            <div className="grid md:grid-cols-2 gap-6">
-                                <FormInput label="Status" id="status"><select name="status" id="status" value={formData.status} onChange={handleChange} className="w-full px-3 py-2 border bg-white border-slate-300 rounded-lg text-slate-900"><option>Draft</option><option>Published</option><option>Scheduled</option></select></FormInput>
-                                <FormInput label="Schedule Date" id="scheduledFor"><input type="datetime-local" id="scheduledFor" name="scheduledFor" value={formData.scheduledFor || ''} onChange={handleChange} disabled={formData.status !== 'Scheduled'} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900 disabled:bg-slate-200" /></FormInput>
-                            </div>
+                            <FormInput label="Status" id="status">
+                                <select name="status" id="status" value={formData.status} onChange={handleChange} className="w-full px-3 py-2 border bg-white border-slate-300 rounded-lg text-slate-900">
+                                    <option>Draft</option>
+                                    <option>Published</option>
+                                </select>
+                            </FormInput>
                         </div>
                     </div>
                     

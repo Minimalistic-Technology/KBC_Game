@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { FileText, ArrowUp, ArrowDown, Edit, Trash2, Gift } from 'lucide-react';
+import { FileText, ArrowUp, ArrowDown, Edit, Trash2, Gift, ShieldCheck } from 'lucide-react';
 import type { QuestionBank } from '@/lib/types';
 
 interface CardProps {
@@ -16,10 +16,10 @@ interface CardProps {
 }
 
 export const QuestionBankCard = ({ bank, index, onEdit, onDelete, onMove, isFirst, isLast }: CardProps) => {
+  // --- UPDATED: Removed 'scheduled' style ---
   const statusClasses: { [key: string]: string } = {
     published: "bg-green-100 text-green-800",
     draft: "bg-yellow-100 text-yellow-800",
-    scheduled: "bg-blue-100 text-blue-800",
   };
   
   const statusKey = (bank.status || 'draft').toLowerCase();
@@ -52,7 +52,6 @@ export const QuestionBankCard = ({ bank, index, onEdit, onDelete, onMove, isFirs
                 <p className="text-sm text-slate-600 line-clamp-2 mb-4">{bank.description}</p>
             </div>
             
-            {/* --- UPDATED: Image now uses prizeMedia object --- */}
             {bank.prizeMedia?.url && (
               <div className="my-auto aspect-video rounded-lg overflow-hidden border bg-slate-50/50">
                 <img 
@@ -74,6 +73,15 @@ export const QuestionBankCard = ({ bank, index, onEdit, onDelete, onMove, isFirs
                 <span className="flex items-center gap-1.5" title="Number of questions"><FileText size={14} /> {bank.questionCount}</span>
                 <span className="font-light text-slate-300">|</span>
                 <span className="flex items-center gap-1.5" title="Prize"><Gift size={14} /> {bank.prize}</span>
+                
+                {bank.onlySafePoints && (
+                    <>
+                        <span className="font-light text-slate-300">|</span>
+                        <span className="flex items-center gap-1.5 text-green-600 font-semibold" title="All levels are safe points">
+                            <ShieldCheck size={14} /> Safe
+                        </span>
+                    </>
+                )}
             </div>
             <div className="flex items-center gap-1">
                 <button onClick={(e) => onMove(e, 'up')} disabled={isFirst} className="p-2 rounded-md text-slate-500 hover:bg-slate-200 disabled:opacity-30"><ArrowUp size={16} /></button>

@@ -92,9 +92,9 @@ export const initialBanks: QuestionBank[] = [
     ageGroup: 'All Ages',
     questionCount: 9,
     prize: '5,000',
-    onlySafePoints: false, // --- ADDED THIS LINE ---
+    onlySafePoints: false,
     defaultTimer: 30,
-    scheduledFor: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    // --- REMOVED scheduledFor ---
     prizeLadder: [
       { id: 1, level: 1, amount: 1000, isSafe: false },
       { id: 2, level: 2, amount: 2000, isSafe: false },
@@ -111,9 +111,9 @@ export const initialBanks: QuestionBank[] = [
     ageGroup: 'Teens (13-17)',
     questionCount: 9,
     prize: '10,000',
-    onlySafePoints: true, // --- ADDED THIS LINE ---
+    onlySafePoints: true,
     defaultTimer: 45,
-    scheduledFor: null,
+    // --- REMOVED scheduledFor ---
     prizeLadder: [
       { id: 1, level: 1, amount: 5000, isSafe: false },
       { id: 2, level: 2, amount: 10000, isSafe: true },
@@ -129,7 +129,7 @@ export const initialBanks: QuestionBank[] = [
     ageGroup: 'Adults (18+)',
     questionCount: 4,
     prize: 'Movie Night Gift Basket',
-    onlySafePoints: false, // --- ADDED THIS LINE ---
+    onlySafePoints: false,
     prizeMedia: { 
         id: 'prize_media_3', 
         url: 'https://picsum.photos/seed/movies/400/225', 
@@ -138,7 +138,7 @@ export const initialBanks: QuestionBank[] = [
         derivedFormats: [{ name: 'Thumbnail', resolution: '300x200' }] 
     },
     defaultTimer: 30,
-    scheduledFor: null,
+    // --- REMOVED scheduledFor ---
     prizeLadder: [],
   },
   {
@@ -151,7 +151,7 @@ export const initialBanks: QuestionBank[] = [
     ageGroup: 'Kids (6-12)',
     questionCount: 4,
     prize: 'A Giant Teddy Bear',
-    onlySafePoints: true, // --- ADDED THIS LINE ---
+    onlySafePoints: true,
     prizeMedia: { 
         id: 'prize_media_4', 
         url: 'https://picsum.photos/seed/cartoons/400/225', 
@@ -160,7 +160,7 @@ export const initialBanks: QuestionBank[] = [
         derivedFormats: [{ name: 'Thumbnail', resolution: '300x200' }] 
     },
     defaultTimer: 20,
-    scheduledFor: null,
+    // --- REMOVED scheduledFor ---
     prizeLadder: [],
   },
 ];

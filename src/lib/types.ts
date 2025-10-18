@@ -19,15 +19,15 @@ export type QuestionBank = {
   title: string;
   slug: string;
   description: string;
-  status: 'Published' | 'Draft' | 'Scheduled';
+  status: 'Published' | 'Draft'; // --- UPDATED THIS LINE ---
   tags: string[];
   ageGroup?: string;
   questionCount: number;
   prize: string;
   prizeMedia?: MediaAsset;
-  onlySafePoints?: boolean; // --- ADDED THIS LINE ---
+  onlySafePoints?: boolean;
   defaultTimer: number; // in seconds
-  scheduledFor: string | null;
+  // --- REMOVED scheduledFor ---
   prizeLadder: PrizeLevel[];
 };
 
