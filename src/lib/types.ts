@@ -21,8 +21,11 @@ export type QuestionBank = {
   description: string;
   status: 'Published' | 'Draft' | 'Scheduled';
   tags: string[];
+  ageGroup?: string;
   questionCount: number;
-  prize: number;
+  prize: string;
+  prizeMedia?: MediaAsset;
+  onlySafePoints?: boolean; // --- ADDED THIS LINE ---
   defaultTimer: number; // in seconds
   scheduledFor: string | null;
   prizeLadder: PrizeLevel[];
@@ -32,7 +35,21 @@ export type Lifeline = {
   '50:50': boolean;
   'Audience Poll': boolean;
   'Expert Advice': boolean;
-  'Flip Question': boolean; // ADD THIS LINE
+  'Flip Question': boolean;
+};
+
+export type DerivedFormat = {
+  name: string;
+  resolution: string;
+};
+
+export type MediaAsset = {
+  id: string;
+  url: string;
+  type: 'image' | 'video' | 'audio';
+  fileName: string;
+  derivedFormats: DerivedFormat[];
+  defaultFormat?: DerivedFormat;
 };
 
 export type Question = {
@@ -42,8 +59,8 @@ export type Question = {
   question: string;
   options: string[];
   answer: string;
-  mediaUrl?: string | null;
-  status: 'Draft' | 'Published'; // ADDED
-  tags: string[];                  // ADDED
-  lifelines: Lifeline;             // ADDED
+  media?: MediaAsset;
+  status: 'Draft' | 'Published';
+  tags: string[];
+  lifelines: Lifeline;
 };

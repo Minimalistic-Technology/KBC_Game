@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import {
   Bell,
@@ -10,9 +10,9 @@ import {
   Home,
   Package,
   Package2,
-  User,
-  LogOut,
+  BarChart3
 } from 'lucide-react';
+import { UserNav } from './components/UserNav'; // Import the new component
 
 const NavLink = ({ href, icon: Icon, children, isCollapsed }: any) => {
   const pathname = usePathname();
@@ -36,11 +36,6 @@ const NavLink = ({ href, icon: Icon, children, isCollapsed }: any) => {
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const router = useRouter(); // Add useRouter for navigation
-
-  const handleSignOut = () => {
-    router.push('/auth/login');
-  };
 
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[auto_1fr] bg-slate-100">
@@ -63,18 +58,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <NavLink href="/admin/question-banks" icon={Package} isCollapsed={isCollapsed}>
             Question Banks
           </NavLink>
+          <NavLink href="/admin/scoreboard" icon={BarChart3} isCollapsed={isCollapsed}>
+            Scoreboard
+          </NavLink>
         </nav>
 
-        {/* sidebar footer*/}
-        <div className="mt-auto border-t p-4 space-y-2">
-          <button
-            onClick={handleSignOut}
-            className={`w-full flex items-center gap-4 px-3 py-2 rounded-lg text-slate-700 transition-colors duration-200 hover:bg-red-50 hover:text-red-600 ${isCollapsed ? 'justify-center' : ''}`}
-            title={isCollapsed ? "Sign Out" : ""}
-          >
-            <LogOut className="h-5 w-5 flex-shrink-0" />
-            {!isCollapsed && <span className="truncate">Sign Out</span>}
-          </button>
+        {/* --- UPDATED: Sidebar footer simplified --- */}
+        <div className="mt-auto border-t p-4">
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
             className="w-full flex items-center justify-center gap-3 rounded-lg px-3 py-3 text-slate-600 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-900"
@@ -84,17 +74,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </aside>
 
-      {/* main*/}
+      {/* --- Main Content --- */}
       <div className="flex flex-col">
-        <header className="flex h-[60px] items-center gap-4 border-b bg-white px-6">
-          <div className="flex-1" />
+        {/* --- UPDATED: Header now uses UserNav component --- */}
+        <header className="flex h-[60px] items-center justify-end gap-4 border-b bg-white px-6">
           <div className="flex items-center gap-4">
             <button className="p-2 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800">
               <Bell className="h-5 w-5" />
             </button>
-            <button className="flex items-center gap-2 p-2 rounded-full hover:bg-slate-100">
-               <User className="h-6 w-6 rounded-full text-slate-500"/>
-            </button>
+            <UserNav />
           </div>
         </header>
         <main className="flex-1 overflow-y-auto bg-slate-100 p-6">{children}</main>

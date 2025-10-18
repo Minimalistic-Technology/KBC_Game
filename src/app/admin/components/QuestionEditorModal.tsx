@@ -1,20 +1,21 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { X, Save, Eye, CheckCircle, Upload, Lightbulb, Users, Zap, Trash2, UploadCloud } from 'lucide-react'; 
-// --- 1. IMPORT THE UPDATED Question and Lifeline TYPES ---
-import type { Question, Lifeline } from '@/lib/types';
+import { X, Save, Eye, CheckCircle, Library, UploadCloud, Lightbulb, Users, Zap, RefreshCw } from 'lucide-react';
+import type { Question, Lifeline, MediaAsset, DerivedFormat } from '@/lib/types';
+import { MediaUploader } from './MediaUploader';
+import { MediaLibraryModal } from './MediaLibraryModal';
+import { MediaPreview } from './MediaPreview';
 
-// Lifeline Item Component
 const QuestionLifelineItem = ({ icon: Icon, label, checked, onChange, disabled = false }: {
   icon: React.ElementType;
-  label: keyof Lifeline; // Use keyof Lifeline for type safety
+  label: keyof Lifeline;
   checked: boolean;
   onChange: (label: keyof Lifeline, isChecked: boolean) => void;
   disabled?: boolean;
 }) => (
-  <div className={`flex items-center justify-between p-3 rounded-lg border transition-colors 
+  <div className={`flex items-center justify-between p-3 rounded-lg border transition-colors
     ${disabled ? 'bg-slate-100 border-slate-200 text-slate-400' : 'bg-white border-slate-300 hover:border-indigo-500'}`}>
     <div className="flex items-center gap-3">
       <Icon className={`h-5 w-5 ${disabled ? 'text-slate-400' : 'text-indigo-600'}`} />
@@ -31,30 +32,30 @@ const QuestionLifelineItem = ({ icon: Icon, label, checked, onChange, disabled =
   </div>
 );
 
-// --- Main Modal Component ---
 export const QuestionEditorModal = ({ question, onSave, onClose }: { question: Question, onSave: (question: Question) => void, onClose: () => void }) => {
   const [formData, setFormData] = useState<Question>(question);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isLibraryOpen, setIsLibraryOpen] = useState(false);
 
   useEffect(() => { setFormData(question); }, [question]);
 
-  // Media Handling Logic
-  const handleMediaUploadClick = () => fileInputRef.current?.click();
+  const handleMediaUploadComplete = (asset: MediaAsset) => {
+    setFormData(prev => ({ ...prev, media: asset }));
+  };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const objectUrl = URL.createObjectURL(file);
-      setFormData(prev => ({ ...prev, mediaUrl: objectUrl }));
-    }
+  const handleSelectFromLibrary = (asset: MediaAsset) => {
+    setFormData(prev => ({ ...prev, media: asset }));
+    setIsLibraryOpen(false);
   };
 
   const handleRemoveMedia = () => {
-    if (formData.mediaUrl && formData.mediaUrl.startsWith('blob:')) {
-      URL.revokeObjectURL(formData.mediaUrl);
-    }
-    setFormData(prev => ({ ...prev, mediaUrl: null }));
+    setFormData(prev => ({ ...prev, media: undefined }));
+  };
+
+  const handleDefaultFormatChange = (format: DerivedFormat) => {
+      if (formData.media) {
+          setFormData(prev => ({ ...prev, media: { ...prev.media!, defaultFormat: format } }));
+      }
   };
   
   const handleBulkImport = () => alert('Bulk import functionality is not yet implemented.');
@@ -64,13 +65,11 @@ export const QuestionEditorModal = ({ question, onSave, onClose }: { question: Q
     setFormData(prev => ({ ...prev, [name]: name === 'level' ? Number(value) : value }));
   };
 
-  // --- 2. FIXED: Tags are now handled and stored as an array ---
   const handleTagsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const tags = e.target.value.split(',').map(tag => tag.trim()).filter(Boolean); // split, trim, and remove empty strings
+    const tags = e.target.value.split(',').map(tag => tag.trim()).filter(Boolean);
     setFormData(prev => ({ ...prev, tags }));
   };
   
-  // --- 3. FIXED: Lifelines are now handled and stored in state ---
   const handleLifelineChange = (label: keyof Lifeline, isChecked: boolean) => {
     setFormData(prev => ({
       ...prev,
@@ -91,7 +90,6 @@ export const QuestionEditorModal = ({ question, onSave, onClose }: { question: Q
     setFormData(prev => ({ ...prev, answer: option }));
   };
   
-  // --- 4. FIXED: The status is now set on the question object before saving ---
   const handleSubmit = (e: React.FormEvent, status: 'Draft' | 'Published' = 'Draft') => {
     e.preventDefault();
     if (!formData.question.trim() || formData.options.some(opt => !opt.trim()) || !formData.answer) {
@@ -125,6 +123,13 @@ export const QuestionEditorModal = ({ question, onSave, onClose }: { question: Q
             </motion.div>
           </motion.div>
         )}
+        {isLibraryOpen && (
+          <MediaLibraryModal 
+            onClose={() => setIsLibraryOpen(false)} 
+            onSelect={handleSelectFromLibrary}
+            filter="all" // Allow all media types in the library
+          />
+        )}
       </AnimatePresence>
     
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}>
@@ -147,25 +152,30 @@ export const QuestionEditorModal = ({ question, onSave, onClose }: { question: Q
               
               <div>
                 <label className="text-sm font-medium text-slate-800 mb-2 block">Media (Image/Video/Audio)</label>
-                <input type="file" ref={fileInputRef} onChange={handleFileChange} accept="image/*,video/*" className="hidden" />
-
-                {formData.mediaUrl ? (
-                  <div className="relative group w-full h-48 rounded-lg overflow-hidden border">
-                    <img src={formData.mediaUrl} alt="Media preview" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button type="button" onClick={handleRemoveMedia} className="inline-flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm hover:bg-white/30">
-                        <Trash2 size={16} /> Remove
-                      </button>
-                    </div>
-                  </div>
+                {formData.media ? (
+                  <MediaPreview 
+                    asset={formData.media} 
+                    onRemove={handleRemoveMedia}
+                    onDefaultFormatChange={handleDefaultFormatChange}
+                  />
                 ) : (
-                  <div onClick={handleMediaUploadClick} className="flex justify-center rounded-lg border-2 border-dashed border-slate-300 px-6 py-10 hover:border-indigo-500 transition-colors cursor-pointer">
-                    <div className="text-center">
-                      <Upload className="mx-auto h-10 w-10 text-slate-400" />
-                      <p className="mt-2 text-sm text-slate-600">
-                        Drag & drop or <span className="font-semibold text-indigo-600">click to upload</span>
-                      </p>
+                  <div className="space-y-3">
+                    <MediaUploader 
+                        onUploadComplete={handleMediaUploadComplete}
+                        accept={{ 
+                            'image/*': ['.png', '.jpg', '.jpeg', '.webp'],
+                            'video/*': ['.mp4', '.mov'],
+                            'audio/*': ['.mp3', '.wav']
+                        }}
+                    />
+                    <div className="relative flex items-center">
+                      <div className="flex-grow border-t border-slate-300"></div>
+                      <span className="flex-shrink mx-4 text-slate-500 text-sm">OR</span>
+                      <div className="flex-grow border-t border-slate-300"></div>
                     </div>
+                    <button type="button" onClick={() => setIsLibraryOpen(true)} className="w-full inline-flex items-center justify-center gap-2 rounded-lg border bg-white px-4 h-11 text-sm font-semibold text-slate-800 hover:bg-slate-100">
+                        <Library className="h-4 w-4"/> Choose from Library
+                    </button>
                   </div>
                 )}
               </div>
@@ -208,7 +218,7 @@ export const QuestionEditorModal = ({ question, onSave, onClose }: { question: Q
                       type="text" 
                       id="tags" 
                       name="tags"
-                      value={formData.tags.join(', ')} // Display array as comma-separated string
+                      value={formData.tags.join(', ')}
                       onChange={handleTagsChange}
                       placeholder="e.g. Science, 90s" 
                       className="w-full h-10 px-3 border border-slate-300 rounded-lg text-slate-900" />
@@ -218,9 +228,10 @@ export const QuestionEditorModal = ({ question, onSave, onClose }: { question: Q
               <div>
                 <h3 className="font-semibold text-slate-900 mb-4">Available Lifelines</h3>
                 <div className="space-y-3 text-sm">
-                  <QuestionLifelineItem icon={Zap} label="50:50" checked={formData.lifelines['50:50']} onChange={handleLifelineChange} />
-                  <QuestionLifelineItem icon={Users} label="Audience Poll" checked={formData.lifelines['Audience Poll']} onChange={handleLifelineChange} />
-                  <QuestionLifelineItem icon={Lightbulb} label="Expert Advice" checked={formData.lifelines['Expert Advice']} onChange={handleLifelineChange} />
+                  <QuestionLifelineItem icon={Zap} label="50:50" checked={!!formData.lifelines['50:50']} onChange={handleLifelineChange} />
+                  <QuestionLifelineItem icon={Users} label="Audience Poll" checked={!!formData.lifelines['Audience Poll']} onChange={handleLifelineChange} />
+                  <QuestionLifelineItem icon={Lightbulb} label="Expert Advice" checked={!!formData.lifelines['Expert Advice']} onChange={handleLifelineChange} />
+                  <QuestionLifelineItem icon={RefreshCw} label="Flip Question" checked={!!formData.lifelines['Flip Question']} onChange={handleLifelineChange} />
                 </div>
               </div>
             </div>

@@ -2,19 +2,15 @@
 
 import { Question, QuestionBank, Question1 } from './types';
 
-/**
- * Shuffles an array and returns a new shuffled array.
- */
 export function shuffleArray<T>(array: T[]): T[] {
   const shuffled = [...array];
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]; // Swap elements
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
   return shuffled;
 }
 
-// --- QUESTION DATA FOR OTHER PAGES ---
 export const level1Questions: Question1[] = [
   { id: 1, question: 'Who was India\'s first female Prime Minister?', options: ['Indira Gandhi', 'Sarojini Naidu', 'Pratibha Patil', 'Sonia Gandhi'], answer: 'Indira Gandhi' },
   { id: 2, question: 'Which city is known as the “Manchester of India” due to its textile industry?', options: ['Ahmedabad', 'Mumbai', 'Coimbatore', 'Surat'], answer: 'Ahmedabad' },
@@ -93,8 +89,10 @@ export const initialBanks: QuestionBank[] = [
     description: 'Easy to medium questions to warm up.',
     status: 'Published',
     tags: ['GK', 'Beginner'],
+    ageGroup: 'All Ages',
     questionCount: 9,
-    prize: 5000,
+    prize: '5,000',
+    onlySafePoints: false, // --- ADDED THIS LINE ---
     defaultTimer: 30,
     scheduledFor: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
     prizeLadder: [
@@ -110,8 +108,10 @@ export const initialBanks: QuestionBank[] = [
     description: 'Challenging questions about the world of science.',
     status: 'Draft',
     tags: ['Science', 'Tech'],
+    ageGroup: 'Teens (13-17)',
     questionCount: 9,
-    prize: 10000,
+    prize: '10,000',
+    onlySafePoints: true, // --- ADDED THIS LINE ---
     defaultTimer: 45,
     scheduledFor: null,
     prizeLadder: [
@@ -119,29 +119,97 @@ export const initialBanks: QuestionBank[] = [
       { id: 2, level: 2, amount: 10000, isSafe: true },
     ],
   },
+  {
+    id: 'q3',
+    title: 'Movie Buffs Trivia',
+    slug: 'movie-buffs-trivia',
+    description: 'Questions for film lovers, from classics to blockbusters.',
+    status: 'Published',
+    tags: ['Movies', 'Entertainment'],
+    ageGroup: 'Adults (18+)',
+    questionCount: 4,
+    prize: 'Movie Night Gift Basket',
+    onlySafePoints: false, // --- ADDED THIS LINE ---
+    prizeMedia: { 
+        id: 'prize_media_3', 
+        url: 'https://picsum.photos/seed/movies/400/225', 
+        type: 'image', 
+        fileName: 'movie_prize.jpg', 
+        derivedFormats: [{ name: 'Thumbnail', resolution: '300x200' }] 
+    },
+    defaultTimer: 30,
+    scheduledFor: null,
+    prizeLadder: [],
+  },
+  {
+    id: 'q4',
+    title: 'Cartoon Capers',
+    slug: 'cartoon-capers',
+    description: 'Fun questions about animated shows and movies.',
+    status: 'Draft',
+    tags: ['Cartoons', 'Kids'],
+    ageGroup: 'Kids (6-12)',
+    questionCount: 4,
+    prize: 'A Giant Teddy Bear',
+    onlySafePoints: true, // --- ADDED THIS LINE ---
+    prizeMedia: { 
+        id: 'prize_media_4', 
+        url: 'https://picsum.photos/seed/cartoons/400/225', 
+        type: 'image', 
+        fileName: 'cartoon_prize.jpg', 
+        derivedFormats: [{ name: 'Thumbnail', resolution: '300x200' }] 
+    },
+    defaultTimer: 20,
+    scheduledFor: null,
+    prizeLadder: [],
+  },
 ];
 
-// --- MOCK QUESTION DATA FOR ADMIN/GAME PAGES ---
-export const allQuestions: Question[] = [ 
-  // Questions for Bank 'q1' (General Knowledge)
-  { id: 101, level: 1, bankId: 'q1', question: 'What is the capital of France?', options: ['Berlin', 'Madrid', 'Paris', 'Rome'], answer: 'Paris', status: 'Published', tags: ['Geography'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': true } },
-  { id: 102, level: 1, bankId: 'q1', question: 'Which planet is known as the Red Planet?', options: ['Earth', 'Mars', 'Jupiter', 'Venus'], answer: 'Mars', status: 'Published', tags: ['Science'], mediaUrl: 'https://placehold.co/600x400/DD2222/FFF?text=Mars', lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': true } },
-  { id: 103, level: 1, bankId: 'q1', question: 'Who wrote "To Kill a Mockingbird"?', options: ['Harper Lee', 'Mark Twain', 'J.K. Rowling', 'F. Scott Fitzgerald'], answer: 'Harper Lee', status: 'Published', tags: ['Literature'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': true } },
+// --- MOCK QUESTION DATA FOR ADMIN PAGE ---
+export const allQuestions: Question[] = [
+  // Bank 1: General Knowledge
+  {
+    id: 101, level: 1, bankId: 'q1', question: 'What is the capital of France?',
+    options: ['Berlin', 'Madrid', 'Paris', 'Rome'],
+    answer: 'Paris', status: 'Published', tags: ['Geography'],
+    lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': false },
+    media: {
+      id: 'media_4',
+      url: 'https://picsum.photos/seed/architecture/1200/800',
+      type: 'image',
+      fileName: 'cityscape.jpg',
+      derivedFormats: [{ name: 'Thumbnail', resolution: '300x200' }, { name: 'Medium', resolution: '600x400' }],
+    }
+  },
+  { id: 102, level: 1, bankId: 'q1', question: 'Which planet is known as the Red Planet?', options: ['Earth', 'Mars', 'Jupiter', 'Venus'], answer: 'Mars', status: 'Published', tags: ['Science'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': false } },
+  { id: 103, level: 1, bankId: 'q1', question: 'Who wrote "To Kill a Mockingbird"?', options: ['Harper Lee', 'Mark Twain', 'J.K. Rowling', 'F. Scott Fitzgerald'], answer: 'Harper Lee', status: 'Published', tags: ['Literature'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': false } },
   { id: 201, level: 2, bankId: 'q1', question: 'What is the largest ocean on Earth?', options: ['Atlantic', 'Indian', 'Arctic', 'Pacific'], answer: 'Pacific', status: 'Published', tags: ['Geography'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': true } },
-  { id: 202, level: 2, bankId: 'q1', question: 'In what year did the Titanic sink?', options: ['1905', '1912', '1918', '1923'], answer: '1912', status: 'Published', tags: ['History'], mediaUrl: 'https://placehold.co/600x400/225599/FFF?text=Titanic', lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': true } },
+  { id: 202, level: 2, bankId: 'q1', question: 'In what year did the Titanic sink?', options: ['1905', '1912', '1918', '1923'], answer: '1912', status: 'Published', tags: ['History'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': true } },
   { id: 203, level: 2, bankId: 'q1', question: 'What is the chemical symbol for gold?', options: ['Ag', 'Au', 'Pb', 'Fe'], answer: 'Au', status: 'Published', tags: ['Science'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': true } },
   { id: 301, level: 3, bankId: 'q1', question: 'Who was the first person to step on the moon?', options: ['Buzz Aldrin', 'Yuri Gagarin', 'Neil Armstrong', 'Michael Collins'], answer: 'Neil Armstrong', status: 'Published', tags: ['History'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': false, 'Flip Question': true } },
   { id: 302, level: 3, bankId: 'q1', question: 'What is the hardest natural substance on Earth?', options: ['Gold', 'Iron', 'Diamond', 'Platinum'], answer: 'Diamond', status: 'Published', tags: ['Science'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': false, 'Flip Question': true } },
   { id: 303, level: 3, bankId: 'q1', question: 'Which country is known as the Land of the Rising Sun?', options: ['China', 'Japan', 'Thailand', 'South Korea'], answer: 'Japan', status: 'Published', tags: ['Geography'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': false, 'Flip Question': true } },
-  
-  // Questions for Bank 'q2' (Science & Tech)
-  { id: 104, level: 1, bankId: 'q2', question: 'What does CPU stand for?', options: ['Central Processing Unit', 'Computer Personal Unit', 'Central Process Unit', 'Control Process Unit'], answer: 'Central Processing Unit', status: 'Draft', tags: ['Tech'], mediaUrl: 'https://placehold.co/600x400/555/FFF?text=CPU', lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': true } },
-  { id: 105, level: 1, bankId: 'q2', question: 'What is the chemical formula for water?', options: ['O2', 'H2O', 'CO2', 'NaCl'], answer: 'H2O', status: 'Draft', tags: ['Science'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': true } },
-  { id: 106, level: 1, bankId: 'q2', question: 'Which force keeps us on the ground?', options: ['Magnetism', 'Friction', 'Gravity', 'Tension'], answer: 'Gravity', status: 'Draft', tags: ['Science'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': true } },
-  { id: 204, level: 2, bankId: 'q2', question: 'What is the powerhouse of the cell?', options: ['Nucleus', 'Ribosome', 'Mitochondrion', 'Chloroplast'], answer: 'Mitochondrion', status: 'Draft', tags: ['Biology'], mediaUrl: 'https://placehold.co/600x400/8A2BE2/FFF?text=Mitochondrion', lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': true } },
+
+  // Bank 2: Science & Tech
+  { id: 104, level: 1, bankId: 'q2', question: 'What does CPU stand for?', options: ['Central Processing Unit', 'Computer Personal Unit', 'Central Process Unit', 'Control Process Unit'], answer: 'Central Processing Unit', status: 'Draft', tags: ['Tech'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': false } },
+  { id: 105, level: 1, bankId: 'q2', question: 'What is the chemical formula for water?', options: ['O2', 'H2O', 'CO2', 'NaCl'], answer: 'H2O', status: 'Draft', tags: ['Science'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': false } },
+  { id: 106, level: 1, bankId: 'q2', question: 'Which force keeps us on the ground?', options: ['Magnetism', 'Friction', 'Gravity', 'Tension'], answer: 'Gravity', status: 'Draft', tags: ['Science'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': false } },
+  { id: 204, level: 2, bankId: 'q2', question: 'What is the powerhouse of the cell?', options: ['Nucleus', 'Ribosome', 'Mitochondrion', 'Chloroplast'], answer: 'Mitochondrion', status: 'Draft', tags: ['Biology'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': true } },
   { id: 205, level: 2, bankId: 'q2', question: 'What does "www" stand for in a website browser?', options: ['World Wide Web', 'Web World Wide', 'World Web Wide', 'Wide World Web'], answer: 'World Wide Web', status: 'Draft', tags: ['Tech'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': true } },
   { id: 206, level: 2, bankId: 'q2', question: 'How many planets are in our solar system?', options: ['7', '8', '9', '10'], answer: '8', status: 'Draft', tags: ['Science'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': true } },
   { id: 304, level: 3, bankId: 'q2', question: 'Who is credited with inventing the telephone?', options: ['Thomas Edison', 'Nikola Tesla', 'Alexander Graham Bell', 'Guglielmo Marconi'], answer: 'Alexander Graham Bell', status: 'Draft', tags: ['History', 'Tech'], lifelines: { '50:50': true, 'Audience Poll': false, 'Expert Advice': false, 'Flip Question': true } },
   { id: 305, level: 3, bankId: 'q2', question: 'What is the speed of light?', options: ['300,000 km/s', '150,000 km/s', '500,000 km/s', '1,000,000 km/s'], answer: '300,000 km/s', status: 'Draft', tags: ['Science'], lifelines: { '50:50': true, 'Audience Poll': false, 'Expert Advice': false, 'Flip Question': true } },
   { id: 306, level: 3, bankId: 'q2', question: 'What is the main component of the sun?', options: ['Oxygen', 'Nitrogen', 'Hydrogen', 'Carbon'], answer: 'Hydrogen', status: 'Draft', tags: ['Science'], lifelines: { '50:50': true, 'Audience Poll': false, 'Expert Advice': false, 'Flip Question': true } },
+
+  // Bank 3: Movie Buffs
+  { id: 401, level: 1, bankId: 'q3', question: 'In "The Matrix", does Neo take the blue pill or the red pill?', options: ['Blue', 'Red', 'He takes both', 'He takes neither'], answer: 'Red', status: 'Published', tags: ['90s', 'Sci-Fi'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': false } },
+  { id: 402, level: 1, bankId: 'q3', question: 'Which movie features the quote "I\'ll be back"?', options: ['The Terminator', 'Die Hard', 'RoboCop', 'Predator'], answer: 'The Terminator', status: 'Published', tags: ['80s', 'Action'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': false, 'Flip Question': false } },
+  { id: 403, level: 2, bankId: 'q3', question: 'Who directed the movie "Pulp Fiction"?', options: ['Steven Spielberg', 'Martin Scorsese', 'Quentin Tarantino', 'James Cameron'], answer: 'Quentin Tarantino', status: 'Published', tags: ['90s', 'Indie'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': true } },
+  { id: 404, level: 3, bankId: 'q3', question: 'Which film won the first-ever Academy Award for Best Picture?', options: ['The Artist', 'Sunrise', 'Metropolis', 'Wings'], answer: 'Wings', status: 'Published', tags: ['History', 'Awards'], lifelines: { '50:50': true, 'Audience Poll': false, 'Expert Advice': false, 'Flip Question': true } },
+  
+  // Bank 4: Cartoon Capers
+  { id: 501, level: 1, bankId: 'q4', question: 'What is the name of Mickey Mouse\'s dog?', options: ['Goofy', 'Pluto', 'Donald', 'Max'], answer: 'Pluto', status: 'Draft', tags: ['Disney'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': false } },
+  { id: 502, level: 1, bankId: 'q4', question: 'In "The Flintstones", what is the name of the family\'s pet dinosaur?', options: ['Dino', 'Rex', 'Spot', 'Bamm-Bamm'], answer: 'Dino', status: 'Draft', tags: ['Classic'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': false, 'Flip Question': false } },
+  { id: 503, level: 2, bankId: 'q4', question: 'Which character lives in a pineapple under the sea?', options: ['Patrick Star', 'Squidward Tentacles', 'SpongeBob SquarePants', 'Mr. Krabs'], answer: 'SpongeBob SquarePants', status: 'Draft', tags: ['Nickelodeon'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': true } },
+  { id: 504, level: 2, bankId: 'q4', question: 'What color are the Smurfs?', options: ['Green', 'Yellow', 'Blue', 'Red'], answer: 'Blue', status: 'Draft', tags: ['80s'], lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': true, 'Flip Question': true } },
 ];

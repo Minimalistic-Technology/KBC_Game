@@ -15,28 +15,28 @@ export default function QuestionsPageClient() {
   const [questions, setQuestions] = useState(allQuestions);
   const [filteredQuestions, setFilteredQuestions] = useState<Question[]>([]);
   const [activeBank, setActiveBank] = useState<QuestionBank | null | undefined>(null);
-  
+
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
-  
+
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
 
   const searchParams = useSearchParams();
-  
+
   useEffect(() => {
     const bankId = searchParams.get('bankId');
     if (bankId) {
       const currentBank = initialBanks.find(b => b.id === bankId);
       const filtered = questions.filter(q => q.bankId === bankId);
-      
+
       setActiveBank(currentBank);
       setFilteredQuestions(filtered);
 
       setSelectedQuestion(filtered.length > 0 ? filtered[0] : null);
-    } else { 
-      setActiveBank(null); 
-      setFilteredQuestions([]); 
-      setSelectedQuestion(null); 
+    } else {
+      setActiveBank(null);
+      setFilteredQuestions([]);
+      setSelectedQuestion(null);
     }
   }, [searchParams, questions]);
 
@@ -44,25 +44,24 @@ export default function QuestionsPageClient() {
     if (question) {
       setEditingQuestion(question);
     } else {
-      setEditingQuestion({ 
-        id: Date.now(), 
-        bankId: activeBank?.id || '', 
-        level: 1, 
-        question: '', 
-        options: ['', '', '', ''], 
+      // --- UPDATED: New lifeline added to the default object ---
+      setEditingQuestion({
+        id: Date.now(),
+        bankId: activeBank?.id || '',
+        level: 1,
+        question: '',
+        options: ['', '', '', ''],
         answer: '',
-        mediaUrl: null,
-        // ADD THESE NEW PROPERTIES
         status: 'Draft',
         tags: [],
-        lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': false, 'Flip Question': true  }
+        lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': false, 'Flip Question': false }
       });
     }
     setIsEditorOpen(true);
 };
-  
+
   const handleCloseEditor = () => { setIsEditorOpen(false); setEditingQuestion(null); };
-  
+
   const handleSaveQuestion = (savedQuestion: Question) => {
     const exists = questions.some(q => q.id === savedQuestion.id);
     if (exists) {
@@ -80,10 +79,12 @@ export default function QuestionsPageClient() {
   const handleDelete = (id: number) => {
     if (window.confirm('Are you sure you want to delete this question?')) {
       setQuestions(prev => prev.filter(q => q.id !== id));
-      setSelectedQuestion(null);
+      if (selectedQuestion?.id === id) {
+          setSelectedQuestion(filteredQuestions.length > 1 ? filteredQuestions[0] : null);
+      }
     }
   };
-  
+
   const handleEditFromSidebar = () => {
     if (selectedQuestion) {
         handleOpenEditor(selectedQuestion);
@@ -95,7 +96,7 @@ export default function QuestionsPageClient() {
       <AnimatePresence>
         {isEditorOpen && editingQuestion && (<QuestionEditorModal question={editingQuestion} onSave={handleSaveQuestion} onClose={handleCloseEditor} />)}
       </AnimatePresence>
-      
+
       <div className="flex flex-col gap-8 h-full">
         <div className="flex-shrink-0 flex items-center justify-between">
           <div>
@@ -116,7 +117,7 @@ export default function QuestionsPageClient() {
                 {filteredQuestions.length > 0 ? (
                     <ul className="divide-y divide-slate-200 overflow-y-auto">
                         {filteredQuestions.map((question) => (
-                            <QuestionListItem 
+                            <QuestionListItem
                                 key={question.id}
                                 question={question}
                                 isSelected={selectedQuestion?.id === question.id}
@@ -134,7 +135,7 @@ export default function QuestionsPageClient() {
             </div>
 
             <div className="lg:col-span-1">
-                <QuestionDetailSidebar 
+                <QuestionDetailSidebar
                     question={selectedQuestion}
                     onEdit={handleEditFromSidebar}
                     onDelete={handleDelete}

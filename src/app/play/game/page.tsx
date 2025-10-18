@@ -23,21 +23,21 @@ export default function GamePage() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [usedLifelines, setUsedLifelines] = useState<{ [key in keyof Lifeline]?: boolean }>({});
-  
+
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [answerState, setAnswerState] = useState<AnswerState>('idle');
   const [removedOptions, setRemovedOptions] = useState<string[]>([]);
-  
+
   const [gameState, setGameState] = useState<GameState>('playing');
   const [finalWinnings, setFinalWinnings] = useState(0);
   const [isWinner, setIsWinner] = useState(false);
 
   const [isPollOpen, setIsPollOpen] = useState(false);
   const [pollResults, setPollResults] = useState<{ option: string; percentage: number }[]>([]);
-  
+
   const [isAdviceOpen, setIsAdviceOpen] = useState(false);
   const [expertAdvice, setExpertAdvice] = useState<{ text: string; confidence: number } | null>(null);
-  
+
   const [askedQuestionIds, setAskedQuestionIds] = useState<Set<number>>(new Set());
   const [fallbackNotice, setFallbackNotice] = useState<string>('');
 
@@ -53,7 +53,7 @@ export default function GamePage() {
   const generatePollResults = () => {
     const currentQuestion = questions[currentQuestionIndex];
     let remainingPercentage = 100;
-    
+
     const correctAnswerPercentage = Math.floor(Math.random() * 31) + 40;
     remainingPercentage -= correctAnswerPercentage;
 
@@ -86,16 +86,16 @@ export default function GamePage() {
     const text = `I'm about ${confidence}% sure the answer is "${chosenOption}".`;
     setExpertAdvice({ text, confidence });
   };
-  
+
   const findAndFlipQuestion = () => {
     const currentQuestion = questions[currentQuestionIndex];
-    
+
     let replacement = allQuestions.find(
       q => q.bankId === currentQuestion.bankId &&
            q.level === currentQuestion.level &&
            !askedQuestionIds.has(q.id)
     );
-    
+
     if (!replacement) {
       replacement = allQuestions.find(
         q => q.level === currentQuestion.level &&
@@ -106,7 +106,7 @@ export default function GamePage() {
         setTimeout(() => setFallbackNotice(''), 2500);
       }
     }
-    
+
     if (replacement) {
       const finalReplacement = replacement;
       setQuestions(prev => {
@@ -120,7 +120,7 @@ export default function GamePage() {
       setUsedLifelines(prev => ({ ...prev, 'Flip Question': false }));
     }
   };
-  
+
   const handleUseLifeline = (lifeline: keyof Lifeline) => {
     if (usedLifelines[lifeline] || selectedOption || gameState === 'gameOver') return;
     setUsedLifelines(prev => ({ ...prev, [lifeline]: true }));
@@ -168,12 +168,12 @@ export default function GamePage() {
       setTimeout(() => {
         const currentQuestion = questions[currentQuestionIndex];
         const prizeLadder = initialBanks[0].prizeLadder;
-        
+
         if (option === currentQuestion.answer) {
           if (currentQuestionIndex < questions.length - 1) {
             const nextQuestionIndex = currentQuestionIndex + 1;
             setAskedQuestionIds(prev => new Set(prev).add(questions[nextQuestionIndex].id));
-            
+
             setCurrentQuestionIndex(nextQuestionIndex);
             setSelectedOption(null);
             setAnswerState('idle');
@@ -189,7 +189,7 @@ export default function GamePage() {
       }, 2000);
     }, 1500);
   };
-  
+
   const handleTimeUp = () => {
     if (gameState === 'gameOver' || selectedOption) return;
     const prizeLadder = initialBanks[0].prizeLadder;
@@ -226,21 +226,21 @@ export default function GamePage() {
       <GameOverModal isOpen={gameState === 'gameOver'} onRestart={handleRestart} winnings={finalWinnings} isWinner={isWinner} />
       <AudiencePollModal isOpen={isPollOpen} onClose={() => setIsPollOpen(false)} pollResults={pollResults} />
       {expertAdvice && <ExpertAdviceModal isOpen={isAdviceOpen} onClose={() => setIsAdviceOpen(false)} advice={expertAdvice} />}
-      
-      <motion.main 
+
+      <motion.main
         className="grid grid-cols-1 lg:grid-cols-4 min-h-screen bg-gradient-to-br from-slate-50 to-indigo-100 text-slate-800 p-8 lg:p-12 gap-8"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
         <motion.div className="lg:col-span-3 flex flex-col gap-4" variants={itemVariants}>
-          <GameHUD 
+          <GameHUD
             currentQuestionIndex={currentQuestionIndex}
             totalQuestions={totalQuestions}
             bankTitle={bankTitle}
           />
           <div className="relative flex-grow flex flex-col gap-6 bg-white border border-slate-200 rounded-lg p-6 shadow-md">
-            
+
             <AnimatePresence>
               {fallbackNotice && (
                 <motion.div
@@ -268,9 +268,9 @@ export default function GamePage() {
                   onTimeUp={handleTimeUp}
                   isPaused={selectedOption !== null}
                 />
-                <QuestionCard 
+                <QuestionCard
                   questionText={currentQuestion.question}
-                  mediaUrl={currentQuestion.mediaUrl}
+                  mediaUrl={currentQuestion.media?.url}
                 />
                 <OptionsGrid
                   options={currentQuestion.options}
@@ -284,16 +284,16 @@ export default function GamePage() {
             </AnimatePresence>
           </div>
         </motion.div>
-        
+
         <motion.div className="lg:col-span-1 flex flex-col gap-6" variants={itemVariants}>
-          <LifelineBar 
+          <LifelineBar
             lifelines={currentQuestion.lifelines}
             usedLifelines={usedLifelines}
             onUseLifeline={handleUseLifeline}
           />
           <div className="flex-grow">
-            <PrizeLadder 
-              prizeLadder={sessionPrizeLadder} 
+            <PrizeLadder
+              prizeLadder={sessionPrizeLadder}
               currentLevel={currentQuestionIndex + 1}
             />
           </div>

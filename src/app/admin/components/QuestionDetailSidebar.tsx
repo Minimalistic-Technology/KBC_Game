@@ -1,17 +1,19 @@
 'use client';
 
-import { 
-    FileQuestion, 
-    ImageIcon, 
-    CheckCircle, 
-    Edit, 
+import {
+    FileQuestion,
+    ImageIcon,
+    CheckCircle,
+    Edit,
     Trash2,
     Tag,
     BarChart3,
     Zap,
     Users,
     Lightbulb,
-    FileEdit
+    FileEdit,
+    Film,
+    RefreshCw // UPDATED: Imported RefreshCw
 } from 'lucide-react';
 import type { Question } from '@/lib/types';
 
@@ -21,7 +23,6 @@ interface SidebarProps {
   onEdit: () => void;
 }
 
-// A small helper component for displaying details
 const DetailItem = ({ icon: Icon, label, children }: { icon: React.ElementType, label: string, children: React.ReactNode }) => (
     <div>
         <span className="text-sm font-semibold text-slate-500 flex items-center gap-2 mb-2">
@@ -44,11 +45,11 @@ export const QuestionDetailSidebar = ({ question, onDelete, onEdit }: SidebarPro
         );
     }
 
-    const { status, level, tags, lifelines, mediaUrl } = question;
+    const { status, level, tags, lifelines, media } = question;
 
     const StatusBadge = () => (
         <span className={`inline-flex items-center gap-1.5 text-xs font-bold capitalize px-3 py-1 rounded-full ${
-            status === 'Published' 
+            status === 'Published'
                 ? "bg-green-100 text-green-800"
                 : "bg-yellow-100 text-yellow-800"
         }`}>
@@ -63,24 +64,28 @@ export const QuestionDetailSidebar = ({ question, onDelete, onEdit }: SidebarPro
                 <h3 className="text-lg font-bold text-slate-900">Details</h3>
             </div>
             <div className="flex-grow p-6 space-y-6 overflow-y-auto">
-                {/* --- Question Preview --- */}
                 <div>
                     <span className="text-sm font-semibold text-slate-500">Question Preview</span>
                     <p className="mt-1 text-slate-800 font-medium">{question.question}</p>
                 </div>
 
-                {/* --- Media Display --- */}
                 <DetailItem icon={ImageIcon} label="Media">
-                    {mediaUrl ? (
-                        <img src={mediaUrl} alt="Question media" className="mt-2 rounded-lg border w-full h-32 object-cover" />
+                    {media ? (
+                        media.type === 'image' ? (
+                            <img src={media.url} alt="Question media" className="mt-2 rounded-lg border w-full h-32 object-cover" />
+                        ) : (
+                            <div className="mt-2 flex flex-col items-center justify-center h-32 rounded-lg bg-slate-800 border">
+                                <Film className="h-10 w-10 text-slate-400" />
+                                <p className="text-xs text-slate-300 mt-2">{media.fileName}</p>
+                            </div>
+                        )
                     ) : (
                         <div className="mt-2 flex items-center justify-center h-32 rounded-lg bg-slate-100 border border-dashed">
                             <p className="text-xs text-slate-500">No media attached</p>
                         </div>
                     )}
                 </DetailItem>
-                
-                {/* --- Options --- */}
+
                 <div>
                     <span className="text-sm font-semibold text-slate-500">Options</span>
                     <ul className="mt-2 space-y-2">
@@ -93,12 +98,11 @@ export const QuestionDetailSidebar = ({ question, onDelete, onEdit }: SidebarPro
                     </ul>
                 </div>
 
-                {/* --- Other Details --- */}
                 <div className="pt-4 border-t space-y-5">
                     <DetailItem icon={CheckCircle} label="Status">
                         <StatusBadge />
                     </DetailItem>
-                    
+
                     <DetailItem icon={BarChart3} label="Difficulty Level">
                         <span className="font-semibold">{level}</span>
                     </DetailItem>
@@ -116,8 +120,8 @@ export const QuestionDetailSidebar = ({ question, onDelete, onEdit }: SidebarPro
                     </DetailItem>
 
                     <DetailItem icon={Zap} label="Available Lifelines">
+                        {/* --- UPDATED: Display logic for new lifeline added --- */}
                         <div className="flex items-center gap-4">
-                            {/* --- CORRECTED CODE --- */}
                             {lifelines['50:50'] && (
                                 <span title="50:50">
                                     <Zap size={18} className="text-slate-600"/>
@@ -131,6 +135,11 @@ export const QuestionDetailSidebar = ({ question, onDelete, onEdit }: SidebarPro
                             {lifelines['Expert Advice'] && (
                                 <span title="Expert Advice">
                                     <Lightbulb size={18} className="text-slate-600"/>
+                                </span>
+                            )}
+                            {lifelines['Flip Question'] && (
+                                <span title="Flip the Question">
+                                    <RefreshCw size={18} className="text-slate-600"/>
                                 </span>
                             )}
                         </div>
