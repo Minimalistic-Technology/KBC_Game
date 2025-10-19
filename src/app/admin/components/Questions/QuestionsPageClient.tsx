@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link'; // Import the Link component
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { PlusCircle, FileQuestion, UploadCloud } from 'lucide-react'; // Import the UploadCloud icon
+import { PlusCircle, FileQuestion, UploadCloud } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
 import { initialBanks, allQuestions } from '@/lib/data';
 import type { QuestionBank, Question } from '@/lib/types';
@@ -55,7 +55,7 @@ export default function QuestionsPageClient() {
         answer: '',
         status: 'Draft',
         tags: [],
-        lifelines: { '50:50': true, 'Audience Poll': true, 'Expert Advice': false, 'Flip Question': false }
+        // --- 'lifelines' property removed ---
       });
     }
     setIsEditorOpen(true);
@@ -105,7 +105,6 @@ export default function QuestionsPageClient() {
             <h1 className="text-3xl font-bold tracking-tight text-slate-900">{activeBank ? activeBank.title : 'Questions'}</h1>
             <p className="text-slate-700 mt-1">{activeBank ? `Manage all questions for this bank.` : 'Select a bank to view its questions.'}</p>
           </div>
-          {/* --- UPDATED: Added a flex container and the Import Bulk button --- */}
           {activeBank && (
             <div className="flex items-center gap-3">
                 <Link href="/admin/import" className="inline-flex items-center justify-center gap-2 rounded-lg border bg-white px-4 h-10 text-sm font-semibold text-slate-800 shadow-sm transition-colors hover:bg-slate-50">

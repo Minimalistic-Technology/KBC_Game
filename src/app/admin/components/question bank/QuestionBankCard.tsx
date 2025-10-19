@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { FileText, ArrowUp, ArrowDown, Edit, Trash2, Gift, ShieldCheck } from 'lucide-react';
+import { FileText, ArrowUp, ArrowDown, Edit, Trash2 } from 'lucide-react';
 import type { QuestionBank } from '@/lib/types';
 
 interface CardProps {
@@ -16,7 +16,6 @@ interface CardProps {
 }
 
 export const QuestionBankCard = ({ bank, index, onEdit, onDelete, onMove, isFirst, isLast }: CardProps) => {
-  // --- UPDATED: Removed 'scheduled' style ---
   const statusClasses: { [key: string]: string } = {
     published: "bg-green-100 text-green-800",
     draft: "bg-yellow-100 text-yellow-800",
@@ -52,17 +51,7 @@ export const QuestionBankCard = ({ bank, index, onEdit, onDelete, onMove, isFirs
                 <p className="text-sm text-slate-600 line-clamp-2 mb-4">{bank.description}</p>
             </div>
             
-            {bank.prizeMedia?.url && (
-              <div className="my-auto aspect-video rounded-lg overflow-hidden border bg-slate-50/50">
-                <img 
-                    src={bank.prizeMedia.url} 
-                    alt={`Prize for ${bank.title}`} 
-                    className="w-full h-full object-contain" 
-                />
-              </div>
-            )}
-            
-            <div className="mt-4 flex items-center gap-2 flex-wrap">
+            <div className="mt-auto flex items-center gap-2 flex-wrap">
                 {bank.tags.map(tag => (
                     <span key={tag} className="text-xs font-semibold bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full">{tag}</span>
                 ))}
@@ -71,17 +60,6 @@ export const QuestionBankCard = ({ bank, index, onEdit, onDelete, onMove, isFirs
         <div className="border-t border-slate-200 bg-slate-50/75 p-3 flex justify-between items-center text-sm">
             <div className="flex items-center gap-4 text-slate-700 font-medium">
                 <span className="flex items-center gap-1.5" title="Number of questions"><FileText size={14} /> {bank.questionCount}</span>
-                <span className="font-light text-slate-300">|</span>
-                <span className="flex items-center gap-1.5" title="Prize"><Gift size={14} /> {bank.prize}</span>
-                
-                {bank.onlySafePoints && (
-                    <>
-                        <span className="font-light text-slate-300">|</span>
-                        <span className="flex items-center gap-1.5 text-green-600 font-semibold" title="All levels are safe points">
-                            <ShieldCheck size={14} /> Safe
-                        </span>
-                    </>
-                )}
             </div>
             <div className="flex items-center gap-1">
                 <button onClick={(e) => onMove(e, 'up')} disabled={isFirst} className="p-2 rounded-md text-slate-500 hover:bg-slate-200 disabled:opacity-30"><ArrowUp size={16} /></button>

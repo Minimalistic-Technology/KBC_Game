@@ -17,8 +17,6 @@ export default function LobbyPage() {
           Ready to test your knowledge? Good luck!
         </p>
 
-        {/* Removed the section that listed the question banks */}
-
         <Link 
           href="/play/game" 
           className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-6 py-3 text-lg font-semibold text-white shadow-sm transition-transform hover:scale-105"

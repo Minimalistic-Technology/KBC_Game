@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import { FileUploader } from '../components/import/FileUploader';
-import { ColumnMapper } from '../components/import/ColumnMapper';
-import { ImportPreview } from '../components/import/ImportPreview';
-import { ImportStatus } from '../components/import/ImportStatus';
+import { FileUploader } from '../components/Import/FileUploader';
+import { ColumnMapper } from '../components/Import/ColumnMapper';
+import { ImportPreview } from '../components/Import/ImportPreview';
+import { ImportStatus } from '../components/Import/ImportStatus';
 import type { Question } from '@/lib/types';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';

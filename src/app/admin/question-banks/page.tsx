@@ -1,14 +1,14 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Download } from 'lucide-react';
+import { Plus, Download } from 'lucide-react'; // Added Download icon
 import { AnimatePresence, motion } from 'framer-motion';
 
 import { initialBanks, allQuestions } from '@/lib/data';
 import type { QuestionBank } from '@/lib/types';
-import { QuestionBankCard } from '../components/question bank/QuestionBankCard';
-import { BankEditorModal } from '../components/question bank/BankEditorModal';
-import { PinVerificationModal } from '../components/question bank/PinVerificationModal';
+import { QuestionBankCard } from '../components/Question bank/QuestionBankCard';
+import { BankEditorModal } from '../components/Question bank/BankEditorModal';
+import { PinVerificationModal } from '../components/Question bank/PinVerificationModal';
 
 export default function QuestionBanksPage() {
   const [isVerified, setIsVerified] = useState(false);
@@ -43,8 +43,6 @@ export default function QuestionBanksPage() {
         tags: [],
         ageGroup: 'All Ages',
         questionCount: 0,
-        prize: '',
-        onlySafePoints: false,
         defaultTimer: 30,
         prizeLadder: [],
        });
@@ -67,7 +65,7 @@ export default function QuestionBanksPage() {
     handleCloseEditor();
   };
 
-  const handleDeleteBank = (bankId: string) => { if (window.confirm('Are you sure you want to delete this bank and all its questions?')) { setAllBanks(prev => prev.filter(b => b.id !== bankId)); } };
+  const handleDeleteBank = (bankId: string) => { if (window.confirm('Are you sure you want to delete this question bank and all its questions?')) { setAllBanks(prev => prev.filter(b => b.id !== bankId)); } };
   const handleMove = (bankId: string, direction: 'up' | 'down') => {
     const index = allBanks.findIndex(b => b.id === bankId);
     if (index === -1) return;
@@ -77,7 +75,8 @@ export default function QuestionBanksPage() {
     [newBanks[index], newBanks[targetIndex]] = [newBanks[targetIndex], newBanks[index]];
     setAllBanks(newBanks);
   };
-  
+
+  // --- ADDED THIS HANDLER BACK ---
   const handleExport = () => {
     alert("This would trigger a download of the selected questions in the chosen format.");
   };
@@ -100,10 +99,11 @@ export default function QuestionBanksPage() {
             </div>
             <button onClick={() => handleOpenEditor(null)} className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 h-10 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700">
                 <Plus className="h-5 w-5" />
-                <span>Create New Bank</span>
+                <span>Create New Question Bank</span>
             </button>
         </div>
         
+        {/* --- EXPORT PANEL ADDED BACK --- */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
             <h3 className="text-lg font-bold text-slate-900">Export Questions</h3>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4 items-end">
@@ -138,7 +138,7 @@ export default function QuestionBanksPage() {
         </div>
         
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
-            <h3 className="text-lg font-bold text-slate-900">Filter Banks</h3>
+            <h3 className="text-lg font-bold text-slate-900">Filter Question Banks</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
                 <div>
                     <label htmlFor="ageGroupFilter" className="block text-sm font-medium text-slate-700 mb-2">Age Group</label>

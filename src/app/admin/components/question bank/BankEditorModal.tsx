@@ -2,11 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Library } from 'lucide-react';
-import type { QuestionBank, MediaAsset, DerivedFormat } from '@/lib/types';
-import { MediaUploader } from '../Media/MediaUploader';
-import { MediaLibraryModal } from '../Media/MediaLibraryModal';
-import { MediaPreview } from '../Media/MediaPreview';
+import { X } from 'lucide-react';
+import type { QuestionBank } from '@/lib/types';
 
 const FormInput = ({ label, id, children }: { label: string; id: string; children: React.ReactNode }) => (
   <div>
@@ -17,7 +14,6 @@ const FormInput = ({ label, id, children }: { label: string; id: string; childre
 
 export const BankEditorModal = ({ bank, onSave, onClose }: { bank: QuestionBank, onSave: (bank: QuestionBank) => void, onClose: () => void }) => {
     const [formData, setFormData] = useState<QuestionBank>(bank);
-    const [isLibraryOpen, setIsLibraryOpen] = useState(false);
     
     useEffect(() => { setFormData(bank); }, [bank]);
 
@@ -36,19 +32,13 @@ export const BankEditorModal = ({ bank, onSave, onClose }: { bank: QuestionBank,
       setFormData(prev => ({...prev, tags: e.target.value.split(',').map(tag => tag.trim())}));
     };
 
-    const handleMediaUploadComplete = (asset: MediaAsset) => { setFormData(prev => ({ ...prev, prizeMedia: asset })); };
-    const handleSelectFromLibrary = (asset: MediaAsset) => { setFormData(prev => ({ ...prev, prizeMedia: asset })); setIsLibraryOpen(false); };
-    const handleRemoveMedia = () => { setFormData(prev => ({ ...prev, prizeMedia: undefined })); };
-    const handleDefaultFormatChange = (format: DerivedFormat) => { if (formData.prizeMedia) { setFormData(prev => ({ ...prev, prizeMedia: { ...prev.prizeMedia!, defaultFormat: format } })); } };
-
-    const handleSubmit = (e: React.FormEvent) => { e.preventDefault(); onSave(formData); };
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onSave(formData);
+    };
 
     return (
-        <>
-            <AnimatePresence>
-                {isLibraryOpen && ( <MediaLibraryModal onClose={() => setIsLibraryOpen(false)} onSelect={handleSelectFromLibrary} filter="image" /> )}
-            </AnimatePresence>
-
+        <AnimatePresence>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" onClick={onClose}>
                 <motion.form 
                     onSubmit={handleSubmit}
@@ -57,22 +47,20 @@ export const BankEditorModal = ({ bank, onSave, onClose }: { bank: QuestionBank,
                     onClick={e => e.stopPropagation()}
                 >
                     <div className="p-6 border-b flex justify-between items-center">
-                        <h2 className="text-xl font-bold text-slate-900">{bank.id ? 'Edit Question Bank' : 'Create New Bank'}</h2>
+                        <h2 className="text-xl font-bold text-slate-900">{bank.id ? 'Edit Question Bank' : 'Create New Question Bank'}</h2>
                         <button type="button" onClick={onClose} className="p-2 text-slate-500 rounded-full hover:bg-slate-100"><X /></button>
                     </div>
                     
                     <div className="flex-grow overflow-y-auto p-6 space-y-6">
                         <div className="grid md:grid-cols-2 gap-6">
-                            <FormInput label="Bank Name" id="title"><input type="text" id="title" name="title" value={formData.title} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900" required /></FormInput>
+                            {/* --- UPDATED LABEL --- */}
+                            <FormInput label="Question Bank Name" id="title"><input type="text" id="title" name="title" value={formData.title} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900" required /></FormInput>
                             <FormInput label="Slug" id="slug"><input type="text" id="slug" name="slug" value={formData.slug} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900" /></FormInput>
                         </div>
                         <FormInput label="Description" id="description"><textarea id="description" name="description" value={formData.description} onChange={handleChange} rows={3} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900" /></FormInput>
-                        <div className="grid md:grid-cols-2 gap-6">
-                            <FormInput label="Tags (comma-separated)" id="tags"><input type="text" id="tags" name="tags" value={formData.tags.join(', ')} onChange={handleTagsChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900" /></FormInput>
-                            <FormInput label="Prize" id="prize"><input type="text" id="prize" name="prize" value={formData.prize} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900" /></FormInput>
-                        </div>
                         
                         <div className="grid md:grid-cols-2 gap-6">
+                            <FormInput label="Tags (comma-separated)" id="tags"><input type="text" id="tags" name="tags" value={formData.tags.join(', ')} onChange={handleTagsChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900" /></FormInput>
                             <FormInput label="Age Group" id="ageGroup">
                                 <select name="ageGroup" id="ageGroup" value={formData.ageGroup || 'All Ages'} onChange={handleChange} className="w-full px-3 py-2 border bg-white border-slate-300 rounded-lg text-slate-900">
                                     <option>All Ages</option>
@@ -83,35 +71,7 @@ export const BankEditorModal = ({ bank, onSave, onClose }: { bank: QuestionBank,
                             </FormInput>
                         </div>
 
-                        <div className="p-4 border rounded-lg bg-slate-50">
-                            <h4 className="font-semibold text-slate-900 mb-3">Game Rules</h4>
-                            <div className="flex items-center justify-between p-3 rounded-md bg-white border">
-                                <label htmlFor="onlySafePoints" className="font-medium text-slate-800 cursor-pointer">Enable Safe Points Only</label>
-                                <input id="onlySafePoints" name="onlySafePoints" type="checkbox" checked={!!formData.onlySafePoints} onChange={handleChange} className="h-5 w-5 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300" />
-                            </div>
-                            <p className="text-xs text-slate-500 mt-2 px-1">If enabled, players will not lose winnings for a wrong answer.</p>
-                        </div>
-
-                        <FormInput label="Prize Image (Optional)" id="prizeImage">
-                            {formData.prizeMedia ? (
-                                <MediaPreview asset={formData.prizeMedia} onRemove={handleRemoveMedia} onDefaultFormatChange={handleDefaultFormatChange} />
-                            ) : (
-                                <div className="space-y-3">
-                                    <MediaUploader onUploadComplete={handleMediaUploadComplete} accept={{ 'image/*': ['.png', '.jpg', '.jpeg', '.webp'] }} />
-                                    <div className="relative flex items-center">
-                                        <div className="flex-grow border-t border-slate-300"></div>
-                                        <span className="flex-shrink mx-4 text-slate-500 text-sm">OR</span>
-                                        <div className="flex-grow border-t border-slate-300"></div>
-                                    </div>
-                                    <button type="button" onClick={() => setIsLibraryOpen(true)} className="w-full inline-flex items-center justify-center gap-2 rounded-lg border bg-white px-4 h-11 text-sm font-semibold text-slate-800 hover:bg-slate-100">
-                                        <Library className="h-4 w-4"/> Choose from Library
-                                    </button>
-                                </div>
-                            )}
-                        </FormInput>
-
-                        {/* --- UPDATED: Publishing section simplified --- */}
-                        <div className="p-4 border rounded-lg bg-slate-50">
+                        <div className="p-4 border rounded-lg bg-slate-50 space-y-4">
                             <h4 className="font-semibold text-slate-900">Publishing</h4>
                             <FormInput label="Status" id="status">
                                 <select name="status" id="status" value={formData.status} onChange={handleChange} className="w-full px-3 py-2 border bg-white border-slate-300 rounded-lg text-slate-900">
@@ -128,6 +88,6 @@ export const BankEditorModal = ({ bank, onSave, onClose }: { bank: QuestionBank,
                     </div>
                 </motion.form>
             </motion.div>
-        </>
+        </AnimatePresence>
     );
 };

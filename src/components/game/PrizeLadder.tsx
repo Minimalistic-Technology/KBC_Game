@@ -1,7 +1,7 @@
 'use client';
 
 import type { PrizeLevel } from '@/lib/types';
-import { Star } from 'lucide-react';
+import { Star, Gift } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface PrizeLadderProps {
@@ -12,7 +12,7 @@ interface PrizeLadderProps {
 export const PrizeLadder = ({ prizeLadder, currentLevel }: PrizeLadderProps) => {
   return (
     <div className="bg-white/60 backdrop-blur-sm border border-slate-200 rounded-lg p-4 h-full flex flex-col shadow-md">
-      <h2 className="text-center text-lg font-bold text-indigo-600 mb-4">Prize Money</h2>
+      <h2 className="text-center text-lg font-bold text-indigo-600 mb-4">Prize Ladder</h2>
       <ol className="relative flex flex-col-reverse justify-end flex-grow gap-1">
         {prizeLadder.map((item) => {
           const isCurrent = item.level === currentLevel;
@@ -31,15 +31,25 @@ export const PrizeLadder = ({ prizeLadder, currentLevel }: PrizeLadderProps) => 
                 <motion.div
                   layoutId="currentLevelHighlight"
                   className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-violet-500 rounded-md shadow-lg z-0 shadow-indigo-500/50"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
                 />
               )}
               <span className="relative w-6 text-left">{item.level}</span>
-              <span className="relative flex-grow text-center tracking-wider">${item.amount.toLocaleString()}</span>
+              
+              <div className="relative flex-grow text-center flex items-center justify-center gap-2">
+                {item.type === 'gift' && item.media && (
+                    <img src={item.media.url} alt="gift" className="w-5 h-5 rounded-sm"/>
+                )}
+                <span className="tracking-wider">
+                    {item.type === 'money' && typeof item.value === 'number'
+                    ? `$${item.value.toLocaleString()}`
+                    : item.value
+                    }
+                </span>
+              </div>
+              
               <span className="relative w-6 text-right">
                 {item.isSafe && <Star size={16} className={isAchieved || isCurrent ? 'text-white' : 'text-slate-400'} />}
+                {item.type === 'gift' && !item.isSafe && <Gift size={16} className={isAchieved || isCurrent ? 'text-white' : 'text-slate-400'} />}
               </span>
             </li>
           );

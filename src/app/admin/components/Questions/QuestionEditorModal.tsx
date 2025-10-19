@@ -2,35 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { X, Save, Eye, CheckCircle, Library, Lightbulb, Users, Zap, RefreshCw } from 'lucide-react';
-import type { Question, Lifeline, MediaAsset, DerivedFormat } from '@/lib/types';
+import { X, Save, Eye, CheckCircle, Library } from 'lucide-react';
+import type { Question, MediaAsset, DerivedFormat } from '@/lib/types';
 import { MediaUploader } from '../Media/MediaUploader';
 import { MediaLibraryModal } from '../Media/MediaLibraryModal';
 import { MediaPreview } from '../Media/MediaPreview';
-
-const QuestionLifelineItem = ({ icon: Icon, label, checked, onChange, disabled = false }: {
-  icon: React.ElementType;
-  label: keyof Lifeline;
-  checked: boolean;
-  onChange: (label: keyof Lifeline, isChecked: boolean) => void;
-  disabled?: boolean;
-}) => (
-  <div className={`flex items-center justify-between p-3 rounded-lg border transition-colors
-    ${disabled ? 'bg-slate-100 border-slate-200 text-slate-400' : 'bg-white border-slate-300 hover:border-indigo-500'}`}>
-    <div className="flex items-center gap-3">
-      <Icon className={`h-5 w-5 ${disabled ? 'text-slate-400' : 'text-indigo-600'}`} />
-      <label htmlFor={label} className={`${disabled ? 'text-slate-400' : 'text-slate-800'} font-medium cursor-pointer`}>{label}</label>
-    </div>
-    <input
-      id={label}
-      type="checkbox"
-      checked={checked}
-      onChange={(e) => onChange(label, e.target.checked)}
-      disabled={disabled}
-      className={`h-5 w-5 rounded ${disabled ? 'text-slate-300' : 'text-indigo-600 focus:ring-indigo-500'} border-slate-300`}
-    />
-  </div>
-);
 
 export const QuestionEditorModal = ({ question, onSave, onClose }: { question: Question, onSave: (question: Question) => void, onClose: () => void }) => {
   const [formData, setFormData] = useState<Question>(question);
@@ -52,10 +28,6 @@ export const QuestionEditorModal = ({ question, onSave, onClose }: { question: Q
   const handleTagsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const tags = e.target.value.split(',').map(tag => tag.trim()).filter(Boolean);
     setFormData(prev => ({ ...prev, tags }));
-  };
-  
-  const handleLifelineChange = (label: keyof Lifeline, isChecked: boolean) => {
-    setFormData(prev => ({ ...prev, lifelines: { ...prev.lifelines, [label]: isChecked } }));
   };
   
   const handleOptionChange = (index: number, value: string) => {
@@ -178,15 +150,6 @@ export const QuestionEditorModal = ({ question, onSave, onClose }: { question: Q
                       placeholder="e.g. Science, 90s" 
                       className="w-full h-10 px-3 border border-slate-300 rounded-lg text-slate-900" />
                   </div>
-                </div>
-              </div>
-              <div>
-                <h3 className="font-semibold text-slate-900 mb-4">Available Lifelines</h3>
-                <div className="space-y-3 text-sm">
-                  <QuestionLifelineItem icon={Zap} label="50:50" checked={!!formData.lifelines['50:50']} onChange={handleLifelineChange} />
-                  <QuestionLifelineItem icon={Users} label="Audience Poll" checked={!!formData.lifelines['Audience Poll']} onChange={handleLifelineChange} />
-                  <QuestionLifelineItem icon={Lightbulb} label="Expert Advice" checked={!!formData.lifelines['Expert Advice']} onChange={handleLifelineChange} />
-                  <QuestionLifelineItem icon={RefreshCw} label="Flip Question" checked={!!formData.lifelines['Flip Question']} onChange={handleLifelineChange} />
                 </div>
               </div>
             </div>

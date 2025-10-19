@@ -3,8 +3,8 @@
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
-// IMPORTANT: Replace this with the actual URL of your deployed quiz app
-const QUIZ_APP_URL = "/play/game";
+// UPDATED: This now points to the user registration page
+const START_URL = "/user-registration";
 
 export default function Hero() {
   return (
@@ -18,7 +18,7 @@ export default function Hero() {
             A modern, interactive platform for players and administrators. Create, manage, and play engaging quizzes with ease.
           </p>
           <div className="inline-block">
-            <Link href={QUIZ_APP_URL}>
+            <Link href={START_URL}>
               <button className="px-10 py-4 text-lg font-bold text-white bg-indigo-600 rounded-full shadow-lg hover:shadow-indigo-300 transition-all duration-200 transform hover:scale-105 inline-flex items-center gap-2">
                 Get Started Now <ArrowRight />
               </button>

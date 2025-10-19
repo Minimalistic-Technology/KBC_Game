@@ -1,6 +1,6 @@
 'use client';
 
-import { FileQuestion, ImageIcon, CheckCircle, Edit, Trash2, Tag, Zap, Users, Lightbulb, FileEdit, Film, Music, RefreshCw } from 'lucide-react';
+import { FileQuestion, ImageIcon, CheckCircle, Edit, Trash2, Tag, FileEdit, Film, Music } from 'lucide-react';
 import type { Question } from '@/lib/types';
 
 interface SidebarProps {
@@ -30,7 +30,7 @@ export const QuestionDetailSidebar = ({ question, onDelete, onEdit }: SidebarPro
         );
     }
 
-    const { status, tags, lifelines, media } = question;
+    const { status, tags, media } = question;
 
     const StatusBadge = () => (
         <span className={`inline-flex items-center gap-1.5 text-xs font-bold capitalize px-3 py-1 rounded-full ${
@@ -78,14 +78,7 @@ export const QuestionDetailSidebar = ({ question, onDelete, onEdit }: SidebarPro
                             </div>
                         ) : ( <p className="text-xs text-slate-500">No tags assigned</p> )}
                     </DetailItem>
-                    <DetailItem icon={Zap} label="Available Lifelines">
-                        <div className="flex items-center gap-4">
-                            {lifelines['50:50'] && ( <span title="50:50"><Zap size={18} className="text-slate-600"/></span> )}
-                            {lifelines['Audience Poll'] && ( <span title="Audience Poll"><Users size={18} className="text-slate-600"/></span> )}
-                            {lifelines['Expert Advice'] && ( <span title="Expert Advice"><Lightbulb size={18} className="text-slate-600"/></span> )}
-                            {lifelines['Flip Question'] && ( <span title="Flip Question"><RefreshCw size={18} className="text-slate-600"/></span> )}
-                        </div>
-                    </DetailItem>
+                    {/* --- "Available Lifelines" DetailItem removed --- */}
                 </div>
             </div>
             <div className="p-4 bg-slate-50 border-t flex gap-3">

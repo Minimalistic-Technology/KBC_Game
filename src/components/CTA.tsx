@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 
-// IMPORTANT: Replace this with the actual URL of your deployed quiz app
-const QUIZ_APP_URL = "/play/game";
+// UPDATED: This now points to the user registration page
+const START_URL = "/user-registration";
 
 export default function CTA() {
   return (
@@ -17,7 +17,7 @@ export default function CTA() {
             Jump right in and see what makes QuizMaster the best quiz platform out there.
           </p>
           <div className="inline-block">
-            <Link href={QUIZ_APP_URL}>
+            <Link href={START_URL}>
               <button className="px-10 py-4 text-lg font-bold text-indigo-600 bg-white rounded-full shadow-lg transition-transform transform hover:scale-105">
                 Launch the App
               </button>

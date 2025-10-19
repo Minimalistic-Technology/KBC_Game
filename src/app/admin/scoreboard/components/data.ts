@@ -77,7 +77,7 @@ export const fetchScores = async (params: FetchScoresParams) => {
         return scoreDate >= startOfDay && scoreDate <= endOfDay;
       })
       .sort((a, b) => b.finalScore - a.finalScore); // Sort by score descending
-  } 
+  }
   // --- STANDARD FILTERING LOGIC ---
   else {
     if (search) {
@@ -86,7 +86,7 @@ export const fetchScores = async (params: FetchScoresParams) => {
       );
     }
     if (bank) {
-       filteredScores = filteredScores.filter(score => score.questionBank === bank);
+        filteredScores = filteredScores.filter(score => score.questionBank === bank);
     }
     if (startDate) {
       const start = new Date(startDate);

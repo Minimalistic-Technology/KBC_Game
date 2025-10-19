@@ -1,16 +1,11 @@
 // lib/types.ts
 
-export interface Question1 {
-  id: number;
-  question: string;
-  options: string[];
-  answer: string;
-}
-
 export type PrizeLevel = {
   id: number;
   level: number;
-  amount: number;
+  type: 'money' | 'gift';
+  value: string | number;
+  media?: MediaAsset;
   isSafe: boolean;
 };
 
@@ -23,13 +18,11 @@ export type QuestionBank = {
   tags: string[];
   ageGroup?: string;
   questionCount: number;
-  prize: string;
-  prizeMedia?: MediaAsset;
-  onlySafePoints?: boolean;
   defaultTimer: number; // in seconds
   prizeLadder: PrizeLevel[];
 };
 
+// --- ADDED THIS TYPE BACK ---
 export type Lifeline = {
   '50:50': boolean;
   'Audience Poll': boolean;
@@ -60,5 +53,4 @@ export type Question = {
   media?: MediaAsset;
   status: 'Draft' | 'Published';
   tags: string[];
-  lifelines: Lifeline;
 };

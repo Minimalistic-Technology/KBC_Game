@@ -1,38 +1,41 @@
 import { Filters } from './components/Filters';
 import { ScoreTable } from './components/ScoreTable';
-import { fetchScores } from './components/data';
+import { fetchScores } from './components/data'; // Updated import
 import { PaginationControls } from './components/PaginationControls';
-import { Trophy } from 'lucide-react';
 
 export default async function ScoreboardPage({
   searchParams,
 }: {
   searchParams: { [key: string]: string | string[] | undefined };
 }) {
-  const page = typeof searchParams.page === 'string' ? Number(searchParams.page) : 1;
-  const limit = typeof searchParams.limit === 'string' ? Number(searchParams.limit) : 10;
-  const search = typeof searchParams.search === 'string' ? searchParams.search : undefined;
-  const bank = typeof searchParams.bank === 'string' ? searchParams.bank : undefined;
-  const startDate = typeof searchParams.startDate === 'string' ? searchParams.startDate : undefined;
-  const endDate = typeof searchParams.endDate === 'string' ? searchParams.endDate : undefined;
-  const view = typeof searchParams.view === 'string' ? searchParams.view : 'all';
+  const page = Number(searchParams.page) || 1;
+  const limit = Number(searchParams.limit) || 10;
+  const search = searchParams.search as string | undefined;
+  // --- FIX: Read 'bank' from the URL ---
+  const bank = searchParams.bank as string | undefined;
+  const startDate = searchParams.startDate as string | undefined;
+  const endDate = searchParams.endDate as string | undefined;
+  // A view parameter can be added if you want to switch between all scores and leaderboard
+  const view = (searchParams.view as string) || 'all'; 
 
+  // Pass the corrected parameters to the fetch function
   const { scores, total } = await fetchScores({ page, limit, search, bank, startDate, endDate, view });
   const totalPages = Math.ceil(total / limit);
 
   return (
-    <div className="flex flex-col gap-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">Scoreboard</h1>
-        <p className="text-slate-700 mt-1">
-          {view === 'leaderboard' ? 'Top players for today. 🏆' : 'Review and analyze all player performance.'}
-        </p>
-      </div>
-
-      <Filters />
-
-      <div className="rounded-xl border bg-white shadow-sm">
-        <ScoreTable scores={scores} />
+    <div className="flex flex-col gap-6">
+      <div className="rounded-xl border bg-white p-6 shadow-sm">
+        <div className="flex items-center justify-between">
+            <div>
+                <h1 className="text-2xl font-bold tracking-tight text-slate-900">Scoreboard</h1>
+                <p className="text-slate-600 mt-1">Showing {scores.length} of {total} results.</p>
+            </div>
+             <Filters />
+        </div>
+        
+        <div className="mt-6">
+            <ScoreTable scores={scores} />
+        </div>
       </div>
       
       <PaginationControls
