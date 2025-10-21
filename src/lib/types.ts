@@ -10,12 +10,13 @@ export type PrizeLevel = {
 };
 
 export type QuestionBank = {
-  id: string;
-  title: string;
+  id?: string;
+   _id?: string;
+  name: string;
   slug: string;
   description: string;
-  status: 'Published' | 'Draft';
-  tags: string[];
+  published: boolean;
+  categories: string[];
   ageGroup?: string;
   questionCount: number;
   defaultTimer: number; // in seconds
@@ -45,7 +46,8 @@ export type MediaAsset = {
 };
 
 export type Question = {
-  id: number;
+  id?: number;
+  _id?:string;
   bankId: string;
   question: string;
   options: string[];

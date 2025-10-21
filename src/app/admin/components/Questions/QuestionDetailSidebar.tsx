@@ -5,7 +5,7 @@ import type { Question } from '@/lib/types';
 
 interface SidebarProps {
   question: Question | null;
-  onDelete: (id: number) => void;
+  onDelete: (_id: string) => void;
   onEdit: () => void;
 }
 
@@ -83,7 +83,7 @@ export const QuestionDetailSidebar = ({ question, onDelete, onEdit }: SidebarPro
             </div>
             <div className="p-4 bg-slate-50 border-t flex gap-3">
                 <button onClick={onEdit} className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 h-10 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700"><Edit size={16} /> Edit</button>
-                <button onClick={() => onDelete(question.id)} className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-white border h-10 text-sm font-semibold text-red-600 hover:bg-red-50 hover:border-red-200"><Trash2 size={16} /> Delete</button>
+                <button onClick={() => onDelete(question._id!)} className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-white border h-10 text-sm font-semibold text-red-600 hover:bg-red-50 hover:border-red-200"><Trash2 size={16} /> Delete</button>
             </div>
         </div>
     );
