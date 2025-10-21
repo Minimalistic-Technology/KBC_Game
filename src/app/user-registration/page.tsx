@@ -37,7 +37,7 @@ export default function RegisterPage() {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address.';
     }
-    if (!/^[6-9]\d{9}$/.test(formData.phone)) {
+    if (!/^[1-9]\d{9}$/.test(formData.phone)) {
       newErrors.phone = 'Please enter a valid 10-digit mobile number.';
     }
     const ageNum = parseInt(formData.age);
@@ -131,7 +131,7 @@ export default function RegisterPage() {
                 <input
                   type="tel" id="phone" name="phone"
                   value={formData.phone} onChange={handleChange}
-                  required pattern="[6-9][0-9]{9}" maxLength={10}
+                  required pattern="[1-9][0-9]{9}" maxLength={10}
                   title="Please enter a valid 10-digit Indian mobile number"
                   className="w-full h-full px-4 bg-transparent border-none rounded-r-lg text-slate-900 focus:outline-none"
                   placeholder="9876543210"

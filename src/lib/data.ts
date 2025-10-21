@@ -57,7 +57,7 @@ export const initialBanks: QuestionBank[] = [
   },
   {
     id: 'q4',
-    title: 'Cartoon Capers',
+    title: 'Gen Cartoon Capers',
     slug: 'cartoon-capers',
     description: 'Fun questions about animated shows and movies.',
     status: 'Draft',
