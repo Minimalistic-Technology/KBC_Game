@@ -12,12 +12,11 @@ export default async function ScoreboardPage({
   const page = typeof searchParams.page === 'string' ? Number(searchParams.page) : 1;
   const limit = typeof searchParams.limit === 'string' ? Number(searchParams.limit) : 10;
   const search = typeof searchParams.search === 'string' ? searchParams.search : undefined;
-  const bank = typeof searchParams.bank === 'string' ? searchParams.bank : undefined;
   const startDate = typeof searchParams.startDate === 'string' ? searchParams.startDate : undefined;
   const endDate = typeof searchParams.endDate === 'string' ? searchParams.endDate : undefined;
   const view = typeof searchParams.view === 'string' ? searchParams.view : 'all';
 
-  const { scores, total } = await fetchScores({ page, limit, search, bank, startDate, endDate, view });
+  const { scores, total } = await fetchScores({ page, limit, search, startDate, endDate });
   const totalPages = Math.ceil(total / limit);
 
   return (
