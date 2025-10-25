@@ -1,3 +1,4 @@
+// app/admin/components/Game-config/BankSelectionCard.tsx
 'use client';
 
 import React from 'react';
@@ -25,7 +26,8 @@ export const BankSelectionCard = ({ bank, isSelected, order, onToggle }: BankSel
             <div className="bg-slate-100 p-2 rounded-md"><Package className="text-slate-600" /></div>
             <div>
                 <p className="font-bold text-slate-800">{bank.title}</p>
-                <p className="text-xs text-slate-500">{bank.questionCount} Questions</p>
+                {/* --- UPDATED LINE --- */}
+                <p className="text-xs text-slate-500 capitalize">{bank.ageGroup || 'General'}</p>
             </div>
         </div>
     </div>

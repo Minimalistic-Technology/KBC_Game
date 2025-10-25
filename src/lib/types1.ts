@@ -32,6 +32,7 @@ export type Lifeline = {
 export type GameConfig = {
   id: string;
   name: string;
+  isActive: boolean; // <-- ADDED THIS
   selectedBankIds: string[];
   prizeLadder: PrizeLevel[];
   lifelines: Lifeline;
