@@ -53,7 +53,7 @@ export type Question = {
   options: string[];
   answer: string;
   media?: any;
-  mediaRefs?: string[];
+  mediaRef?: any;
   status: 'Draft' | 'Published';
   categories: string[];
 };

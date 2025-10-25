@@ -48,7 +48,7 @@ export default function QuestionsPageClient() {
         bankId: q.bankId,
         question: q.text,
         options: q.options.map((o: any) => o.text),
-        mediaRefs : q.mediaRefs,
+        mediaRef : q.mediaRef,
         answer: q.options[q.correctIndex]?.text || '',
         status: q.status === 'draft' ? 'Draft' : 'Published',
         categories: q.categories || [],

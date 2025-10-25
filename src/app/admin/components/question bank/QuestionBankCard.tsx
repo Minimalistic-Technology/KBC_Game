@@ -1,9 +1,10 @@
 'use client';
-
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { FileText, ArrowUp, ArrowDown, Edit, Trash2 } from 'lucide-react';
 import type { QuestionBank } from '@/lib/types';
+import axios from 'axios';
 
 interface CardProps {
     bank: QuestionBank;
@@ -16,6 +17,28 @@ interface CardProps {
 }
 
 export const QuestionBankCard = ({ bank, index, onEdit, onDelete, onMove, isFirst, isLast }: CardProps) => {
+    const [questionCount, setQuestionCount] = useState('');
+
+     useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL_DEV}/api/questions`, {
+        params:{ bankId: bank._id },
+        withCredentials: true
+      });
+
+        const count = res.data.length;
+        setQuestionCount(count);
+
+      } catch (error) {
+        console.error("Error fetching questions:", error);
+      }
+    };
+
+    fetchQuestions();
+  }, [bank._id]);
+
+
     const statusClasses: { [key: string]: string } = {
         published: "bg-green-100 text-green-800",
         draft: "bg-yellow-100 text-yellow-800",
@@ -60,7 +83,7 @@ export const QuestionBankCard = ({ bank, index, onEdit, onDelete, onMove, isFirs
             </Link>
             <div className="border-t border-slate-200 bg-slate-50/75 p-3 flex justify-between items-center text-sm">
                 <div className="flex items-center gap-4 text-slate-700 font-medium">
-                    <span className="flex items-center gap-1.5" title="Number of questions"><FileText size={14} /> {bank.questionCount}</span>
+                    <span className="flex items-center gap-1.5" title="Number of questions"><FileText size={14} /> {questionCount}</span>
                 </div>
                 <div className="flex items-center gap-1">
                     <button onClick={(e) => onMove(e, 'up')} disabled={isFirst} className="p-2 rounded-md text-slate-500 hover:bg-slate-200 disabled:opacity-30"><ArrowUp size={16} /></button>
