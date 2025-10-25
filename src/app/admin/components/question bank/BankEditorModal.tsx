@@ -71,7 +71,7 @@ export const BankEditorModal = ({ bank, onSave, onClose }: { bank: QuestionBank,
                                 >
                                     <option value="child">Kids (6-12)</option>
                                     <option value="teen">Teens (13-17)</option>
-                                    <option value="adults">Adults (18+)</option>
+                                    <option value="adult">Adults (18+)</option>
                                 </select>
                             </FormInput>
                         </div>

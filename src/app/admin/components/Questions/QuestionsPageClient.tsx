@@ -48,9 +48,10 @@ export default function QuestionsPageClient() {
         bankId: q.bankId,
         question: q.text,
         options: q.options.map((o: any) => o.text),
+        mediaRef : q.mediaRef,
         answer: q.options[q.correctIndex]?.text || '',
         status: q.status === 'draft' ? 'Draft' : 'Published',
-        tags: q.tags || [],
+        categories: q.categories || [],
       }));
 
       setQuestions(frontendQuestions);
@@ -86,7 +87,7 @@ export default function QuestionsPageClient() {
         options: ['', '', '', ''],
         answer: '',
         status: 'Draft',
-        tags: [],
+        categories: [],
       });
     }
     setIsEditorOpen(true);
@@ -97,39 +98,42 @@ export default function QuestionsPageClient() {
     setEditingQuestion(null);
   };
 
-  // --- Save Question ---
-  const handleSaveQuestion = async (savedQuestion: Question) => {
-    try {
-      // Convert frontend Question -> backend payload
-      const payload = {
-        bankId: savedQuestion.bankId,
-        text: savedQuestion.question,
-        options: savedQuestion.options.map(opt => ({ text: opt })),
-        correctIndex: savedQuestion.options.indexOf(savedQuestion.answer),
-        status: savedQuestion.status.toLowerCase(), // 'Draft' -> 'draft'
-        tags: savedQuestion.tags,
-      };
+ 
 
-      if (savedQuestion._id) {
-        await axios.put(
-          `${process.env.NEXT_PUBLIC_API_URL_DEV}/api/questions/${savedQuestion._id}`,
-          payload,
-          { withCredentials: true }
-        );
-      } else {
-        await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL_DEV}/api/questions`,
-          payload,
-          { withCredentials: true }
-        );
-      }
+  const handleSaveQuestion = async (savedQuestion: Question, file?: File | null) => {
+  try {
+    const formDataToSend = new FormData();
+    formDataToSend.append("bankId", savedQuestion.bankId);
+    formDataToSend.append("text", savedQuestion.question);
+    formDataToSend.append("status", savedQuestion.status.toLowerCase());
+    formDataToSend.append("categories", JSON.stringify(savedQuestion.categories));
+   formDataToSend.append("options", JSON.stringify(savedQuestion.options.map(opt => ({ text: opt })),));
+    formDataToSend.append("correctIndex", savedQuestion.options.indexOf(savedQuestion.answer).toString());
 
-      if (bankId) fetchQuestions(bankId);
-      handleCloseEditor();
-    } catch (err) {
-      console.error('Failed to save question', err);
-    }
-  };
+    if (file) formDataToSend.append("file", file);
+
+    console.log(file)
+
+    const url = savedQuestion._id
+      ? `${process.env.NEXT_PUBLIC_API_URL_DEV}/api/questions/${savedQuestion._id}`
+      : `${process.env.NEXT_PUBLIC_API_URL_DEV}/api/questions`;
+
+    const method = savedQuestion._id ? "put" : "post";
+
+    await axios({
+      method,
+      url,
+      data: formDataToSend,
+      withCredentials: true,
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+
+    if (bankId) fetchQuestions(bankId);
+    handleCloseEditor();
+  } catch (err) {
+    console.error("Failed to save question", err);
+  }
+};
 
   // --- Delete Question ---
   const handleDelete = async (_id: string) => {

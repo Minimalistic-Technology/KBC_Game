@@ -4,9 +4,9 @@ import { FileQuestion, ImageIcon, CheckCircle, Edit, Trash2, Tag, FileEdit, Film
 import type { Question } from '@/lib/types';
 
 interface SidebarProps {
-  question: Question | null;
-  onDelete: (_id: string) => void;
-  onEdit: () => void;
+    question: Question | null;
+    onDelete: (_id: string) => void;
+    onEdit: () => void;
 }
 
 const DetailItem = ({ icon: Icon, label, children }: { icon: React.ElementType, label: string, children: React.ReactNode }) => (
@@ -29,13 +29,12 @@ export const QuestionDetailSidebar = ({ question, onDelete, onEdit }: SidebarPro
             </div>
         );
     }
-
-    const { status, tags, media } = question;
-
+    console.log(question)
+    const { status, categories , mediaRef } = question;
+    console.log(mediaRef)
     const StatusBadge = () => (
-        <span className={`inline-flex items-center gap-1.5 text-xs font-bold capitalize px-3 py-1 rounded-full ${
-            status === 'Published' ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
-        }`}>
+        <span className={`inline-flex items-center gap-1.5 text-xs font-bold capitalize px-3 py-1 rounded-full ${status === 'Published' ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
+            }`}>
             {status === 'Published' ? <CheckCircle size={12} /> : <FileEdit size={12} />}
             {status}
         </span>
@@ -49,15 +48,39 @@ export const QuestionDetailSidebar = ({ question, onDelete, onEdit }: SidebarPro
                     <span className="text-sm font-semibold text-slate-500">Question Preview</span>
                     <p className="mt-1 text-slate-800 font-medium">{question.question}</p>
                 </div>
-                <DetailItem icon={ImageIcon} label="Media">
-                    {media ? (
-                        media.type === 'image' ? <img src={media.url} alt="Question media" className="mt-2 rounded-lg border w-full h-32 object-cover" />
-                        : (media.type === 'video' ? <div className="mt-2 flex flex-col items-center justify-center h-32 rounded-lg bg-slate-800 border"><Film className="h-10 w-10 text-slate-400" /><p className="text-xs text-slate-300 mt-2">{media.fileName}</p></div>
-                        : <div className="mt-2 flex flex-col items-center justify-center h-32 rounded-lg bg-slate-800 border"><Music className="h-10 w-10 text-slate-400" /><p className="text-xs text-slate-300 mt-2">{media.fileName}</p></div>)
+
+
+               <DetailItem icon={ImageIcon} label="Media">
+                    {mediaRef?.url ? (
+                        mediaRef.type.startsWith('image') ? (
+                            <img
+                                src={mediaRef.url}
+                                alt="Question media"
+                                className="mt-2 w-full h-40 object-cover rounded-lg border"
+                                loading="lazy"
+                                onError={(e) => (e.currentTarget.src = '/placeholder.png')}
+                            />
+                        ) : mediaRef.type.startsWith('video') ? (
+                            <video
+                                src={mediaRef.url}
+                                className="mt-2 w-full h-40 rounded-lg border object-cover"
+                                controls
+                            />
+                        ) : mediaRef.type.startsWith('audio') ? (
+                            <audio src={mediaRef.url} className="mt-2 w-full" controls />
+                        ) : (
+                            <div className="mt-2 flex items-center justify-center h-40 rounded-lg bg-slate-100 border border-dashed">
+                                <p className="text-xs text-slate-500">Unsupported media type</p>
+                            </div>
+                        )
                     ) : (
-                        <div className="mt-2 flex items-center justify-center h-32 rounded-lg bg-slate-100 border border-dashed"><p className="text-xs text-slate-500">No media attached</p></div>
+                        <div className="mt-2 flex items-center justify-center h-40 rounded-lg bg-slate-100 border border-dashed">
+                            <p className="text-xs text-slate-500">No media attached</p>
+                        </div>
                     )}
                 </DetailItem>
+
+
                 <div>
                     <span className="text-sm font-semibold text-slate-500">Options</span>
                     <ul className="mt-2 space-y-2">
@@ -72,11 +95,11 @@ export const QuestionDetailSidebar = ({ question, onDelete, onEdit }: SidebarPro
                 <div className="pt-4 border-t space-y-5">
                     <DetailItem icon={CheckCircle} label="Status"><StatusBadge /></DetailItem>
                     <DetailItem icon={Tag} label="Tags">
-                        {tags && tags.length > 0 ? (
+                        {categories && categories.length > 0 ? (
                             <div className="flex flex-wrap gap-2">
-                                {tags.map(tag => ( <span key={tag} className="text-xs font-semibold bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full">{tag}</span> ))}
+                                {categories.map(categories => (<span key={categories} className="text-xs font-semibold bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full">{categories}</span>))}
                             </div>
-                        ) : ( <p className="text-xs text-slate-500">No tags assigned</p> )}
+                        ) : (<p className="text-xs text-slate-500">No tags assigned</p>)}
                     </DetailItem>
                     {/* --- "Available Lifelines" DetailItem removed --- */}
                 </div>
