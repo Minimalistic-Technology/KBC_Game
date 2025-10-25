@@ -64,18 +64,6 @@ export const Filters = () => {
     replace(`${pathname}?${params.toString()}`);
   }, 300);
 
-  const handleBankChange = (bank: string) => {
-    const params = new URLSearchParams(searchParams);
-    params.set('page', '1');
-     if (bank) {
-      // --- FIX: Use 'bank' instead of 'bankId' ---
-      params.set('bank', bank);
-    } else {
-      params.delete('bank');
-    }
-    replace(`${pathname}?${params.toString()}`);
-  };
-
   const handleClearFilters = () => {
     setDate(undefined);
     router.push(pathname);
@@ -97,17 +85,8 @@ export const Filters = () => {
             className="w-full rounded-lg border bg-white py-2 pl-9 pr-4 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
         </div>
-        <select
-           onChange={(e) => handleBankChange(e.target.value)}
-           // --- FIX: Use 'bank' instead of 'bankId' ---
-           defaultValue={searchParams.get('bank')?.toString() || ''}
-           className="rounded-lg border bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-        >
-          <option value="">All Banks</option>
-          <option value="General Knowledge">General Knowledge</option>
-          <option value="Modern History">Modern History</option>
-          <option value="JavaScript Fundamentals">JavaScript Fundamentals</option>
-        </select>
+
+        {/* --- BANK FILTER SELECT REMOVED --- */}
 
         <div ref={calendarRef} className="relative flex items-center rounded-lg border bg-white focus-within:ring-2 focus-within:ring-indigo-500 transition-all duration-150">
             <button

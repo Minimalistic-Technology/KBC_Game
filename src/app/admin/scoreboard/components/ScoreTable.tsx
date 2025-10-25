@@ -3,26 +3,7 @@
 import { useState } from 'react';
 import { PlayerDetailModal } from './PlayerDetailModal';
 import { ChevronRight } from 'lucide-react';
-
-// --- UPDATED TYPE DEFINITION ---
-// Since /types folder doesn't exist, we define the type here based on data.ts
-export interface QuestionDetail {
-  text: string;
-  selectedAnswer: string;
-  correctAnswer: string;
-  isCorrect: boolean;
-  timeTakenSeconds: number;
-}
-export interface Score {
-  id: string;
-  playerName: string;
-  questionBank: 'General Knowledge' | 'Modern History' | 'JavaScript Fundamentals';
-  finalScore: number;
-  date: string;
-  totalTimeSeconds: number;
-  lifelinesUsed: Array<'50-50' | 'Hint'>;
-  questions: QuestionDetail[];
-}
+import { QuestionDetail, Score } from './data';
 
 export const ScoreTable = ({ scores }: { scores: Score[] }) => {
   const [selectedScore, setSelectedScore] = useState<Score | null>(null);
@@ -32,7 +13,7 @@ export const ScoreTable = ({ scores }: { scores: Score[] }) => {
       <div className="space-y-3">
         {scores.map((score) => (
           <div
-            key={score.id} // --- FIX: Use 'id' ---
+            key={score.id}
             onClick={() => setSelectedScore(score)}
             className="flex cursor-pointer items-center justify-between rounded-lg border bg-white p-4 transition-all duration-200 hover:border-indigo-500 hover:shadow-md"
           >
@@ -42,21 +23,16 @@ export const ScoreTable = ({ scores }: { scores: Score[] }) => {
             </div>
 
             <div className="flex items-center gap-8">
-              {/* Question Bank Section */}
-              <div className="hidden text-right md:block">
-                <p className="font-medium text-slate-700">{score.questionBank}</p> {/* --- FIX: Use 'questionBank' --- */}
-              </div>
-
               {/* Score Section */}
               <div className="text-right">
                 <p className="text-xs text-slate-500">Score</p>
-                <p className="font-bold text-indigo-600">{score.finalScore}</p> {/* --- FIX: Use 'finalScore' --- */}
+                <p className="font-bold text-indigo-600">{score.finalScore}</p>
               </div>
 
               {/* Date Played section */}
               <div className="hidden text-right md:block">
                 <p className="font-medium text-slate-700">
-                  {new Date(score.date).toLocaleDateString('en-GB', { timeZone: 'UTC' })} {/* --- FIX: Use 'date' --- */}
+                  {new Date(score.date).toLocaleDateString('en-GB', { timeZone: 'UTC' })}
                 </p>
                 <p className="text-xs text-slate-500">Date Played</p>
               </div>
