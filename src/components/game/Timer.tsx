@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Clock } from 'lucide-react';
 
 interface TimerProps {
@@ -10,20 +10,27 @@ interface TimerProps {
 }
 
 export const Timer = ({ duration, onTimeUp, isPaused }: TimerProps) => {
+  const [timeLeft, setTimeLeft] = useState(duration);
+
+  // This effect resets the timer when a new question appears (i.e., duration changes)
   useEffect(() => {
-    // If the timer is paused, do nothing.
-    if (isPaused) {
+    setTimeLeft(duration);
+  }, [duration]);
+
+  useEffect(() => {
+    if (isPaused || timeLeft <= 0) {
+      if (timeLeft <= 0) {
+        onTimeUp();
+      }
       return;
     }
 
-    const timer = setTimeout(() => {
-      onTimeUp();
-    }, duration * 1000);
+    const intervalId = setInterval(() => {
+      setTimeLeft(prevTime => prevTime - 1);
+    }, 1000);
 
-    // This cleanup function will run when the component re-renders
-    // (e.g., when isPaused becomes true), clearing the old timeout.
-    return () => clearTimeout(timer);
-  }, [duration, onTimeUp, isPaused]); // Add isPaused to the dependency array
+    return () => clearInterval(intervalId);
+  }, [timeLeft, onTimeUp, isPaused]);
 
   return (
     <div className="bg-white/60 backdrop-blur-sm border border-slate-200 rounded-lg p-3 h-16 flex items-center gap-4">
@@ -36,6 +43,9 @@ export const Timer = ({ duration, onTimeUp, isPaused }: TimerProps) => {
             animationPlayState: isPaused ? 'paused' : 'running',
           }}
         />
+      </div>
+      <div className="text-xl font-bold text-slate-700 w-16 text-right">
+        {timeLeft}s
       </div>
     </div>
   );

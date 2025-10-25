@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import type { Lifeline } from '@/lib/types';
+import type { Lifeline } from '@/lib/types1';
 
 interface LifelineToggleProps {
     label: keyof Lifeline;

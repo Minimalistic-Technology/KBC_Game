@@ -6,9 +6,9 @@ import { AnimatePresence, motion } from 'framer-motion';
 import axiosInstance from '@/utils/axiosInstance';
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import type { QuestionBank } from '@/lib/types';
-import { QuestionBankCard } from '../components/question bank/QuestionBankCard';
-import { BankEditorModal } from '../components/question bank/BankEditorModal';
-import { PinVerificationModal } from '../components/question bank/PinVerificationModal';
+import { QuestionBankCard } from '../components/Question bank/QuestionBankCard';
+import { BankEditorModal } from '../components/Question bank/BankEditorModal';
+import { PinVerificationModal } from '../components/Question bank/PinVerificationModal';
 
 // Create QueryClient
 const queryClient = new QueryClient();
@@ -234,7 +234,7 @@ function QuestionBanksPageContent() {
                 <option value="all">All</option>
                 <option value="child">Kids (6-12)</option>
                 <option value="teen">Teens (13-17)</option>
-                <option value="adult">Adults (18+)</option>
+                <option value="adult">Adult (18+)</option>
               </select>
             </div>
             <div>

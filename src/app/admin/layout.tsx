@@ -11,8 +11,7 @@ import {
   Home,
   Package,
   Package2,
-  Award,
-  Settings, // Import the Settings icon
+  Settings,
 } from 'lucide-react';
 import { UserNav } from './components/UserNav';
 
@@ -60,10 +59,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <NavLink href="/admin/question-banks" icon={Package} isCollapsed={isCollapsed}>
             Question Banks
           </NavLink>
-          <NavLink href="/admin/scoreboard" icon={Award} isCollapsed={isCollapsed}>
-            Scoreboard
-          </NavLink>
-          {/* --- NEW LINK ADDED BACK --- */}
+          {/* --- Scoreboard NavLink removed --- */}
           <NavLink href="/admin/game-config" icon={Settings} isCollapsed={isCollapsed}>
             Game Config
           </NavLink>

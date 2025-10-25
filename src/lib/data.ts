@@ -1,6 +1,6 @@
 // lib/data.ts
 
-import { Question, QuestionBank } from './types';
+import { Question, QuestionBank } from './types1';
 
 export function shuffleArray<T>(array: T[]): T[] {
   const shuffled = [...array];
@@ -11,6 +11,7 @@ export function shuffleArray<T>(array: T[]): T[] {
   return shuffled;
 }
 
+// --- MOCK QUESTION BANK DATA ---
 export const initialBanks: QuestionBank[] = [
   {
     id: 'q1',
@@ -57,7 +58,7 @@ export const initialBanks: QuestionBank[] = [
   },
   {
     id: 'q4',
-    title: 'Gen Cartoon Capers',
+    title: 'Cartoon Capers',
     slug: 'cartoon-capers',
     description: 'Fun questions about animated shows and movies.',
     status: 'Draft',
@@ -69,6 +70,7 @@ export const initialBanks: QuestionBank[] = [
   },
 ];
 
+// --- MOCK QUESTION DATA FOR ADMIN PAGE ---
 export const allQuestions: Question[] = [
   // Question Bank 1: General Knowledge
   {

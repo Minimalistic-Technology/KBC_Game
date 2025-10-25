@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import type { Question, Lifeline } from '@/lib/types';
+import type { Question, Lifeline } from '@/lib/types1';
 import { allQuestions, initialBanks } from '@/lib/data';
 import { activeGameConfig } from '@/lib/gameConfig';
 
@@ -232,7 +232,12 @@ export default function GamePage() {
                 transition={{ duration: 0.3 }}
                 className="flex flex-col gap-6"
               >
-                <Timer duration={currentBank?.defaultTimer || 60} onTimeUp={handleTimeUp} isPaused={selectedOption !== null} />
+                {/* --- UPDATED: Timer duration is now hardcoded to 45 seconds --- */}
+                <Timer
+                  duration={45}
+                  onTimeUp={handleTimeUp}
+                  isPaused={selectedOption !== null}
+                />
                 <QuestionCard questionText={currentQuestion.question} mediaUrl={currentQuestion.media?.url} />
                 <OptionsGrid
                   options={currentQuestion.options}

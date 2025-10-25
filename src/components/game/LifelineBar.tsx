@@ -1,6 +1,6 @@
 'use client';
 
-import type { Lifeline } from '@/lib/types';
+import type { Lifeline } from '@/lib/types1';
 import { Zap, Users, Lightbulb, RefreshCw } from 'lucide-react';
 import React from 'react';
 import { motion } from 'framer-motion';

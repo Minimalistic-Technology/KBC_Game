@@ -1,6 +1,6 @@
 'use client';
 
-import type { PrizeLevel } from '@/lib/types';
+import type { PrizeLevel } from '@/lib/types1';
 import { Star, Gift } from 'lucide-react';
 import { motion } from 'framer-motion';
 

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import type { PrizeLevel } from '@/lib/types';
+import type { PrizeLevel } from '@/lib/types1';
 import { Plus, Trash2, ImagePlus, X } from 'lucide-react';
 
 interface PrizeLadderEditorProps {

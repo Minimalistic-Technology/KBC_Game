@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import type { QuestionBank } from '@/lib/types';
+import type { QuestionBank } from '@/lib/types1';
 import { Package, ShieldCheck } from 'lucide-react';
 
 interface BankSelectionCardProps {
