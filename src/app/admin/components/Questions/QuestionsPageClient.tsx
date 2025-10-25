@@ -50,7 +50,7 @@ export default function QuestionsPageClient() {
         options: q.options.map((o: any) => o.text),
         answer: q.options[q.correctIndex]?.text || '',
         status: q.status === 'draft' ? 'Draft' : 'Published',
-        tags: q.tags || [],
+        categories: q.categories || [],
       }));
 
       setQuestions(frontendQuestions);
@@ -86,7 +86,7 @@ export default function QuestionsPageClient() {
         options: ['', '', '', ''],
         answer: '',
         status: 'Draft',
-        tags: [],
+        categories: [],
       });
     }
     setIsEditorOpen(true);
@@ -104,10 +104,10 @@ export default function QuestionsPageClient() {
       const payload = {
         bankId: savedQuestion.bankId,
         text: savedQuestion.question,
-        options: savedQuestion.options.map(opt => ({ text: opt })),
+          options: savedQuestion.options.map(opt => ({ text: opt })),
         correctIndex: savedQuestion.options.indexOf(savedQuestion.answer),
         status: savedQuestion.status.toLowerCase(), // 'Draft' -> 'draft'
-        tags: savedQuestion.tags,
+        categories: savedQuestion.categories,
       };
 
       if (savedQuestion._id) {

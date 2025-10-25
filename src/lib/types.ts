@@ -52,7 +52,8 @@ export type Question = {
   question: string;
   options: string[];
   answer: string;
-  media?: MediaAsset;
+  media?: any;
+  mediaRefs?: string[];
   status: 'Draft' | 'Published';
-  tags: string[];
+  categories: string[];
 };
