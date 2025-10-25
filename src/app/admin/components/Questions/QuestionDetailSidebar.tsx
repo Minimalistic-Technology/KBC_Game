@@ -31,7 +31,6 @@ export const QuestionDetailSidebar = ({ question, onDelete, onEdit }: SidebarPro
     }
   const mediaRefs = question.mediaRefs || [];
     const { status, categories  } = question;
-
     const StatusBadge = () => (
         <span className={`inline-flex items-center gap-1.5 text-xs font-bold capitalize px-3 py-1 rounded-full ${status === 'Published' ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
             }`}>
@@ -39,8 +38,6 @@ export const QuestionDetailSidebar = ({ question, onDelete, onEdit }: SidebarPro
             {status}
         </span>
     );
-    console.log('mediaRefs:', mediaRefs?.length);
-    console.log(question);
 
     return (
         <div className="hidden lg:flex flex-col h-full bg-white rounded-xl shadow-sm border border-slate-200">
@@ -50,30 +47,27 @@ export const QuestionDetailSidebar = ({ question, onDelete, onEdit }: SidebarPro
                     <span className="text-sm font-semibold text-slate-500">Question Preview</span>
                     <p className="mt-1 text-slate-800 font-medium">{question.question}</p>
                 </div>
-                <DetailItem icon={ImageIcon} label="Media">
-                   
-                    
-                    {mediaRefs && mediaRefs.length > 0 ? (
-                        mediaRefs.map((publicId) => {
-                            
-                             const url = `https://res.cloudinary.com/dzdveae1f/image/upload/${publicId}`;
-                            
-
-                            return (
-                                <img
-                                    key={publicId}
-                                    src={url}
-                                    alt="Question media"
-                                    className="mt-2 rounded-lg border w-full h-32 object-cover"
-                                />
-                            );
-                        })
-                    ) : (
-                        <div className="mt-2 flex items-center justify-center h-32 rounded-lg bg-slate-100 border border-dashed">
-                            <p className="text-xs text-slate-500">No media attached</p>
-                        </div>
-                    )}
-                </DetailItem>
+               <DetailItem icon={ImageIcon} label="Media">
+  {mediaRefs && mediaRefs.length > 0 ? (
+    mediaRefs.map((publicId) => {
+      const url = `https://res.cloudinary.com/dzdveae1f/image/upload/${publicId}.png`; // add extension if necessary
+      return (
+        <img
+          key={publicId}
+          src={url}
+          alt="Question media"
+          className="mt-2 rounded-lg border w-full h-32 object-cover"
+          loading="lazy"
+          onError={(e) => { e.currentTarget.src = '/placeholder.png'; }}
+        />
+      );
+    })
+  ) : (
+    <div className="mt-2 flex items-center justify-center h-32 rounded-lg bg-slate-100 border border-dashed">
+      <p className="text-xs text-slate-500">No media attached</p>
+    </div>
+  )}
+</DetailItem>
                 <div>
                     <span className="text-sm font-semibold text-slate-500">Options</span>
                     <ul className="mt-2 space-y-2">

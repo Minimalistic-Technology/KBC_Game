@@ -14,7 +14,7 @@ export const QuestionEditorModal = ({
   onClose
 }: {
   question: Question;
-  onSave: (question: Question) => void;
+ onSave: (question: Question, file?: File | null) => void;
   onClose: () => void;
 }) => {
   // Ensure categories is always an array
@@ -23,7 +23,12 @@ export const QuestionEditorModal = ({
 
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
+const [rawFile, setRawFile] = useState<File | null>(null);
 
+const handleMediaUploadComplete = (asset: MediaAsset, file?: File) => {
+  setFormData(prev => ({ ...prev, media: asset }));
+  if (file) setRawFile(file);
+};
 
   useEffect(() => {
     setFormData(question);
@@ -39,10 +44,7 @@ export const QuestionEditorModal = ({
     }));
   };
 
-  // --- Media handlers ---
-  const handleMediaUploadComplete = (asset: MediaAsset) => {
-    setFormData(prev => ({ ...prev, media: asset }));
-  };
+  
 
   const handleSelectFromLibrary = (asset: MediaAsset) => {
     setFormData(prev => ({ ...prev, media: asset }));
@@ -76,15 +78,17 @@ const handleOptionChange = (index: number, value: string) => {
     setFormData(prev => ({ ...prev, answer: option }));
   };
 
-  const handleSubmit = (e: React.FormEvent, status: 'Draft' | 'Published' = 'Draft') => {
-    e.preventDefault();
-    if (!formData.question.trim() || formData.options.some(opt => !opt.trim()) || !formData.answer) {
-      alert("Please fill out the question, all options, and select a correct answer.");
-      return;
-    }
-    if (status === 'Published' && !window.confirm("Are you sure you want to publish this question?")) return;
-    onSave({ ...formData, status });
-  };
+const handleSubmit = (e: React.FormEvent, status: 'Draft' | 'Published' = 'Draft') => {
+  e.preventDefault();
+  if (!formData.question.trim() || formData.options.some(opt => !opt.trim()) || !formData.answer) {
+    alert("Please fill out the question, all options, and select a correct answer.");
+    return;
+  }
+  if (status === 'Published' && !window.confirm("Are you sure you want to publish this question?")) return;
+
+  // Pass both the data and the file to parent
+  onSave({ ...formData, status }, rawFile);
+};
 
   return (
     <>
