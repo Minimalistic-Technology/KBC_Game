@@ -25,9 +25,7 @@ import {
     BackendQuestionBank
 } from '@/lib/apiHelpers';
 
-/**
- * Helper function to parse Zod errors from the backend
- */
+// --- ERROR HANDLING FUNCTION ---
 const getErrorMessages = (error: unknown): string => {
     if (axios.isAxiosError(error) && error.response?.data?.errors) {
         const errors = error.response.data.errors;
@@ -55,7 +53,6 @@ export default function GameConfigPage() {
     const [categoryFilter, setCategoryFilter] = useState('all');
     
 
-    // --- Data Fetching (with TanStack Query) ---
 
     // 1. Fetch the list of all configs
     const { data: configList, isLoading: isListLoading, error: listError } = useQuery({
@@ -161,13 +158,10 @@ export default function GameConfigPage() {
     };
 
 
-    // --- API Mutations (with TanStack Query) ---
 
     // CREATE
     const createConfigMutation = useMutation({
-        // Use Omit to create a type that doesn't require 'id'
         mutationFn: async (newConfigData: Omit<GameConfig, 'id'>) => {
-            // Cast is safe here because frontendToBackend removes 'id'
             const { data } = await api.post<{ config: BackendConfig }>('/api/v1/game-config', frontendToBackend(newConfigData as GameConfig));
             return data.config;
         },
@@ -175,13 +169,11 @@ export default function GameConfigPage() {
             queryClient.invalidateQueries({ queryKey: ['gameConfigs'] }); 
             setSelectedConfigId(newBackendConfig._id);
         },
-        // --- 2. UPDATED ERROR HANDLER ---
         onError: (err) => {
             alert(`Failed to create config:\n${getErrorMessages(err)}`);
         },
     });
 
-    // UPDATE
     const updateConfigMutation = useMutation({
         mutationFn: async (configToSave: GameConfig) => {
             const { data } = await api.put(
@@ -195,7 +187,6 @@ export default function GameConfigPage() {
             queryClient.invalidateQueries({ queryKey: ['gameConfigs'] });
             queryClient.invalidateQueries({ queryKey: ['gameConfig', variables.id] });
         },
-        // --- 2. UPDATED ERROR HANDLER ---
         onError: (err) => {
             alert(`Failed to save:\n${getErrorMessages(err)}`);
         },
@@ -208,7 +199,6 @@ export default function GameConfigPage() {
             queryClient.invalidateQueries({ queryKey: ['gameConfigs'] });
             setSelectedConfigId(null); 
         },
-        // --- 2. UPDATED ERROR HANDLER ---
         onError: (err) => {
             alert(`Failed to delete:\n${getErrorMessages(err)}`);
         },
@@ -220,17 +210,14 @@ export default function GameConfigPage() {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['gameConfigs'] }); 
         },
-        // --- 2. UPDATED ERROR HANDLER ---
         onError: (err) => {
             alert(`Failed to set active:\n${getErrorMessages(err)}`);
         },
     });
 
 
-    // --- Event Handlers (wired to mutations) ---
 
     const handleNewConfig = () => {
-        // Use Omit<GameConfig, 'id'> to match the mutation
         const newConfig: Omit<GameConfig, 'id'> = {
             name: 'Untitled Config',
             isActive: false,

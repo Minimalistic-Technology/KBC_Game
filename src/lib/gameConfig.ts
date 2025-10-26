@@ -6,6 +6,7 @@ export const savedGameConfigs: GameConfig[] = [
   {
     id: 'config_1',
     name: 'Standard Weekly Quiz',
+    isActive: true,
     selectedBankIds: ['q1', 'q3'],
     prizeLadder: [
       { id: 1, level: 1, type: 'money', value: 1000, isSafe: false },
@@ -23,6 +24,7 @@ export const savedGameConfigs: GameConfig[] = [
   {
     id: 'config_2',
     name: 'Kids Cartoon Special',
+    isActive: false,
     selectedBankIds: ['q4'],
     prizeLadder: [
         { id: 1, level: 1, type: 'gift', value: 'Stuffed Animal', isSafe: true },
@@ -37,12 +39,8 @@ export const savedGameConfigs: GameConfig[] = [
   }
 ];
 
-// --- IDENTIFIER FOR THE ACTIVE CONFIG ---
-// The game will use the configuration with this ID.
+
 export const activeGameConfigId = 'config_1';
 
 
-// --- DERIVED ACTIVE CONFIGURATION ---
-// This finds the active config from the list and exports it for the game to use.
-// This means you only need to change the activeGameConfigId above to change the live game settings.
 export const activeGameConfig = savedGameConfigs.find(c => c.id === activeGameConfigId) || savedGameConfigs[0];

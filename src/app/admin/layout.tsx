@@ -14,7 +14,7 @@ import {
   Settings,
 } from 'lucide-react';
 import { UserNav } from './components/UserNav';
-import { Providers } from '@/lib/Providers'; // --- 1. IMPORT THE PROVIDER ---
+import { Providers } from '@/lib/Providers';
 
 const NavLink = ({ href, icon: Icon, children, isCollapsed }: any) => {
   const pathname = usePathname();
@@ -60,7 +60,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <NavLink href="/admin/question-banks" icon={Package} isCollapsed={isCollapsed}>
             Question Banks
           </NavLink>
-          {/* --- Scoreboard NavLink removed --- */}
           <NavLink href="/admin/game-config" icon={Settings} isCollapsed={isCollapsed}>
             Game Config
           </NavLink>
@@ -85,7 +84,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <UserNav />
           </div>
         </header>
-        {/* --- 2. WRAP THE CHILDREN IN THE PROVIDER --- */}
         <main className="flex-1 overflow-y-auto bg-slate-100 p-6">
           <Providers>
             {children}

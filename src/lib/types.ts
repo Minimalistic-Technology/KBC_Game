@@ -31,6 +31,15 @@ export type Lifeline = {
   'Flip Question': boolean;
 };
 
+export type GameConfig = {
+  id: string;
+  name: string;
+  isActive: boolean; // <-- ADDED THIS
+  selectedBankIds: string[];
+  prizeLadder: PrizeLevel[];
+  lifelines: Lifeline;
+};
+
 export type DerivedFormat = {
   name: string;
   resolution: string;
