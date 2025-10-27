@@ -42,7 +42,7 @@ export const OptionsGrid = ({
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {options.map((option, index) => (
         <motion.button
-          key={option}
+           key={`${option}-${index}`}
           onClick={() => onOptionSelect(option)}
           disabled={selectedOption !== null}
           className={getButtonClass(option)}

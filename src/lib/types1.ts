@@ -10,6 +10,7 @@ export type PrizeLevel = {
 };
 
 export type QuestionBank = {
+  _id? : string;
   id: string;
   title: string;
   slug: string;
@@ -53,6 +54,7 @@ export type MediaAsset = {
 };
 
 export type Question = {
+  _id?: string;
   id: number;
   bankId: string;
   question: string;
