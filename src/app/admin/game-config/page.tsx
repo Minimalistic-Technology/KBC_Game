@@ -12,12 +12,12 @@ import { LifelineToggle } from '../components/Game-config/LifelineToggle';
 // --- TanStack Query & Axios ---
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios'; // Your axios instance
-import axios from 'axios'; // --- 1. IMPORT AXIOS TO CHECK ERROR TYPE ---
+import axios from 'axios';
 
 // --- API Helpers ---
-import { 
-    backendToFrontend, 
-    backendListToFrontend, 
+import {
+    backendToFrontend,
+    backendListToFrontend,
     frontendToBackend,
     bankBackendToFrontend,
     BackendConfig,
@@ -42,21 +42,22 @@ const getErrorMessages = (error: unknown): string => {
 
 export default function GameConfigPage() {
     const queryClient = useQueryClient();
-     const router = useRouter();
+    const router = useRouter();
     // --- Local UI State ---
     const [selectedConfigId, setSelectedConfigId] = useState<string | null>(null);
     const [currentFullConfig, setCurrentFullConfig] = useState<GameConfig | null>(null);
     const [isMediaLibraryOpen, setIsMediaLibraryOpen] = useState(false);
     const [editingLevelId, setEditingLevelId] = useState<number | null>(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [ageFilter, setAgeFilter] = useState('all');
+    const [ageFilter, setAgeFilter] = useState('adult');
     const [categoryFilter, setCategoryFilter] = useState('all');
-    
-    const loggedIn = localStorage.getItem('adminLoggedIN');
 
-if(loggedIn != 'true'){
-    router.push('/auth/login');
-   }
+    useEffect(() => {
+        const loggedIn = localStorage.getItem('adminLoggedIN');
+        if (loggedIn !== 'true') {
+            router.push('/auth/login');
+        }
+    }, [router]);
 
 
     // 1. Fetch the list of all configs
@@ -75,7 +76,7 @@ if(loggedIn != 'true'){
             const { data } = await api.get<BackendConfig>(`/api/v1/game-config/${selectedConfigId}`);
             return backendToFrontend(data);
         },
-        enabled: !!selectedConfigId, 
+        enabled: !!selectedConfigId,
     });
 
     // 3. Fetch all available question banks
@@ -83,7 +84,9 @@ if(loggedIn != 'true'){
         queryKey: ['questionBanks'],
         queryFn: async () => {
             const { data } = await api.get<BackendQuestionBank[]>('/api/questions/banks');
-            return data.map(bankBackendToFrontend);
+            const allBanks = data.map(bankBackendToFrontend);
+            // --- MODIFICATION: Only show question banks that have been published ---
+            return allBanks.filter(bank => bank.status === 'Published');
         },
     });
 
@@ -103,24 +106,24 @@ if(loggedIn != 'true'){
             setCurrentFullConfig(null);
         }
     }, [fullConfigData]);
-    
-    
+
+
     // --- Memos for Bank Filtering ---
     const allCategories = useMemo(() => {
         return [...new Set((questionBanks || []).flatMap(b => b.tags))]
     }, [questionBanks]);
-    
+
     const filteredBanks = useMemo(() => {
         const banks = questionBanks || [];
         return banks.filter(bank => {
             const searchMatch = searchTerm === '' || bank.title.toLowerCase().startsWith(searchTerm.toLowerCase());
-            const ageMatch = ageFilter === 'all' || bank.ageGroup === ageFilter;
+            const ageMatch = bank.ageGroup === ageFilter;
             const categoryMatch = categoryFilter === 'all' || bank.tags.includes(categoryFilter);
             return searchMatch && ageMatch && categoryMatch;
         });
     }, [questionBanks, searchTerm, ageFilter, categoryFilter]);
 
-    
+
     // --- Local Editor State Updates ---
     const updateCurrentConfig = (field: keyof GameConfig, value: any) => {
         if (!currentFullConfig) return;
@@ -130,12 +133,12 @@ if(loggedIn != 'true'){
     const handleBankToggle = (id: string) => {
         if (!currentFullConfig) return;
         const currentSelection = currentFullConfig.selectedBankIds || [];
-        const newSelection = currentSelection.includes(id) 
+        const newSelection = currentSelection.includes(id)
             ? currentSelection.filter(bankId => bankId !== id)
             : [...currentSelection, id];
         updateCurrentConfig('selectedBankIds', newSelection);
     };
-    
+
     const handleLifelineToggle = (label: keyof Lifeline) => {
         if (!currentFullConfig) return;
         const newLifelines = { ...currentFullConfig.lifelines, [label]: !currentFullConfig.lifelines[label] };
@@ -154,7 +157,7 @@ if(loggedIn != 'true'){
 
     const handleSelectPrizeImage = (asset: MediaAsset) => {
         if (editingLevelId === null || !currentFullConfig) return;
-        const newLadder = currentFullConfig.prizeLadder.map(level => 
+        const newLadder = currentFullConfig.prizeLadder.map(level =>
             level.id === editingLevelId ? { ...level, media: asset } : level
         ) || [];
         updateCurrentConfig('prizeLadder', newLadder);
@@ -171,7 +174,7 @@ if(loggedIn != 'true'){
             return data.config;
         },
         onSuccess: (newBackendConfig) => {
-            queryClient.invalidateQueries({ queryKey: ['gameConfigs'] }); 
+            queryClient.invalidateQueries({ queryKey: ['gameConfigs'] });
             setSelectedConfigId(newBackendConfig._id);
         },
         onError: (err) => {
@@ -182,7 +185,7 @@ if(loggedIn != 'true'){
     const updateConfigMutation = useMutation({
         mutationFn: async (configToSave: GameConfig) => {
             const { data } = await api.put(
-                `/api/v1/game-config/${configToSave.id}`, 
+                `/api/v1/game-config/${configToSave.id}`,
                 frontendToBackend(configToSave)
             );
             return data;
@@ -202,7 +205,7 @@ if(loggedIn != 'true'){
         mutationFn: (id: string) => api.delete(`/api/v1/game-config/${id}`),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ['gameConfigs'] });
-            setSelectedConfigId(null); 
+            setSelectedConfigId(null);
         },
         onError: (err) => {
             alert(`Failed to delete:\n${getErrorMessages(err)}`);
@@ -213,7 +216,7 @@ if(loggedIn != 'true'){
     const setActiveMutation = useMutation({
         mutationFn: (id: string) => api.put(`/api/v1/game-config/${id}`, { isActive: true }),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['gameConfigs'] }); 
+            queryClient.invalidateQueries({ queryKey: ['gameConfigs'] });
         },
         onError: (err) => {
             alert(`Failed to set active:\n${getErrorMessages(err)}`);
@@ -238,7 +241,7 @@ if(loggedIn != 'true'){
             deleteConfigMutation.mutate(id);
         }
     };
-    
+
     const handleSetActive = (id: string) => {
         setActiveMutation.mutate(id);
     };
@@ -248,11 +251,11 @@ if(loggedIn != 'true'){
             updateConfigMutation.mutate(currentFullConfig);
         }
     };
-    
-    const isMutating = 
-        createConfigMutation.isPending || 
-        updateConfigMutation.isPending || 
-        deleteConfigMutation.isPending || 
+
+    const isMutating =
+        createConfigMutation.isPending ||
+        updateConfigMutation.isPending ||
+        deleteConfigMutation.isPending ||
         setActiveMutation.isPending;
 
     const error = listError || editorError || banksError;
@@ -262,7 +265,7 @@ if(loggedIn != 'true'){
     return (
         <>
             <AnimatePresence>
-                {isMediaLibraryOpen && ( <MediaLibraryModal onClose={() => setIsMediaLibraryOpen(false)} onSelect={handleSelectPrizeImage} filter="image"/> )}
+                {isMediaLibraryOpen && (<MediaLibraryModal onClose={() => setIsMediaLibraryOpen(false)} onSelect={handleSelectPrizeImage} filter="image" />)}
             </AnimatePresence>
 
             <div className="flex flex-col gap-8">
@@ -271,8 +274,8 @@ if(loggedIn != 'true'){
                         <h1 className="text-3xl font-bold tracking-tight text-slate-900">Game Configuration</h1>
                         <p className="text-slate-700 mt-1">Create and manage game sessions.</p>
                     </div>
-                    <button 
-                        onClick={handleSaveConfig} 
+                    <button
+                        onClick={handleSaveConfig}
                         disabled={updateConfigMutation.isPending || !currentFullConfig}
                         className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-5 h-11 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
                     >
@@ -320,14 +323,14 @@ if(loggedIn != 'true'){
                     <div className="lg:col-span-3 bg-white rounded-xl shadow-sm border border-slate-200 p-8 space-y-8 min-h-[500px]">
                         {isEditorLoading ? (
                             <div className="flex flex-col justify-center items-center text-center py-20">
-                                <Loader2 size={48} className="mx-auto text-slate-300 animate-spin"/>
+                                <Loader2 size={48} className="mx-auto text-slate-300 animate-spin" />
                                 <h3 className="mt-4 text-lg font-semibold text-slate-800">Loading Configuration...</h3>
                             </div>
                         ) : currentFullConfig ? (
                             <>
                                 <div>
                                     <label htmlFor="configName" className="text-sm font-medium text-slate-600">Configuration Name</label>
-                                    <input type="text" id="configName" value={currentFullConfig.name || ''} onChange={(e) => updateCurrentConfig('name', e.target.value)} className="w-full text-2xl font-bold border-0 border-b-2 p-1 focus:ring-0 focus:border-indigo-500 text-slate-900"/>
+                                    <input type="text" id="configName" value={currentFullConfig.name || ''} onChange={(e) => updateCurrentConfig('name', e.target.value)} className="w-full text-2xl font-bold border-0 border-b-2 p-1 focus:ring-0 focus:border-indigo-500 text-slate-900" />
                                 </div>
                                 <div className="pt-6 border-t">
                                     <h3 className="text-lg font-bold text-slate-900 mb-4">Select Question Banks (in order)</h3>
@@ -335,9 +338,16 @@ if(loggedIn != 'true'){
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 p-4 bg-slate-50 rounded-lg border">
                                         <div className="col-span-1 md:col-span-3">
                                             <label htmlFor="search" className="block text-sm font-medium text-slate-700 mb-2">Search</label>
-                                            <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20}/><input type="text" placeholder="Search by name..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full h-10 pl-10 pr-4 border bg-white border-slate-300 rounded-lg text-slate-900"/></div>
+                                            <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={20} /><input type="text" placeholder="Search by name..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full h-10 pl-10 pr-4 border bg-white border-slate-300 rounded-lg text-slate-900" /></div>
                                         </div>
-                                        <div><label htmlFor="ageFilter" className="block text-sm font-medium text-slate-700 mb-2">Age Group</label><select id="ageFilter" value={ageFilter} onChange={e => setAgeFilter(e.target.value)} className="w-full h-10 px-3 border bg-white border-slate-300 rounded-lg text-slate-900"><option value="all">All Ages</option><option value="child">Child</option><option value="teen">Teen</option><option value="adult">Adult</option></select></div>
+                                        <div>
+                                            <label htmlFor="ageFilter" className="block text-sm font-medium text-slate-700 mb-2">Age Group</label>
+                                            <select id="ageFilter" value={ageFilter} onChange={e => setAgeFilter(e.target.value)} className="w-full h-10 px-3 border bg-white border-slate-300 rounded-lg text-slate-900">
+                                                <option value="adult">Adult</option>
+                                                <option value="teen">Teen</option>
+                                                <option value="child">Child</option>
+                                            </select>
+                                        </div>
                                         <div>
                                             <label htmlFor="categoryFilter" className="block text-sm font-medium text-slate-700 mb-2">Category</label>
                                             <select id="categoryFilter" value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)} className="w-full h-10 px-3 border bg-white border-slate-300 rounded-lg text-slate-900">
@@ -346,7 +356,7 @@ if(loggedIn != 'true'){
                                             </select>
                                         </div>
                                     </div>
-                                    
+
                                     {/* Bank List Rendering */}
                                     {isBanksLoading ? (
                                         <div className="flex justify-center items-center h-32"><Loader2 className="animate-spin text-slate-400" /></div>
@@ -362,7 +372,7 @@ if(loggedIn != 'true'){
                                     )}
                                 </div>
                                 <div className="pt-8 border-t">
-                                  <PrizeLadderEditor value={currentFullConfig.prizeLadder} onChange={handlePrizeLadderChange} onEditImage={handleEditPrizeImage} />
+                                    <PrizeLadderEditor value={currentFullConfig.prizeLadder} onChange={handlePrizeLadderChange} onEditImage={handleEditPrizeImage} />
                                 </div>
                                 <div className="pt-8 border-t">
                                     <h3 className="text-lg font-bold text-slate-900 mb-4">Configure Available Lifelines</h3>
@@ -376,7 +386,7 @@ if(loggedIn != 'true'){
                             </>
                         ) : (
                             <div className="flex flex-col justify-center items-center text-center py-20">
-                                <Settings size={48} className="mx-auto text-slate-300"/>
+                                <Settings size={48} className="mx-auto text-slate-300" />
                                 <h3 className="mt-4 text-lg font-semibold text-slate-800">No Configuration Selected</h3>
                                 <p className="mt-1 text-slate-500">Select a configuration from the list or create a new one to begin.</p>
                             </div>
