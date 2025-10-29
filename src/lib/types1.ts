@@ -5,7 +5,7 @@ export type PrizeLevel = {
   level: number;
   type: 'money' | 'gift';
   value: string | number;
-  media?: MediaAsset;
+  media?: any;
   isSafe: boolean;
 };
 

@@ -6,6 +6,7 @@ import AuthLayout from '../_components/AuthLayout';
 import Link from 'next/link';
 import Input from '../_components/Input';
 import Banner from '../_components/Banner';
+import axiosInstance from '@/utils/axiosInstance';
 
 import axios from 'axios';
 import { useQuery, QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -28,8 +29,8 @@ export default function LoginPageWrapper() {
 
 
    const loginAdmin = async () => {
-    const { data } = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL_DEV}/auth/admins/login`,
+    const { data } = await axiosInstance.post(
+      `/auth/admins/login`,
       { email, password },
       { withCredentials: true, headers: { 'Content-Type': 'application/json' } }
     );
@@ -56,11 +57,9 @@ export default function LoginPageWrapper() {
       const result = await refetch();
 
         if(result.status === 'success'){
+          localStorage.setItem("adminLoggedIN", 'true');
           router.push('/admin');
         }
-       
-        
-
       else {
         setError(result.data?.message || "Login failed. Please try again.");
       }

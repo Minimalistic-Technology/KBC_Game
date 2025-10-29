@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Plus, Download } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import axiosInstance from '@/utils/axiosInstance';
@@ -9,6 +10,7 @@ import type { QuestionBank } from '@/lib/types';
 import { QuestionBankCard } from '../components/question bank/QuestionBankCard';
 import { BankEditorModal } from '../components/question bank/BankEditorModal';
 import { PinVerificationModal } from '../components/question bank/PinVerificationModal';
+import { Router } from 'next/router';
 
 // Create QueryClient
 const queryClient = new QueryClient();
@@ -20,6 +22,8 @@ function Wrapper({ children }: { children: React.ReactNode }) {
 
 // Page content component
 function QuestionBanksPageContent() {
+
+  const router = useRouter();
   const [isVerified, setIsVerified] = useState(false);
   const [filteredBanks, setFilteredBanks] = useState<QuestionBank[]>([]);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
@@ -28,6 +32,13 @@ function QuestionBanksPageContent() {
   const [tagFilter, setTagFilter] = useState('all');
 
   const correctPin = process.env.NEXT_PUBLIC_ADMIN_PIN || '1234';
+
+
+   const loggedIn = localStorage.getItem("adminLoggedIN");
+
+   if(loggedIn != 'true'){
+    router.push('/auth/login');
+   }
 
   // Fetch all question banks
   const { data: allBanks = [], isLoading, isError } = useQuery<QuestionBank[]>({
@@ -152,7 +163,7 @@ function QuestionBanksPageContent() {
     alert('This would trigger a download of the selected questions in the chosen format.');
   };
 
-  if (!isVerified) return <PinVerificationModal onVerify={handleVerificationSuccess} correctPin={correctPin} />;
+  if (!isVerified) return <PinVerificationModal onVerify={handleVerificationSuccess}  />;
   if (isLoading) return <div className="text-center mt-10">Loading question banks...</div>;
   if (isError) return <div className="text-center mt-10 text-red-600">Failed to load question banks.</div>;
 

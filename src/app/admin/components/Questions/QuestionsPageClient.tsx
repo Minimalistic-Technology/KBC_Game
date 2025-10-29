@@ -8,7 +8,7 @@ import axios from 'axios';
 import { QuestionListItem } from './QuestionListItem';
 import { QuestionDetailSidebar } from './QuestionDetailSidebar';
 import { QuestionEditorModal } from './QuestionEditorModal';
-import type { Question, QuestionBank, MediaAsset } from '@/lib/types';
+import type { Question, QuestionBank } from '@/lib/types';
 
 export default function QuestionsPageClient() {
   const [questions, setQuestions] = useState<Question[]>([]);

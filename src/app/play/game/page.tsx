@@ -593,7 +593,7 @@ const bankTitle = currentBank?.name || 'Quiz Game';
                 className="flex flex-col gap-6"
               >
                 <Timer duration={45} onTimeUp={handleTimeUp} isPaused={selectedOption !== null} />
-                <QuestionCard questionText={currentQuestion.question} mediaUrl={currentQuestion.media?.url} />
+                <QuestionCard questionText={currentQuestion.question} mediaUrl={currentQuestion.media?.url} mediaType = {currentQuestion.media?.type} />
                 <OptionsGrid
                   
                   options={currentQuestion.options}

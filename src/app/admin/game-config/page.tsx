@@ -1,5 +1,5 @@
 'use client';
-
+import { useRouter } from 'next/navigation';
 import React, { useState, useMemo, useEffect } from 'react';
 import type { PrizeLevel, Lifeline, MediaAsset, GameConfig, QuestionBank } from '@/lib/types1';
 import { PrizeLadderEditor } from '../components/Game-config/PrizeLadderEditor';
@@ -42,7 +42,7 @@ const getErrorMessages = (error: unknown): string => {
 
 export default function GameConfigPage() {
     const queryClient = useQueryClient();
-
+     const router = useRouter();
     // --- Local UI State ---
     const [selectedConfigId, setSelectedConfigId] = useState<string | null>(null);
     const [currentFullConfig, setCurrentFullConfig] = useState<GameConfig | null>(null);
@@ -52,6 +52,11 @@ export default function GameConfigPage() {
     const [ageFilter, setAgeFilter] = useState('all');
     const [categoryFilter, setCategoryFilter] = useState('all');
     
+    const loggedIn = localStorage.getItem('adminLoggedIN');
+
+if(loggedIn != 'true'){
+    router.push('/auth/login');
+   }
 
 
     // 1. Fetch the list of all configs
