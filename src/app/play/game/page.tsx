@@ -306,81 +306,59 @@ export default function GamePage() {
   const [expertAdvice, setExpertAdvice] = useState<{ text: string; confidence: number } | null>(null);
   const [askedQuestionIds, setAskedQuestionIds] = useState<Set<number>>(new Set());
 
-  // Fetch the active game config from backend
-  const fetchActiveGameConfig = async () => {
-    const { data } = await api.get('/api/v1/game-config');
-    const active = data.find((c: any) => c.isActive);
-    if (!active) throw new Error('No active game config found');
-    const fullConfig = await api.get(`/api/v1/game-config/${active._id}`);
-    console.log(fullConfig.data);
-    return fullConfig.data;
-  };
-const setupGameQuestions = async (config: any) => {
-  try {
+  
+  const setupGameQuestions = async (config: any) => {
+    try {
+      const questionsFromBackend = config?.questions || [];
 
-    const selectedBankIds = config?.selectedBanks || [];
+      if (!questionsFromBackend.length) {
+        console.error("No questions found in config:", config);
+        setIsLoading(false);
+        return;
+      }
 
-    if (!selectedBankIds.length) {
-      console.error("No banks found in config:", config);
+      const cleanedQuestions = questionsFromBackend.map((q: any) => ({
+        id: q._id,
+        bankId: q.bankId,
+        question: q.text || q.question,
+        options: q.options?.map((opt: any) => opt.text) || [],
+        answer:
+          q.answer ||
+          (q.correctIndex != null && q.options?.[q.correctIndex]
+            ? q.options[q.correctIndex].text
+            : null),
+        media: q.mediaRef
+          ? {
+            url: q.mediaRef.url,
+            type: q.mediaRef.type,
+          }
+          : null,
+      }));
+
+      setAllQuestions(cleanedQuestions);
+      setQuestions(cleanedQuestions);
+      setAskedQuestionIds(new Set(cleanedQuestions.map((q: any) => q.id)));
       setIsLoading(false);
-      return;
+    } catch (err) {
+      console.error("Error setting up game questions:", err);
+      setIsLoading(false);
     }
-
-    // Fetch questions for each selected bank
-    const allQuestionsData = await Promise.all(
-      selectedBankIds.map(async (bankId: string) => {
-        const { data } = await api.get('/api/questions', {
-          params: { bankId },
-          withCredentials: true,
-        });
-        return data;
-      })
-    );
-
-    setAllQuestions(allQuestionsData.flat());
-    const allQuestions = allQuestionsData.flat();
-    console.log("1",allQuestions)
-
-  const gameQuestions = selectedBankIds.map((bankId: string) => {
-  const questionsForBank = allQuestions.filter(
-    (q: any) => q.bankId === bankId
-  );
-
-  if (questionsForBank.length > 0) {
-    const randomIndex = Math.floor(Math.random() * questionsForBank.length);
-    const q = questionsForBank[randomIndex];
+  };
 
 
-    const cleanedQuestion = {
-      id: q._id,
-      bankId: q.bankId,
-      question: q.text,
-      options: q.options.map((opt: any) => opt.text),
-      answer: q.options[q.correctIndex].text, 
-      media: q.mediaRef ? { url: q.mediaRef.url, type: q.mediaRef.type } : null
-    };
-
-    return cleanedQuestion;
-  }
-
-  return null;
-}).filter((q:any): q is NonNullable<typeof q> => q !== null);
-
-    
-    setQuestions(gameQuestions);
-    setAskedQuestionIds(new Set(gameQuestions.map((q: any) => q._id)));
-    setIsLoading(false);
-  } catch (err) {
-    console.error("Error setting up game questions:", err);
-    setIsLoading(false);
-  }
-};
+  const fetchActiveGameConfig = async () => {
+    const { data } = await api.get('/api/game/session');
+    return data;
+  };
 
 
   useEffect(() => {
     (async () => {
       try {
+
+
         const config = await fetchActiveGameConfig();
+        console.log(questions)
         setActiveConfig(config);
         setupGameQuestions(config);
       } catch (err) {
@@ -390,7 +368,7 @@ const setupGameQuestions = async (config: any) => {
     })();
   }, []);
 
-  
+
   const generatePollResults = () => {
     const currentQuestion = questions[currentQuestionIndex];
     let remainingPercentage = 100;
@@ -430,22 +408,78 @@ const setupGameQuestions = async (config: any) => {
     setExpertAdvice({ text, confidence });
   };
 
+
+  
+  const fetchFlipQuestion = async () => {
+  try {
+    const currentQuestionBankId = questions[currentQuestionIndex].bankId;
+
+    const { data } = await api.post(
+      '/api/game/flip-question',
+      {
+        currentQuestionBankId,
+        askedQuestionIds: Array.from(askedQuestionIds || []),
+      },
+      { withCredentials: true }
+    );
+
+   const cleanedQuestion = {
+  id: data._id,
+        bankId: data.bankId,
+        question: data.text || data.question,
+        options: data.options?.map((opt: any) => opt.text) || [],
+        categories: data.categories,
+        status:data.status,
+        answer:
+          data.answer ||
+          (data.correctIndex != null && data.options?.[data.correctIndex]
+            ? data.options[data.correctIndex].text
+            : null),
+        media: data.mediaRef
+          ? {
+            url: data.mediaRef.url,
+            type: data.mediaRef.type,
+          }
+          : null,
+};
+
+  console.log(questions);
+
+    setQuestions(prev => {
+  const updated = prev.map(q =>
+    q.bankId === cleanedQuestion.bankId
+      ? {
+          ...cleanedQuestion,
+          status: cleanedQuestion.status || q.status || "published",
+          tag: cleanedQuestion.categories || q.categories || null,
+        }
+      : q
+  );
+
+  console.log(questions)
+  return updated;
+});
+
+    // 🆕 Add to askedQuestionIds
+    setAskedQuestionIds(prev => {
+      const updated = new Set(prev);
+      updated.add(cleanedQuestion.id);
+      return updated;
+    });
+
+  } catch (error) {
+    console.error("Error fetching flip question:", error);
+  }
+};
+
+
   const findAndFlipQuestion = () => {
     const currentQuestion = questions[currentQuestionIndex];
-    const replacementPool = allQuestions.filter(
-      q => q.bankId === currentQuestion.bankId && !askedQuestionIds.has(q.id)
-    );
-    if (replacementPool.length > 0) {
-      const newQuestion = replacementPool[Math.floor(Math.random() * replacementPool.length)];
-      setQuestions(prev => {
-        const newQuestions = [...prev];
-        newQuestions[currentQuestionIndex] = newQuestion;
-        return newQuestions;
-      });
-      setAskedQuestionIds(prev => new Set(prev).add(newQuestion.id));
-    } else {
-      alert('No other questions available in this bank to flip to.');
-    }
+    const question = fetchFlipQuestion();
+
+    console.log(currentQuestion);
+    console.log(question);
+
   };
 
   const handleUseLifeline = (lifeline: keyof Lifeline) => {
@@ -469,6 +503,9 @@ const setupGameQuestions = async (config: any) => {
   const endGame = (prizeValue: string | number, prizeType: 'money' | 'gift', isWinner: boolean, finalScore: number) => {
     router.push(`/play/game-over?prizeValue=${prizeValue}&prizeType=${prizeType}&winner=${isWinner}&score=${finalScore}`);
   };
+
+  
+
 
   const handleOptionSelect = (option: string) => {
     if (selectedOption || !activeConfig) return;
@@ -562,10 +599,10 @@ const setupGameQuestions = async (config: any) => {
   const totalQuestions = questions.length;
   const sessionPrizeLadder = activeConfig.prizeLadder;
   const currentBank = activeConfig.selectedBanks?.find(
-  (b: any) => b._id === currentQuestion.bankId
-);
+    (b: any) => b._id === currentQuestion.bankId
+  );
 
-const bankTitle = currentBank?.name || 'Quiz Game';
+  const bankTitle = currentBank?.name || 'Quiz Game';
 
   return (
     <>
@@ -593,9 +630,9 @@ const bankTitle = currentBank?.name || 'Quiz Game';
                 className="flex flex-col gap-6"
               >
                 <Timer duration={45} onTimeUp={handleTimeUp} isPaused={selectedOption !== null} />
-                <QuestionCard questionText={currentQuestion.question} mediaUrl={currentQuestion.media?.url} mediaType = {currentQuestion.media?.type} />
+                <QuestionCard questionText={currentQuestion.question} mediaUrl={currentQuestion.media?.url} mediaType={currentQuestion.media?.type} />
                 <OptionsGrid
-                  
+
                   options={currentQuestion.options}
                   correctAnswer={currentQuestion.answer}
                   selectedOption={selectedOption}

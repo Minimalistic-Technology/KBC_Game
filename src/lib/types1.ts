@@ -60,7 +60,7 @@ export type Question = {
   question: string;
   options: string[];
   answer: string;
-  media?: MediaAsset;
+  media?: any;
   status: 'Draft' | 'Published';
-  tags: string[];
+  categories: string[];
 };
