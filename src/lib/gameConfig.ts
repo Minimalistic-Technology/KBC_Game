@@ -1,13 +1,12 @@
-import type { PrizeLevel, Lifeline, GameConfig } from './types1'; // Import the new GameConfig type
+import type { PrizeLevel, Lifeline, GameConfig } from './types1'; 
 
-// --- MOCK DATABASE OF SAVED CONFIGURATIONS ---
-// In a real application, this would come from a database.
+
 export const savedGameConfigs: GameConfig[] = [
   {
     id: 'config_1',
     name: 'Standard Weekly Quiz',
     isActive: true,
-    selectedBankIds: ['q1', 'q3'],
+    selectedBankIds: ['q1', 'q3', 'q2', 'q4'],
     prizeLadder: [
       { id: 1, level: 1, type: 'money', value: 1000, isSafe: false },
       { id: 2, level: 2, type: 'money', value: 5000, isSafe: true },
