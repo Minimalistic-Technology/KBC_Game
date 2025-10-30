@@ -2,12 +2,12 @@
 import { useRouter } from 'next/navigation';
 import React, { useState, useMemo, useEffect } from 'react';
 import type { PrizeLevel, Lifeline, MediaAsset, GameConfig, QuestionBank } from '@/lib/types1';
-import { PrizeLadderEditor } from '../components/Game-config/PrizeLadderEditor';
+import { PrizeLadderEditor } from '../components/game-config/PrizeLadderEditor';
 import { Save, Search, Zap, Users, Lightbulb, RefreshCw, Plus, Trash2, CheckCircle, Settings, Loader2 } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
-import { MediaLibraryModal } from '../components/Media/MediaLibraryModal';
-import { BankSelectionCard } from '../components/Game-config/BankSelectionCard';
-import { LifelineToggle } from '../components/Game-config/LifelineToggle';
+import { MediaLibraryModal } from '../components/media/MediaLibraryModal';
+import { BankSelectionCard } from '../components/game-config/BankSelectionCard';
+import { LifelineToggle } from '../components/game-config/LifelineToggle';
 
 // --- TanStack Query & Axios ---
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';

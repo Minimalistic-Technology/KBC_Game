@@ -206,20 +206,33 @@ const findAndFlipQuestion = async () => {
   }
 };
 
-  const handleUseLifeline = (lifeline: keyof Lifeline) => {
+  const handleUseLifeline = async (lifeline: keyof Lifeline) => {
     if (usedLifelines[lifeline] || selectedOption) return;
     setUsedLifelines(prev => ({ ...prev, [lifeline]: true }));
-    if (lifeline === 'Flip Question') findAndFlipQuestion();
-    else if (lifeline === '50:50') {
-      const currentQuestion = questions[currentQuestionIndex];
-      const incorrectOptions = currentQuestion.options.filter(opt => opt !== currentQuestion.answer);
-      setRemovedOptions(incorrectOptions.sort(() => 0.5 - Math.random()).slice(0, 2));
+
+    if (lifeline === 'Flip Question') {
+        findAndFlipQuestion();
+    } else if (lifeline === '50:50') {
+        try {
+            const currentQuestion = questions[currentQuestionIndex];
+            const { data } = await api.post('/api/game/lifeline/50-50', {
+                question: {
+                    options: currentQuestion.options,
+                    answer: currentQuestion.answer,
+                },
+            });
+            if (data.removedOptions) {
+                setRemovedOptions(data.removedOptions);
+            }
+        } catch (error) {
+            console.error("Error using 50:50 lifeline:", error);
+        }
     } else if (lifeline === 'Audience Poll') {
-      generatePollResults();
-      setIsPollOpen(true);
+        generatePollResults();
+        setIsPollOpen(true);
     } else if (lifeline === 'Expert Advice') {
-      generateExpertAdvice();
-      setIsAdviceOpen(true);
+        generateExpertAdvice();
+        setIsAdviceOpen(true);
     }
   };
 

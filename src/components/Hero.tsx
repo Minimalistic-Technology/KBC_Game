@@ -4,7 +4,7 @@ import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 // UPDATED: This now points to the user registration page
-const START_URL = "/user-registration";
+const START_URL = "/login";
 
 export default function Hero() {
   return (
