@@ -33,12 +33,12 @@ function QuestionBanksPageContent() {
 
   const correctPin = process.env.NEXT_PUBLIC_ADMIN_PIN || '1234';
 
-
-   const loggedIn = localStorage.getItem("adminLoggedIN");
-
-   if(loggedIn != 'true'){
-    router.push('/auth/login');
-   }
+    useEffect(() => {
+        const loggedIn = localStorage.getItem('adminLoggedIN');
+        if (loggedIn !== 'true') {
+            router.push('/auth/login');
+        }
+    }, [router]);
 
   // Fetch all question banks
   const { data: allBanks = [], isLoading, isError } = useQuery<QuestionBank[]>({
