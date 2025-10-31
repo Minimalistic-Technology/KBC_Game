@@ -117,15 +117,18 @@
 // };
 
 
+// src/components/PinVerificationModal.tsx
+
 'use client';
 
 import React, { useState, useRef, ChangeEvent, KeyboardEvent } from 'react';
+import Link from 'next/link';
 import { motion, Variants } from 'framer-motion';
 import { Lock, ArrowRight } from 'lucide-react';
-import axios from 'axios';
 import axiosInstance from '@/utils/axiosInstance';
+
 interface PinModalProps {
-  onVerify: () => void; // called on successful verification
+  onVerify: () => void;
 }
 
 const PIN_LENGTH = 4;
@@ -144,7 +147,6 @@ export const PinVerificationModal = ({ onVerify }: PinModalProps) => {
       newPin[index] = value;
       setPin(newPin);
       setError('');
-
       if (value && index < PIN_LENGTH - 1) {
         inputRefs.current[index + 1]?.focus();
       }
@@ -163,17 +165,11 @@ export const PinVerificationModal = ({ onVerify }: PinModalProps) => {
       setError(`Please enter a ${PIN_LENGTH}-digit PIN.`);
       return;
     }
-
     try {
       setIsLoading(true);
-      const res = await axiosInstance.post(
-        '/api/pin/verify',
-        { pin: enteredPin },
-        { withCredentials: true }
-      );
-
+      const res = await axiosInstance.post('/api/pin/verify', { pin: enteredPin }, { withCredentials: true });
       if (res.data.success) {
-        onVerify(); // 🔥 Trigger success action (e.g., unlock page)
+        onVerify();
       }
     } catch (err: any) {
       const msg = err.response?.data?.message || 'Invalid PIN. Please try again.';
@@ -188,10 +184,7 @@ export const PinVerificationModal = ({ onVerify }: PinModalProps) => {
   };
 
   const shakeVariants: Variants = {
-    shake: {
-      x: [0, -10, 10, -10, 10, 0],
-      transition: { duration: 0.4, ease: 'easeInOut' },
-    },
+    shake: { x: [0, -10, 10, -10, 10, 0], transition: { duration: 0.4, ease: 'easeInOut' } },
     initial: { x: 0 },
   };
 
@@ -207,12 +200,8 @@ export const PinVerificationModal = ({ onVerify }: PinModalProps) => {
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-indigo-100">
             <Lock className="h-8 w-8 text-indigo-600" />
           </div>
-          <h2 className="mt-6 text-2xl font-bold text-slate-900">
-            Verification Required
-          </h2>
-          <p className="mt-2 text-slate-600">
-            Enter your admin PIN to access this page.
-          </p>
+          <h2 className="mt-6 text-2xl font-bold text-slate-900">Verification Required</h2>
+          <p className="mt-2 text-slate-600">Enter your admin PIN to access this page.</p>
 
           <motion.div
             variants={shakeVariants}
@@ -223,9 +212,7 @@ export const PinVerificationModal = ({ onVerify }: PinModalProps) => {
               {pin.map((digit, index) => (
                 <input
                   key={index}
-                  ref={(el) => {
-                    inputRefs.current[index] = el;
-                  }}
+                  ref={(el) => { inputRefs.current[index] = el; }}
                   type="password"
                   inputMode="numeric"
                   value={digit}
@@ -237,15 +224,22 @@ export const PinVerificationModal = ({ onVerify }: PinModalProps) => {
                 />
               ))}
             </div>
-            {error && (
-              <p className="text-red-500 text-sm font-semibold mt-4">{error}</p>
-            )}
+            {error && <p className="text-red-500 text-sm font-semibold mt-4">{error}</p>}
           </motion.div>
+
+          <div className="mt-4 text-center">
+            <Link
+              href="/auth/create-pin"
+              className="text-sm font-medium text-slate-500 hover:text-indigo-600 hover:underline transition-colors"
+            >
+              Forgot PIN?
+            </Link>
+          </div>
 
           <button
             onClick={handleSubmit}
             disabled={isLoading || pin.join('').length < PIN_LENGTH}
-            className="w-full mt-8 inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-5 h-12 text-md font-semibold text-white shadow-sm transition-all hover:bg-indigo-700 disabled:bg-slate-400 disabled:cursor-not-allowed disabled:shadow-none"
+            className="w-full mt-4 inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-5 h-12 text-md font-semibold text-white shadow-sm transition-all hover:bg-indigo-700 disabled:bg-slate-400 disabled:cursor-not-allowed disabled:shadow-none"
           >
             {isLoading ? 'Verifying...' : 'Verify Access'} <ArrowRight size={18} />
           </button>
