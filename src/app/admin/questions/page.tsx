@@ -1,5 +1,5 @@
 import React, { Suspense } from 'react';
-import QuestionsPageClient from '../components/questions/QuestionsPageClient'; // Adjust the path if necessary
+import QuestionsPageClient from '../components/Questions/QuestionsPageClient'; // Adjust the path if necessary
 
 // A simple loading skeleton component
 const LoadingSkeleton = () => (

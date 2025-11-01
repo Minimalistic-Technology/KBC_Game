@@ -1,16 +1,32 @@
+"use client";
+
 import Link from 'next/link';
 import { PackageCheck, ArrowRight, ListOrdered, Zap, Users, Lightbulb, RefreshCw } from 'lucide-react';
-import { activeGameConfig } from '@/lib/gameConfig';
+import axiosInstance from '@/utils/axiosInstance';
+import { useEffect, useState } from "react";
 
 export default function LobbyPage() {
-  // --- UPDATED LOGIC ---
+  const [config, setConfig] = useState<{ totalQuestions: number; lifelines: Record<string, boolean> } | null>(null);
 
-  // The total number of questions is now simply the number of selected banks,
-  // since one question is chosen from each.
-  const totalQuestions = activeGameConfig.selectedBankIds.length;
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const response = await axiosInstance.get("/api/game/config", { withCredentials: true });
+        setConfig(response.data);
+      } catch (error) {
+        console.error("Error fetching game config:", error);
+      }
+    };
 
-  // Get a list of the lifelines that are enabled in the config.
-  const enabledLifelines = Object.entries(activeGameConfig.lifelines)
+    fetchConfig();
+  }, []);
+
+  // Extract data safely
+  const totalQuestions = config?.totalQuestions ?? 0;
+  const lifelines = config?.lifelines ?? {};
+
+  // Get list of enabled lifelines
+  const enabledLifelines = Object.entries(lifelines)
     .filter(([, value]) => value)
     .map(([key]) => key);
 
@@ -38,6 +54,7 @@ export default function LobbyPage() {
               <p className="text-sm text-slate-600">{totalQuestions} questions in this session</p>
             </div>
           </div>
+
           <div className="flex items-start gap-3">
             <Zap className="h-6 w-6 text-indigo-600 flex-shrink-0 mt-0.5" />
             <div>
@@ -62,7 +79,6 @@ export default function LobbyPage() {
           <span>Start Game</span>
           <ArrowRight size={20} />
         </Link>
-        
       </div>
     </div>
   );

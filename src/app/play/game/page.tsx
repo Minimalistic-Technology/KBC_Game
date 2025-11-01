@@ -14,6 +14,7 @@ import { AudiencePollModal } from '@/components/game/AudiencePollModal';
 import { ExpertAdviceModal } from '@/components/game/ExpertAdviceModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '@/lib/axios';
+import axiosInstance from '@/utils/axiosInstance';
 
 type AnswerState = 'idle' | 'revealed';
 
@@ -75,27 +76,83 @@ export default function GamePage() {
   };
 
 
-  const fetchActiveGameConfig = async () => {
-    const { data } = await api.get('/api/game/session');
-    return data;
-  };
+  const fetchActiveGameSession = async () => {
+    try {
+      const response = await api.get("/api/session", { withCredentials: true });
+      // If session not found
+      if (response.status === 404) return null;
 
+      return response.data.session || null;
+    } catch (err: any) {
+      if (err.response?.status === 404) return null; // no active session
+      console.error("Error fetching active session:", err);
+      throw err;
+    }
+  };
 
   useEffect(() => {
     (async () => {
       try {
+        setIsLoading(true);
 
+        let session = await fetchActiveGameSession();
 
-        const config = await fetchActiveGameConfig();
-        console.log(questions)
-        setActiveConfig(config);
-        setupGameQuestions(config);
+        if (!session) {
+          console.log("🎮 No session found — starting new game");
+          const { data } = await api.get("/api/game/session", { withCredentials: true });
+          const newSession = await startNewGameSession(data);
+
+          if (!newSession) return; // user had completed game
+          setActiveConfig(data);
+          setUsedLifelines(data.lifelines); 
+          setupGameQuestions(data);
+        } else if (session.isCompleted) {
+          console.log("✅ Session completed — redirecting");
+          router.push("/play/game-over");
+          return;
+        } else {
+          setActiveConfig(session);
+          setupGameQuestions(session);
+           setUsedLifelines(session.lifelines); 
+          setCurrentQuestionIndex(session.currentQuestionIndex);
+        }
       } catch (err) {
-        console.error('Error loading config:', err);
+        console.error("Error loading session:", err);
+      } finally {
         setIsLoading(false);
       }
     })();
   }, []);
+
+  const startNewGameSession = async (config: any) => {
+    try {
+      const payload = {
+        gameConfigId: config?._id || config?.gameConfigId,
+        questions: config?.questions || [],
+        prizeLadder: config?.prizeLadder || [],
+        lifelines: config?.lifelines || {
+          "50:50": true,
+          "Audience Poll": true,
+          "Expert Advice": true,
+          "Flip Question": true,
+        },
+      };
+
+      const response = await api.post("/api/session/start", payload, { withCredentials: true });
+
+      // handle status 206 from backend
+      if (response.status === 206) {
+        alert("🎉 You’ve already completed this session!");
+        router.push("/play/game-over");
+        return null;
+      }
+
+      return response.data.session;
+    } catch (err: any) {
+      console.error("Error starting/resuming session:", err);
+      throw err;
+    }
+  };
 
 
   const generatePollResults = () => {
@@ -155,144 +212,195 @@ export default function GamePage() {
       // The backend wraps actual question data inside "data.question"
       const q = data.question || data;
 
-     const cleanedQuestion = {
-      id: q._id,
-      bankId: q.bankId,
-      question: q.text || q.question,
-      options: q.options?.map((opt: any) => opt.text) || [],
-      status:q.status,
-      categories:q.categories,
-      answer:
-        q.answer ||
-        (q.correctIndex != null && q.options?.[q.correctIndex]
-          ? q.options[q.correctIndex].text
-          : null),
-      media: q.mediaRef
-        ? {
+      const cleanedQuestion = {
+        id: q._id,
+        bankId: q.bankId,
+        question: q.text || q.question,
+        options: q.options?.map((opt: any) => opt.text) || [],
+        status: q.status,
+        categories: q.categories,
+        answer:
+          q.answer ||
+          (q.correctIndex != null && q.options?.[q.correctIndex]
+            ? q.options[q.correctIndex].text
+            : null),
+        media: q.mediaRef
+          ? {
             url: q.mediaRef.url,
             type: q.mediaRef.type,
           }
-        : null,
-    };
+          : null,
+      };
 
       return cleanedQuestion;
     } catch (error) {
       console.error("Error fetching flip question:", error);
     }
   };
-const findAndFlipQuestion = async () => {
-  try {
-    const flippedQuestion = await fetchFlipQuestion();
-    if (!flippedQuestion) return;
 
-    // Replace the current question in the array
-    setQuestions((prevQuestions) => {
-      const updatedQuestions = [...prevQuestions];
-      updatedQuestions[currentQuestionIndex] = flippedQuestion;
-      return updatedQuestions;
+  const findAndFlipQuestion = async () => {
+    try {
+      const flippedQuestion = await fetchFlipQuestion();
+      if (!flippedQuestion) return;
+
+      // Replace the current question in the array
+      setQuestions((prevQuestions) => {
+        const updatedQuestions = [...prevQuestions];
+        updatedQuestions[currentQuestionIndex] = flippedQuestion;
+        return updatedQuestions;
+      });
+
+      // Add the flipped question ID to askedQuestionIds (so it won’t repeat later)
+      setAskedQuestionIds((prev) => new Set([...prev, flippedQuestion.id]));
+
+      // Optional: Reset any UI states
+      setSelectedOption(null);
+      setAnswerState('idle');
+      setRemovedOptions([]);
+
+      console.log("Flipped Question:", flippedQuestion);
+    } catch (error) {
+      console.error("Error flipping question:", error);
+    }
+  };
+
+const handleUseLifeline = async (lifeline: keyof Lifeline) => {
+  if (usedLifelines[lifeline] === false || selectedOption) return;
+
+  // 🟢 Clone current lifelines & mark the used one as false (disabled)
+  const updatedLifelines = { ...usedLifelines, [lifeline]: false };
+  setUsedLifelines(updatedLifelines);
+  console.log(lifeline)
+  try {
+    // Step 2: Update backend session using your existing endpoint
+    await api.put("/api/session/update", {
+      lifelines: updatedLifelines,
     });
 
-    // Add the flipped question ID to askedQuestionIds (so it won’t repeat later)
-    setAskedQuestionIds((prev) => new Set([...prev, flippedQuestion.id]));
-
-    // Optional: Reset any UI states
-    setSelectedOption(null);
-    setAnswerState('idle');
-    setRemovedOptions([]);
-
-    console.log("Flipped Question:", flippedQuestion);
+    // Step 3: Continue with lifeline logic
+    if (lifeline === "Flip Question") {
+      findAndFlipQuestion();
+    } else if (lifeline === "50:50") {
+      const currentQuestion = questions[currentQuestionIndex];
+      const { data } = await api.post("/api/game/lifeline/50-50", {
+        question: {
+          options: currentQuestion.options,
+          answer: currentQuestion.answer,
+        },
+      });
+      if (data.removedOptions) {
+        setRemovedOptions(data.removedOptions);
+      }
+    } else if (lifeline === "Audience Poll") {
+      generatePollResults();
+      setIsPollOpen(true);
+    } else if (lifeline === "Expert Advice") {
+      generateExpertAdvice();
+      setIsAdviceOpen(true);
+    }
   } catch (error) {
-    console.error("Error flipping question:", error);
+    console.error("Error using lifeline:", error);
   }
 };
 
-  const handleUseLifeline = async (lifeline: keyof Lifeline) => {
-    if (usedLifelines[lifeline] || selectedOption) return;
-    setUsedLifelines(prev => ({ ...prev, [lifeline]: true }));
-
-    if (lifeline === 'Flip Question') {
-        findAndFlipQuestion();
-    } else if (lifeline === '50:50') {
-        try {
-            const currentQuestion = questions[currentQuestionIndex];
-            const { data } = await api.post('/api/game/lifeline/50-50', {
-                question: {
-                    options: currentQuestion.options,
-                    answer: currentQuestion.answer,
-                },
-            });
-            if (data.removedOptions) {
-                setRemovedOptions(data.removedOptions);
-            }
-        } catch (error) {
-            console.error("Error using 50:50 lifeline:", error);
-        }
-    } else if (lifeline === 'Audience Poll') {
-        generatePollResults();
-        setIsPollOpen(true);
-    } else if (lifeline === 'Expert Advice') {
-        generateExpertAdvice();
-        setIsAdviceOpen(true);
-    }
-  };
 
   // --- Game Logic ---
   const endGame = (prizeValue: string | number, prizeType: 'money' | 'gift', isWinner: boolean, finalScore: number) => {
     router.push(`/play/game-over?prizeValue=${prizeValue}&prizeType=${prizeType}&winner=${isWinner}&score=${finalScore}`);
   };
-
-
-
-
-  const handleOptionSelect = (option: string) => {
+  const handleOptionSelect = async (option: string) => {
     if (selectedOption || !activeConfig) return;
     setSelectedOption(option);
-    setTimeout(() => {
-      setAnswerState('revealed');
-      setTimeout(() => {
-        const prizeLadder = activeConfig.prizeLadder;
 
-        if (option === questions[currentQuestionIndex].answer) {
-          const score = currentQuestionIndex + 1;
-          if (currentQuestionIndex < questions.length - 1) {
-            setCurrentQuestionIndex(prev => prev + 1);
+    setTimeout(() => {
+      setAnswerState("revealed");
+
+      setTimeout(async () => {
+        const prizeLadder = activeConfig.prizeLadder;
+        const currentQuestion = questions[currentQuestionIndex];
+        const correctAnswer = currentQuestion?.answer;
+        const isCorrect = option === correctAnswer;
+        const nextIndex = currentQuestionIndex + 1;
+        const isLast = nextIndex >= questions.length;
+
+        try {
+          // 🧠 1️⃣ Update backend session progress
+          await axiosInstance.put("/api/session/update", {
+            questionId: currentQuestion?._id,
+            isCorrect,
+            currentQuestionIndex: isCorrect ? nextIndex : currentQuestionIndex,
+          });
+
+          // 🏁 2️⃣ If last question and correct → mark as completed
+          if (isCorrect && isLast) {
+            await axiosInstance.put("/api/session/end");
+          }
+        } catch (error) {
+          console.error("Error updating session:", error);
+        }
+
+        // 🧩 3️⃣ Frontend logic
+        if (isCorrect) {
+          const score = nextIndex;
+
+          if (!isLast) {
+            // Move to next question safely
+            setCurrentQuestionIndex(nextIndex);
             setSelectedOption(null);
-            setAnswerState('idle');
+            setAnswerState("idle");
             setRemovedOptions([]);
           } else {
+            // 🚫 Stay on last question to avoid undefined access
             const finalPrizeLevel = prizeLadder[prizeLadder.length - 1];
-            if (finalPrizeLevel && finalPrizeLevel.type === 'gift') {
-              endGame(finalPrizeLevel.value, 'gift', true, score);
+
+            if (finalPrizeLevel?.type === "gift") {
+              endGame(finalPrizeLevel.value, "gift", true, score);
             } else {
               const totalWinnings = prizeLadder
-                .filter((level: PrizeLevel) => level.type === 'money' && typeof level.value === 'number')
-                .reduce((sum: number, level: PrizeLevel) => sum + (level.value as number), 0);
-              endGame(totalWinnings, 'money', true, score);
+                .filter(
+                  (level: PrizeLevel) =>
+                    level.type === "money" && typeof level.value === "number"
+                )
+                .reduce(
+                  (sum: number, level: PrizeLevel) =>
+                    sum + (level.value as number),
+                  0
+                );
+              endGame(totalWinnings, "money", true, score);
             }
           }
         } else {
+          // ❌ Wrong answer logic
           const score = currentQuestionIndex;
           const lastSafeLevel = prizeLadder
             .slice(0, currentQuestionIndex)
             .reverse()
             .find((p: PrizeLevel) => p.isSafe);
 
-          if (lastSafeLevel && lastSafeLevel.type === 'gift') {
-            endGame(lastSafeLevel.value, 'gift', false, score);
+          if (lastSafeLevel?.type === "gift") {
+            endGame(lastSafeLevel.value, "gift", false, score);
           } else {
             let winnings = 0;
             if (lastSafeLevel) {
               const levelsToSum = prizeLadder.slice(0, lastSafeLevel.level);
               winnings = levelsToSum
-                .filter((level: PrizeLevel) => level.type === 'money' && typeof level.value === 'number')
-                .reduce((sum: number, level: PrizeLevel) => sum + (level.value as number), 0);
+                .filter(
+                  (level: PrizeLevel) =>
+                    level.type === "money" && typeof level.value === "number"
+                )
+                .reduce(
+                  (sum: number, level: PrizeLevel) =>
+                    sum + (level.value as number),
+                  0
+                );
             }
-            endGame(winnings, 'money', false, score);
+            endGame(winnings, "money", false, score);
           }
         }
       }, 2000);
     }, 1500);
   };
+
 
   const handleTimeUp = () => {
     if (selectedOption || !activeConfig) return;
@@ -333,6 +441,18 @@ const findAndFlipQuestion = async () => {
   const itemVariants = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
 
   const currentQuestion = questions[currentQuestionIndex];
+
+  if (!currentQuestion) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-indigo-100 text-slate-800 text-center p-4">
+        <h2 className="text-3xl font-bold text-indigo-700 mb-4">🎉 Game Completed!</h2>
+        <p className="text-slate-600 mb-6">
+          Please wait while we finalize your results...
+        </p>
+      </div>
+    );
+  }
+
   const totalQuestions = questions.length;
   const sessionPrizeLadder = activeConfig.prizeLadder;
   const currentBank = activeConfig.selectedBanks?.find(
@@ -384,7 +504,12 @@ const findAndFlipQuestion = async () => {
 
         <motion.div className="lg:col-span-1 flex flex-col gap-6" variants={itemVariants}>
           <LifelineBar
-            lifelines={activeConfig.lifelines}
+            lifelines={activeConfig?.lifelines ?? {
+              '50:50': true,
+              'Audience Poll': true,
+              'Expert Advice': true,
+              'Flip Question': true,
+            }}
             usedLifelines={usedLifelines}
             onUseLifeline={handleUseLifeline}
           />
