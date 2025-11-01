@@ -1,6 +1,6 @@
 'use client';
 
-import { Gamepad2 } from 'lucide-react';
+import { Gamepad2, User } from 'lucide-react';
 import Link from 'next/link';
 
 export default function Header() {
@@ -12,6 +12,10 @@ export default function Header() {
           <h1 className="text-2xl font-bold text-slate-800">
             QuizMaster
           </h1>
+        </Link>
+        <Link href="/auth/login" className="ml-auto flex items-center gap-2 text-slate-700 hover:text-slate-900 transition-colors">
+          <User size={20} />
+          {/* <span className="font-medium">Admin Login</span> */}
         </Link>
       </div>
     </header>

@@ -1,3 +1,5 @@
+// src/app/admin/components/UserNav.tsx
+
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -22,10 +24,10 @@ export const UserNav = () => {
   }, []);
 
   const handleSignOut = () => {
+    localStorage.removeItem('adminLoggedIN');
     router.push('/auth/login');
   };
 
-  // --- CORRECTED: Added 'as const' to the end of the object ---
   const dropdownVariants = {
     hidden: { opacity: 0, scale: 0.95, y: -10 },
     visible: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring', stiffness: 300, damping: 25 } },
@@ -40,7 +42,6 @@ export const UserNav = () => {
       >
         <div className="relative">
           <User className="h-7 w-7 rounded-full bg-slate-200 p-1 text-slate-600" />
-          {/* Session Indicator */}
           <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-white" title="Session Active" />
         </div>
         <span>Admin</span>

@@ -1,9 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
 import {
   Bell,
   ChevronLeft,
@@ -38,6 +37,14 @@ const NavLink = ({ href, icon: Icon, children, isCollapsed }: any) => {
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const adminLoggedIn = localStorage.getItem('adminLoggedIN');
+    if (adminLoggedIn === 'true') {
+      setIsLoggedIn(true);
+    }
+  }, []);
 
   return (
     <div className="grid min-h-screen w-full md:grid-cols-[auto_1fr] bg-slate-100">
@@ -81,7 +88,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <button className="p-2 rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-800">
               <Bell className="h-5 w-5" />
             </button>
-            <UserNav />
+            
+            {isLoggedIn ? (
+              <UserNav />
+            ) : (
+              <Link
+                href="/auth/login"
+                className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-700"
+              >
+                Login
+              </Link>
+            )}
           </div>
         </header>
         <main className="flex-1 overflow-y-auto bg-slate-100 p-6">
