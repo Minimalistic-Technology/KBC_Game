@@ -20,7 +20,7 @@ export const PrizeLadder = ({ prizeLadder, currentLevel }: PrizeLadderProps) => 
           
           return (
             <li
-              key={item.id}
+              key={item.level}
               className={`relative flex items-center justify-between p-3 rounded-md text-sm transition-all duration-300 z-10
                 ${item.isSafe ? 'font-bold text-slate-800' : 'text-slate-500'}
                 ${isAchieved ? 'text-indigo-600' : ''}

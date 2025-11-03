@@ -33,7 +33,6 @@ export default function GamePage() {
   const [pollResults, setPollResults] = useState<{ option: string; percentage: number }[]>([]);
   const [isAdviceOpen, setIsAdviceOpen] = useState(false);
   const [expertAdvice, setExpertAdvice] = useState<{ text: string; confidence: number } | null>(null);
-  const [askedQuestionIds, setAskedQuestionIds] = useState<Set<number>>(new Set());
 
 
   const setupGameQuestions = async (config: any) => {
@@ -42,8 +41,7 @@ export default function GamePage() {
 
       if (!questionsFromBackend.length) {
         console.error("No questions found in config:", config);
-        setIsLoading(false);
-        return;
+        return null; 
       }
 
       const cleanedQuestions = questionsFromBackend.map((q: any) => ({
@@ -58,20 +56,20 @@ export default function GamePage() {
             : null),
         media: q.mediaRef
           ? {
-            url: q.mediaRef.url,
-            type: q.mediaRef.type,
-          }
+              url: q.mediaRef.url,
+              type: q.mediaRef.type,
+            }
           : null,
       }));
 
-      setAllQuestions(cleanedQuestions);
-      console.log("Cleaned Questions: ", cleanedQuestions);
-      setQuestions(cleanedQuestions);
-      setAskedQuestionIds(new Set(cleanedQuestions.map((q: any) => q.id)));
-      setIsLoading(false);
+      const askedIds = new Set(cleanedQuestions.map((q: any) => q.id));
+      console.log("[setupGameQuestions] Cleaned Questions: ", cleanedQuestions);
+
+      return { cleanedQuestions, askedIds };
+
     } catch (err) {
       console.error("Error setting up game questions:", err);
-      setIsLoading(false);
+      return null; 
     }
   };
 
@@ -79,22 +77,77 @@ export default function GamePage() {
   const fetchActiveGameSession = async () => {
     try {
       const response = await api.get("/api/session", { withCredentials: true });
-      // If session not found
       if (response.status === 404) return null;
 
       return response.data.session || null;
     } catch (err: any) {
-      if (err.response?.status === 404) return null; // no active session
+      if (err.response?.status === 404) return null; 
       console.error("Error fetching active session:", err);
       throw err;
     }
   };
 
+
+  const autoFlipQuestionOnResume = async (
+    originalQuestions: Question[], 
+    questionIndex: number
+  ) => {
+    try {
+      const currentQuestionBankId = originalQuestions[questionIndex].bankId;
+
+      const { data } = await api.post(
+        "/api/game/flip-question", 
+        {
+          currentQuestionBankId,
+        },
+        { withCredentials: true }
+      );
+
+      const q = data.question || data;
+      if (!q || !q._id) {
+        console.error("[autoFlip] No valid question data received. Aborting auto-flip.");
+        return { questions: originalQuestions }; 
+      }
+
+      const flippedQuestion = {
+        id: q._id,
+        bankId: q.bankId,
+        question: q.text || q.question,
+        options: q.options?.map((opt: any) => opt.text) || [],
+        status: q.status,
+        categories: q.categories,
+        answer:
+          q.answer ||
+          (q.correctIndex != null && q.options?.[q.correctIndex]
+            ? q.options[q.correctIndex].text
+            : null),
+        media: q.mediaRef
+          ? { url: q.mediaRef.url, type: q.mediaRef.type }
+          : null,
+      };
+      
+
+      const updatedQuestions = [...originalQuestions];
+      updatedQuestions[questionIndex] = flippedQuestion;
+
+      await api.put("/api/session/update", {
+        questions: updatedQuestions,
+        currentQuestionIndex: questionIndex
+      });
+      
+      return { questions: updatedQuestions };
+
+    } catch (error) {
+      console.error("[autoFlip] Error auto-flipping question:", error);
+      return { questions: originalQuestions };
+    }
+  };
+
+
   useEffect(() => {
     (async () => {
       try {
         setIsLoading(true);
-
         let session = await fetchActiveGameSession();
 
         if (!session) {
@@ -102,19 +155,45 @@ export default function GamePage() {
           const { data } = await api.get("/api/game/session", { withCredentials: true });
           const newSession = await startNewGameSession(data);
 
-          if (!newSession) return; // user had completed game
+          if (!newSession) return;
           setActiveConfig(data);
           setUsedLifelines(data.lifelines); 
-          setupGameQuestions(data);
+          
+          const gameData = await setupGameQuestions(data);
+          if (gameData) {
+            setAllQuestions(gameData.cleanedQuestions);
+            setQuestions(gameData.cleanedQuestions);
+          }
+
         } else if (session.isCompleted) {
           console.log("✅ Session completed — redirecting");
           router.push("/play/game-over");
           return;
+
         } else {
+
+          console.log("🔄 Resuming active session...");
           setActiveConfig(session);
-          setupGameQuestions(session);
-           setUsedLifelines(session.lifelines); 
-          setCurrentQuestionIndex(session.currentQuestionIndex);
+          setUsedLifelines(session.lifelines); 
+          const questionIndex = session.currentQuestionIndex;
+
+          const gameData = await setupGameQuestions(session);
+          if (!gameData) {
+             console.error("Failed to setup questions on resume.");
+             setIsLoading(false);
+             return;
+          }
+
+          const { questions: flippedQuestions } = 
+            await autoFlipQuestionOnResume(
+              gameData.cleanedQuestions, 
+              questionIndex
+            );
+          
+
+          setAllQuestions(flippedQuestions);
+          setQuestions(flippedQuestions);
+          setCurrentQuestionIndex(questionIndex);
         }
       } catch (err) {
         console.error("Error loading session:", err);
@@ -123,6 +202,7 @@ export default function GamePage() {
       }
     })();
   }, []);
+
 
   const startNewGameSession = async (config: any) => {
     try {
@@ -140,7 +220,6 @@ export default function GamePage() {
 
       const response = await api.post("/api/session/start", payload, { withCredentials: true });
 
-      // handle status 206 from backend
       if (response.status === 206) {
         alert("🎉 You’ve already completed this session!");
         router.push("/play/game-over");
@@ -198,18 +277,18 @@ export default function GamePage() {
 
   const fetchFlipQuestion = async () => {
     try {
+      console.log(questions);
+      console.log(currentQuestionIndex)
       const currentQuestionBankId = questions[currentQuestionIndex].bankId;
 
       const { data } = await api.post(
         "/api/game/flip-question",
         {
-          currentQuestionBankId,
-          askedQuestionIds: Array.from(askedQuestionIds || []),
+          currentQuestionBankId
         },
         { withCredentials: true }
       );
 
-      // The backend wraps actual question data inside "data.question"
       const q = data.question || data;
 
       const cleanedQuestion = {
@@ -243,17 +322,12 @@ export default function GamePage() {
       const flippedQuestion = await fetchFlipQuestion();
       if (!flippedQuestion) return;
 
-      // Replace the current question in the array
       setQuestions((prevQuestions) => {
         const updatedQuestions = [...prevQuestions];
         updatedQuestions[currentQuestionIndex] = flippedQuestion;
         return updatedQuestions;
       });
 
-      // Add the flipped question ID to askedQuestionIds (so it won’t repeat later)
-      setAskedQuestionIds((prev) => new Set([...prev, flippedQuestion.id]));
-
-      // Optional: Reset any UI states
       setSelectedOption(null);
       setAnswerState('idle');
       setRemovedOptions([]);
@@ -267,17 +341,14 @@ export default function GamePage() {
 const handleUseLifeline = async (lifeline: keyof Lifeline) => {
   if (usedLifelines[lifeline] === false || selectedOption) return;
 
-  // 🟢 Clone current lifelines & mark the used one as false (disabled)
   const updatedLifelines = { ...usedLifelines, [lifeline]: false };
   setUsedLifelines(updatedLifelines);
   console.log(lifeline)
   try {
-    // Step 2: Update backend session using your existing endpoint
     await api.put("/api/session/update", {
       lifelines: updatedLifelines,
     });
 
-    // Step 3: Continue with lifeline logic
     if (lifeline === "Flip Question") {
       findAndFlipQuestion();
     } else if (lifeline === "50:50") {
@@ -304,7 +375,6 @@ const handleUseLifeline = async (lifeline: keyof Lifeline) => {
 };
 
 
-  // --- Game Logic ---
   const endGame = (prizeValue: string | number, prizeType: 'money' | 'gift', isWinner: boolean, finalScore: number) => {
     router.push(`/play/game-over?prizeValue=${prizeValue}&prizeType=${prizeType}&winner=${isWinner}&score=${finalScore}`);
   };
@@ -324,14 +394,12 @@ const handleUseLifeline = async (lifeline: keyof Lifeline) => {
         const isLast = nextIndex >= questions.length;
 
         try {
-          // 🧠 1️⃣ Update backend session progress
           await axiosInstance.put("/api/session/update", {
             questionId: currentQuestion?._id,
             isCorrect,
             currentQuestionIndex: isCorrect ? nextIndex : currentQuestionIndex,
           });
 
-          // 🏁 2️⃣ If last question and correct → mark as completed
           if (isCorrect && isLast) {
             await axiosInstance.put("/api/session/end");
           }
@@ -339,18 +407,15 @@ const handleUseLifeline = async (lifeline: keyof Lifeline) => {
           console.error("Error updating session:", error);
         }
 
-        // 🧩 3️⃣ Frontend logic
         if (isCorrect) {
           const score = nextIndex;
 
           if (!isLast) {
-            // Move to next question safely
             setCurrentQuestionIndex(nextIndex);
             setSelectedOption(null);
             setAnswerState("idle");
             setRemovedOptions([]);
           } else {
-            // 🚫 Stay on last question to avoid undefined access
             const finalPrizeLevel = prizeLadder[prizeLadder.length - 1];
 
             if (finalPrizeLevel?.type === "gift") {
@@ -370,7 +435,6 @@ const handleUseLifeline = async (lifeline: keyof Lifeline) => {
             }
           }
         } else {
-          // ❌ Wrong answer logic
           const score = currentQuestionIndex;
           const lastSafeLevel = prizeLadder
             .slice(0, currentQuestionIndex)
