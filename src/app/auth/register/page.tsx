@@ -6,7 +6,20 @@ import Banner from '../_components/Banner';
 import Input from '../_components/Input';
 import PasswordStrengthMeter from '../_components/PasswordStrengthMeter';
 
-export default function RegisterPage() {
+import axios from 'axios';
+import { useQuery, QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const queryClient = new QueryClient();
+
+export default function RegisterPageWrapper() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <RegisterPage />
+    </QueryClientProvider>
+  );
+}
+
+ function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -28,13 +41,29 @@ export default function RegisterPage() {
     }
     return '';
   };
-  
+
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setErrors(prev => ({ ...prev, [name]: validateField(name, value) }));
+    setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const registerAdmin = async () => {
+    const { data } = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL_DEV}/auth/admins/register`,
+      { email, password },
+      { headers: { 'Content-Type': 'application/json' } }
+    );
+    return data;
+  };
+
+  const { refetch, isFetching, isError, error, data } = useQuery({
+    queryKey: ['register', email],
+    queryFn: registerAdmin,
+    enabled: false,
+    retry: false,
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setBanner({ message: '', type: 'error' });
     setRegistrationSuccess(false);
@@ -42,12 +71,9 @@ export default function RegisterPage() {
     const emailError = validateField('email', email);
     const passwordError = validateField('password', password);
     const confirmError = validateField('confirm', confirmPassword);
-    
     setErrors({ email: emailError, password: passwordError, confirm: confirmError });
 
-    if (emailError || passwordError || confirmError) {
-      return;
-    }
+    if (emailError || passwordError || confirmError) return;
 
     console.log("Simulating registration for:", email);
     setBanner({ message: "Registration successful! Please check your email to verify your account.", type: 'success' });
