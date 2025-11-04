@@ -36,7 +36,7 @@ export default function QuizPage() {
       options: shuffleArray(q.options)
     }));
     
-    setCurrentQuestions(shuffledQuestions);
+    // setCurrentQuestions(shuffledQuestions);
     setCurrentQuestionIndex(0);
     setScore(0);
     setSelectedOption(null);

@@ -23,7 +23,7 @@ export default function UserLoginPage() {
     }
     
     localStorage.setItem('quizUser', JSON.stringify({ username }));
-    router.push('/dashboard');
+    router.push('/play');
   };
 
   return (
