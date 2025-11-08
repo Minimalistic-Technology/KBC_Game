@@ -1,36 +1,58 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Clock } from 'lucide-react';
 
 interface TimerProps {
   duration: number;
   onTimeUp: () => void;
-  isPaused: boolean;
+  isPaused: boolean;               // true when user selected an option
+  onTimeTaken?: (secs: number) => void; // called on pause or timeout
+  questionKey?: string | number;   // change this per question to reset (e.g., question.id)
 }
 
-export const Timer = ({ duration, onTimeUp, isPaused }: TimerProps) => {
+export const Timer = ({ duration, onTimeUp, isPaused, onTimeTaken, questionKey }: TimerProps) => {
   const [timeLeft, setTimeLeft] = useState(duration);
+  const firedRef = useRef(false);           // prevents multiple onTimeUp fires
+  const prevPausedRef = useRef(isPaused);   // detect running -> paused transition
 
-  // This effect resets the timer when a new question appears (i.e., duration changes)
+  // Reset for new question
   useEffect(() => {
     setTimeLeft(duration);
-  }, [duration]);
+    firedRef.current = false;
+    prevPausedRef.current = false;
+  }, [duration, questionKey]);
 
+  // Countdown / timeout
   useEffect(() => {
-    if (isPaused || timeLeft <= 0) {
-      if (timeLeft <= 0) {
-        onTimeUp();
-      }
-      return;
+  if (isPaused || firedRef.current) return;
+
+  if (timeLeft <= 0) {
+    firedRef.current = true;
+    onTimeUp();
+    return;
+  }
+
+  const id = setInterval(() => {
+    setTimeLeft(t => Math.max(0, t - 1));
+  }, 1000);
+  return () => clearInterval(id);
+
+// ⬇️ remove onTimeTaken from deps
+}, [timeLeft, isPaused, onTimeUp, duration]);
+
+  // Detect answer selection: running -> paused
+  useEffect(() => {
+    const wasRunning = !prevPausedRef.current;
+    const nowPaused = isPaused;
+
+    if (wasRunning && nowPaused && !firedRef.current) {
+      firedRef.current = true;
+      const spent = Math.min(duration, Math.max(0, duration - timeLeft));
+      onTimeTaken?.(spent);
     }
-
-    const intervalId = setInterval(() => {
-      setTimeLeft(prevTime => prevTime - 1);
-    }, 1000);
-
-    return () => clearInterval(intervalId);
-  }, [timeLeft, onTimeUp, isPaused]);
+    prevPausedRef.current = isPaused;
+  }, [isPaused, duration, timeLeft, onTimeTaken]);
 
   return (
     <div className="bg-white/60 backdrop-blur-sm border border-slate-200 rounded-lg p-3 h-16 flex items-center gap-4">

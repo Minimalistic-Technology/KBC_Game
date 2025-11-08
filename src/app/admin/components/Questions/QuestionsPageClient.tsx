@@ -9,6 +9,7 @@ import { QuestionListItem } from './QuestionListItem';
 import { QuestionDetailSidebar } from './QuestionDetailSidebar';
 import { QuestionEditorModal } from './QuestionEditorModal';
 import type { Question, QuestionBank } from '@/lib/types';
+import { BulkExcelUpload } from './BulkExcelUpload';
 
 export default function QuestionsPageClient() {
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -163,23 +164,34 @@ export default function QuestionsPageClient() {
 
       <div className="flex flex-col gap-8 h-full">
         {/* Header */}
-        <div className="flex-shrink-0 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900">{activeBank?.name || 'Questions'}</h1>
-            <p className="text-slate-700 mt-1">
-              {activeBank ? `Manage all questions for this bank.` : 'Select a bank to view its questions.'}
-            </p>
-          </div>
-          {activeBank && (
-            <button
-              onClick={() => handleOpenEditor(null)}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 h-10 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700"
-            >
-              <PlusCircle className="h-5 w-5" />
-              Add New Question
-            </button>
-          )}
-        </div>
+    <div className="flex-shrink-0 flex items-center justify-between">
+  <div>
+    <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+      {activeBank?.name || 'Questions'}
+    </h1>
+    <p className="text-slate-700 mt-1">
+      {activeBank ? 'Manage all questions for this bank.' : 'Select a bank to view its questions.'}
+    </p>
+  </div>
+
+  <div className="flex items-center gap-3">
+    {activeBank && (
+      <>
+        <BulkExcelUpload
+          bankId={activeBank._id as string}
+          onUploaded={() => bankId && fetchQuestions(bankId)}
+        />
+        <button
+          onClick={() => handleOpenEditor(null)}
+          className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 h-10 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700"
+        >
+          <PlusCircle className="h-5 w-5" />
+          Add New Question
+        </button>
+      </>
+    )}
+  </div>
+</div>
 
         {activeBank ? (
           <div className="flex-grow grid grid-cols-1 lg:grid-cols-3 gap-8 min-h-0">

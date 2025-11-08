@@ -20,6 +20,11 @@ function Wrapper({ children }: { children: React.ReactNode }) {
   return <div className="max-w-6xl mx-auto p-4">{children}</div>;
 }
 
+// for export 
+type Bank = { _id?: string; name: string };
+type Props = { allBanks: Bank[] };
+
+
 // Page content component
 function QuestionBanksPageContent() {
 
@@ -31,14 +36,92 @@ function QuestionBanksPageContent() {
   const [ageGroupFilter, setAgeGroupFilter] = useState('all');
   const [tagFilter, setTagFilter] = useState('all');
 
+  const [bankId, setBankId] = useState<string>("");
+  const [status, setStatus] = useState<"all" | "published" | "draft">("all");
+  const [format, setFormat] = useState<"csv" | "xlsx" | "json">("csv");
+  const [loading, setLoading] = useState(false);
+  const handleExport = async () => {
+    try {
+      if (!bankId) {
+        alert("Please select a Question Bank (single bank only).");
+        return;
+      }
+
+      setLoading(true);
+
+      // Handle JSON fallback gracefully
+      const apiFormat = format === "json" ? "csv" : format;
+
+      const res = await axiosInstance.get("/api/import-export/export/questions", {
+        params: { bankId, status, format: apiFormat },
+        responseType: "blob",
+        withCredentials: true,
+      });
+
+      // ✅ If backend succeeded, Axios already ensures status 200–299
+      const blob = new Blob([res.data]);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+
+      // Extract filename from headers (if backend sent it)
+      const cd = res.headers["content-disposition"];
+      const match = cd?.match(/filename="?([^"]+)"?/i);
+      const fileName = match?.[1] || `questions_${status}.${apiFormat}`;
+
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      console.error("Export failed:", err);
+      alert(err?.response?.data?.error || err?.message || "Export failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  // --- helpers ---
+  function defaultFilename({
+    allBanks,
+    bankId,
+    status,
+    format,
+  }: {
+    allBanks: Bank[];
+    bankId: string;
+    status: "all" | "published" | "draft";
+    format: "csv" | "xlsx" | "json";
+  }) {
+    const bankName = allBanks.find((b) => b._id === bankId)?.name ?? `bank_${bankId.slice(-6)}`;
+    const statusTag = status === "all" ? "all-status" : status;
+    const ext = format === "xlsx" ? "xlsx" : format; // if json unsupported, we used csv above
+    const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+    return `${slugify(bankName)}_${statusTag}_questions_${stamp}.${ext}`;
+  }
+
+  function slugify(s: string) {
+    return s.toLowerCase().replace(/[^\w\-]+/g, "_");
+  }
+
+  async function safeJson(res: Response) {
+    try {
+      return await res.json();
+    } catch {
+      return null;
+    }
+  }
+
   const correctPin = process.env.NEXT_PUBLIC_ADMIN_PIN || '1234';
 
-    useEffect(() => {
-        const loggedIn = localStorage.getItem('adminLoggedIN');
-        if (loggedIn !== 'true') {
-            router.push('/auth/login');
-        }
-    }, [router]);
+  useEffect(() => {
+    const loggedIn = localStorage.getItem('adminLoggedIN');
+    if (loggedIn !== 'true') {
+      router.push('/auth/login');
+    }
+  }, [router]);
 
   // Fetch all question banks
   const { data: allBanks = [], isLoading, isError } = useQuery<QuestionBank[]>({
@@ -108,62 +191,59 @@ function QuestionBanksPageContent() {
     }
   };
 
-  const onMove = async(bank: QuestionBank) => {
+  const onMove = async (bank: QuestionBank) => {
 
   }
- 
+
 
   const handleSaveBank = async (bank: QuestionBank) => {
-  try {
-    const payload = {
-      name: bank.name,
-      slug: bank.slug,
-      description: bank.description,
-      published: bank.published,
-      categories: bank.categories,
-      ageGroup: bank.ageGroup,
-      questionCount: bank.questionCount,
-      defaultTimer: bank.defaultTimer,
-      prizeLadder: bank.prizeLadder,
-    };
+    try {
+      const payload = {
+        name: bank.name,
+        slug: bank.slug,
+        description: bank.description,
+        published: bank.published,
+        categories: bank.categories,
+        ageGroup: bank.ageGroup,
+        questionCount: bank.questionCount,
+        defaultTimer: bank.defaultTimer,
+        prizeLadder: bank.prizeLadder,
+      };
 
-    let updatedBank: QuestionBank;
-    if (bank._id) {
-      const res = await axiosInstance.put(`/api/questions/banks/${bank._id}`, payload);
-      updatedBank = { ...res.data, tags: res.data.tags || [] };
-    } else {
-      const res = await axiosInstance.post(`/api/questions/banks`, payload);
-      updatedBank = { ...res.data, tags: res.data.tags || [] };
+      let updatedBank: QuestionBank;
+      if (bank._id) {
+        const res = await axiosInstance.put(`/api/questions/banks/${bank._id}`, payload);
+        updatedBank = { ...res.data, tags: res.data.tags || [] };
+      } else {
+        const res = await axiosInstance.post(`/api/questions/banks`, payload);
+        updatedBank = { ...res.data, tags: res.data.tags || [] };
+      }
+
+
+      queryClient.setQueryData<QuestionBank[]>(['question-banks'], (old = []) => {
+        const exists = old.some((b) => b._id === updatedBank._id);
+        const newBanks = exists
+          ? old.map((b) => (b._id === updatedBank._id ? updatedBank : b))
+          : [updatedBank, ...old];
+
+        // Update filteredBanks immediately according to filters
+        let tempBanks = [...newBanks];
+        if (ageGroupFilter !== 'all') tempBanks = tempBanks.filter((b) => b.ageGroup === ageGroupFilter);
+        if (tagFilter !== 'all') tempBanks = tempBanks.filter((b) => b.categories.includes(tagFilter));
+        setFilteredBanks(tempBanks);
+
+        return newBanks;
+      });
+
+      handleCloseEditor();
+    } catch (err) {
+      console.error('Failed to save bank:', err);
     }
-
-   
-    queryClient.setQueryData<QuestionBank[]>(['question-banks'], (old = []) => {
-      const exists = old.some((b) => b._id === updatedBank._id);
-      const newBanks = exists
-        ? old.map((b) => (b._id === updatedBank._id ? updatedBank : b))
-        : [updatedBank, ...old];
-
-      // Update filteredBanks immediately according to filters
-      let tempBanks = [...newBanks];
-      if (ageGroupFilter !== 'all') tempBanks = tempBanks.filter((b) => b.ageGroup === ageGroupFilter);
-      if (tagFilter !== 'all') tempBanks = tempBanks.filter((b) => b.categories.includes(tagFilter));
-      setFilteredBanks(tempBanks);
-
-      return newBanks;
-    });
-
-    handleCloseEditor();
-  } catch (err) {
-    console.error('Failed to save bank:', err);
-  }
-};
-
-
-  const handleExport = () => {
-    alert('This would trigger a download of the selected questions in the chosen format.');
   };
 
-  if (!isVerified) return <PinVerificationModal onVerify={handleVerificationSuccess}  />;
+
+
+  if (!isVerified) return <PinVerificationModal onVerify={handleVerificationSuccess} />;
   if (isLoading) return <div className="text-center mt-10">Loading question banks...</div>;
   if (isError) return <div className="text-center mt-10 text-red-600">Failed to load question banks.</div>;
 
@@ -191,44 +271,87 @@ function QuestionBanksPageContent() {
           </button>
         </div>
 
-        {/* Export Panel */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
           <h3 className="text-lg font-bold text-slate-900">Export Questions</h3>
+
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4 items-end">
+  
+              <div className="md:col-span-1">
+                <label
+                  htmlFor="bankSelect"
+                  className="block text-sm font-medium text-slate-700 mb-2"
+                >
+                  Question Bank
+                </label>
+                <select
+                  id="bankSelect"
+                  className="w-full h-10 px-3 border bg-white border-slate-300 rounded-lg text-slate-900"
+                  value={bankId}
+                  onChange={(e) => setBankId(e.target.value)}
+                >
+                  <option value="all">All Banks</option> {/* ✅ Supports global export */}
+                  {allBanks.map((bank) => (
+                    <option key={bank._id} value={bank._id}>
+                      {bank.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            
+
             <div className="md:col-span-1">
-              <label htmlFor="bankSelect" className="block text-sm font-medium text-slate-700 mb-2">Question Bank</label>
-              <select id="bankSelect" className="w-full h-10 px-3 border bg-white border-slate-300 rounded-lg text-slate-900">
-                <option>All Banks</option>
-                {allBanks.map((bank) => (
-                  <option key={bank._id} value={bank._id}>{bank.name}</option>
-                ))}
+              <label htmlFor="statusSelect" className="block text-sm font-medium text-slate-700 mb-2">
+                Status
+              </label>
+              <select
+                id="statusSelect"
+                className="w-full h-10 px-3 border bg-white border-slate-300 rounded-lg text-slate-900"
+                value={status}
+                onChange={(e) =>
+                  setStatus(
+                    (e.target.value.toLowerCase() as "all" | "published" | "draft") ?? "all"
+                  )
+                }
+              >
+                <option value="all">All Statuses</option>
+                <option value="published">Published</option>
+                <option value="draft">Draft</option>
               </select>
             </div>
+
             <div className="md:col-span-1">
-              <label htmlFor="statusSelect" className="block text-sm font-medium text-slate-700 mb-2">Status</label>
-              <select id="statusSelect" className="w-full h-10 px-3 border bg-white border-slate-300 rounded-lg text-slate-900">
-                <option>All Statuses</option>
-                <option>Published</option>
-                <option>Draft</option>
+              <label htmlFor="formatSelect" className="block text-sm font-medium text-slate-700 mb-2">
+                Format
+              </label>
+              <select
+                id="formatSelect"
+                className="w-full h-10 px-3 border bg-white border-slate-300 rounded-lg text-slate-900"
+                value={format}
+                onChange={(e) =>
+                  setFormat(
+                    (e.target.value.toLowerCase() as "csv" | "xlsx" | "json") ?? "csv"
+                  )
+                }
+              >
+                <option value="csv">CSV</option>
+                <option value="xlsx">Excel (.xlsx)</option>
+                <option value="json">JSON</option>
               </select>
             </div>
-            <div className="md:col-span-1">
-              <label htmlFor="formatSelect" className="block text-sm font-medium text-slate-700 mb-2">Format</label>
-              <select id="formatSelect" className="w-full h-10 px-3 border bg-white border-slate-300 rounded-lg text-slate-900">
-                <option>CSV</option>
-                <option>JSON</option>
-              </select>
-            </div>
+
             <div className="md:col-span-1">
               <button
                 onClick={handleExport}
-                className="w-full inline-flex items-center justify-center gap-2 rounded-lg border bg-white px-4 h-10 text-sm font-semibold text-slate-800 hover:bg-slate-100"
+                disabled={loading}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-lg border bg-white px-4 h-10 text-sm font-semibold text-slate-800 hover:bg-slate-100 disabled:opacity-60"
               >
-                <Download size={16} /> Export Data
+                {/* <Download size={16} /> */}
+                {loading ? "Exporting…" : "Export Data"}
               </button>
             </div>
           </div>
         </div>
+
 
         {/* Filters */}
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
@@ -275,7 +398,7 @@ function QuestionBanksPageContent() {
                 index={index}
                 isFirst={index === 0}
                 isLast={index === filteredBanks.length - 1}
-                onMove={(e) => { e.preventDefault(); onMove(bank);}}
+                onMove={(e) => { e.preventDefault(); onMove(bank); }}
                 onEdit={(e) => { e.preventDefault(); handleOpenEditor(bank); }}
                 onDelete={(e) => { e.preventDefault(); if (bank._id) handleDeleteBank(bank._id); }}
               />
@@ -283,7 +406,7 @@ function QuestionBanksPageContent() {
           </AnimatePresence>
         </motion.div>
       </div>
-    </Wrapper>
+    </Wrapper >
   );
 }
 
@@ -294,3 +417,5 @@ export default function QuestionBanksPageWrapper() {
     </QueryClientProvider>
   );
 }
+
+

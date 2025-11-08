@@ -1,42 +1,72 @@
-import { Filters } from './components/Filters';
-import { ScoreTable } from './components/ScoreTable';
-import { fetchScores } from './components/data';
-import { PaginationControls } from './components/PaginationControls';
+"use client";
 
-export const dynamic = 'force-dynamic';
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import axiosInstance from "@/utils/axiosInstance";
+import { ScoreTable } from "./components/ScoreTable";
+import { PaginationControls } from "./components/PaginationControls";
 
-export default async function ScoreboardPage({
-  searchParams,
-}: {
-  searchParams: { [key: string]: string | string[] | undefined };
-}) {
-  const page = Number(searchParams.page) || 1;
-  const limit = Number(searchParams.limit) || 10;
-  const search = searchParams.search as string | undefined;
-  const bank = searchParams.bank as string | undefined;
-  const startDate = searchParams.startDate as string | undefined;
-  const endDate = searchParams.endDate as string | undefined;
-  const view = (searchParams.view as string) || 'all'; 
+export default function ScoreboardPage() {
+  const searchParams = useSearchParams();
+  const page = Number(searchParams.get("page")) || 1;
+  const limit = Number(searchParams.get("limit")) || 10;
 
-  const { scores, total } = await fetchScores({ page, limit, search, bank, startDate, endDate, view });
+  const [scores, setScores] = useState<any[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchScores = async () => {
+      try {
+        setLoading(true);
+        const res = await axiosInstance.get("/api/score/get", {
+          params: { page, limit },
+          withCredentials: true,
+        });
+
+        const { results = [], total = 0 } = res.data || {};
+        setScores(results);
+        setTotal(total);
+      } catch (error) {
+        console.error("❌ Failed to fetch scores:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchScores();
+  }, [page, limit]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 text-center">
+        <h2 className="text-2xl font-semibold text-slate-800">Loading scores…</h2>
+        <p className="text-slate-600 mt-2">Please wait.</p>
+      </div>
+    );
+  }
+
   const totalPages = Math.ceil(total / limit);
 
   return (
     <div className="flex flex-col gap-6">
       <div className="rounded-xl border bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between">
-            <div>
-                <h1 className="text-2xl font-bold tracking-tight text-slate-900">Scoreboard</h1>
-                <p className="text-slate-600 mt-1">Showing {scores.length} of {total} results.</p>
-            </div>
-             <Filters />
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+              Scoreboard
+            </h1>
+            <p className="text-slate-600 mt-1">
+              Showing {scores.length} of {total} results.
+            </p>
+          </div>
         </div>
-        
+
         <div className="mt-6">
-            <ScoreTable scores={scores} />
+          <ScoreTable scores={scores} />
         </div>
       </div>
-      
+
       <PaginationControls
         currentPage={page}
         totalPages={totalPages}
