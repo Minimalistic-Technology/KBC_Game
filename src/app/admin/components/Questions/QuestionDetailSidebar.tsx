@@ -1,7 +1,8 @@
 'use client';
 
-import { FileQuestion, ImageIcon, CheckCircle, Edit, Trash2, Tag, FileEdit, Film, Music } from 'lucide-react';
+import { FileQuestion, ImageIcon, CheckCircle, Edit, Trash2, Tag, FileEdit } from 'lucide-react';
 import type { Question } from '@/lib/types';
+import React, { useState , useEffect } from 'react';
 
 interface SidebarProps {
     question: Question | null;
@@ -9,7 +10,15 @@ interface SidebarProps {
     onEdit: () => void;
 }
 
-const DetailItem = ({ icon: Icon, label, children }: { icon: React.ElementType, label: string, children: React.ReactNode }) => (
+const DetailItem = ({
+    icon: Icon,
+    label,
+    children,
+}: {
+    icon: React.ElementType;
+    label: string;
+    children: React.ReactNode;
+}) => (
     <div>
         <span className="text-sm font-semibold text-slate-500 flex items-center gap-2 mb-2">
             <Icon size={14} />
@@ -25,32 +34,94 @@ export const QuestionDetailSidebar = ({ question, onDelete, onEdit }: SidebarPro
             <div className="hidden lg:flex flex-col items-center justify-center h-full bg-white rounded-xl shadow-sm border border-slate-200 p-6 text-center">
                 <FileQuestion className="h-16 w-16 text-slate-300" />
                 <h3 className="mt-4 text-lg font-semibold text-slate-800">Select a Question</h3>
-                <p className="mt-1 text-sm text-slate-500">Choose a question from the list to see its details.</p>
+                <p className="mt-1 text-sm text-slate-500">
+                    Choose a question from the list to see its details.
+                </p>
             </div>
         );
     }
-    console.log(question)
-    const { status, categories , mediaRef } = question;
-    console.log(mediaRef)
+
+    const { status, mediaRef, lang } = question as any;
+    const [activeLang, setActiveLang] = useState<'en' | 'hi' | 'gu'>('en');
+
+     useEffect(() => {
+    setActiveLang('en');
+  }, [question?._id]);
+
+
+    // ✅ Only use that language, don’t fallback to English
+    const block = lang?.[activeLang] || {};
+    const options =
+        Array.isArray(block.options) && block.options.length > 0
+            ? block.options.map((o: any) => (typeof o === 'string' ? o : o.text))
+            : [];
+
+    const categories = block.categories || [];
+
     const StatusBadge = () => (
-        <span className={`inline-flex items-center gap-1.5 text-xs font-bold capitalize px-3 py-1 rounded-full ${status === 'Published' ? "bg-green-100 text-green-800" : "bg-yellow-100 text-yellow-800"
-            }`}>
+        <span
+            className={`inline-flex items-center gap-1.5 text-xs font-bold capitalize px-3 py-1 rounded-full ${status === 'Published'
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-yellow-100 text-yellow-800'
+                }`}
+        >
             {status === 'Published' ? <CheckCircle size={12} /> : <FileEdit size={12} />}
             {status}
         </span>
     );
 
+    console.log(mediaRef);
+     console.log(status);
+      console.log(lang);
+
     return (
         <div className="hidden lg:flex flex-col h-full bg-white rounded-xl shadow-sm border border-slate-200">
-            <div className="p-6 border-b"><h3 className="text-lg font-bold text-slate-900">Details</h3></div>
+            {/* Header */}
+            <div className="p-6 border-b flex justify-between items-center">
+                <h3 className="text-lg font-bold text-slate-900">Details</h3>
+
+                {/* Language Tabs */}
+                <div className="flex gap-1">
+                    {(['en', 'hi', 'gu'] as const).map((k) => {
+                        const exists = !!lang?.[k]?.text;
+                        return (
+                            <button
+                                key={k}
+                                type="button"
+                                onClick={() => setActiveLang(k)}
+                                disabled={!exists}
+                                className={`px-2 py-1 text-xs rounded-md border transition-all ${activeLang === k
+                                        ? 'bg-indigo-600 text-white border-indigo-600'
+                                        : exists
+                                            ? 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                                            : 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
+                                    }`}
+                            >
+                                {k.toUpperCase()}
+                            </button>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Content */}
             <div className="flex-grow p-6 space-y-6 overflow-y-auto">
+                {/* Question text */}
                 <div>
-                    <span className="text-sm font-semibold text-slate-500">Question Preview</span>
-                    <p className="mt-1 text-slate-800 font-medium">{question.question}</p>
+                    <span className="text-sm font-semibold text-slate-500">
+                        Question ({activeLang.toUpperCase()})
+                    </span>
+                    {block?.text ? (
+                        <p className="mt-1 text-slate-800 font-medium">{block.text}</p>
+                    ) : (
+                        <p className="mt-1 text-slate-500 italic">
+                            No {activeLang.toUpperCase()} translation available
+                        </p>
+                    )}
                 </div>
 
-
-               <DetailItem icon={ImageIcon} label="Media">
+                {/* Media */}
+                <DetailItem icon={ImageIcon} label="Media">
                     {mediaRef?.url ? (
                         mediaRef.type.startsWith('image') ? (
                             <img
@@ -80,33 +151,76 @@ export const QuestionDetailSidebar = ({ question, onDelete, onEdit }: SidebarPro
                     )}
                 </DetailItem>
 
-
+                {/* Options */}
                 <div>
-                    <span className="text-sm font-semibold text-slate-500">Options</span>
-                    <ul className="mt-2 space-y-2">
-                        {question.options.map((opt, index) => (
-                            <li key={index} className={`flex items-center gap-3 text-sm p-3 rounded-md ${question.answer === opt ? 'bg-green-100 text-green-900 font-semibold' : 'bg-slate-100 text-slate-700'}`}>
-                                {question.answer === opt && <CheckCircle size={16} className="text-green-600 flex-shrink-0" />}
-                                <span>{opt}</span>
-                            </li>
-                        ))}
-                    </ul>
+                    <span className="text-sm font-semibold text-slate-500">
+                        Options ({activeLang.toUpperCase()})
+                    </span>
+                    {options.length > 0 ? (
+                        <ul className="mt-2 space-y-2">
+                            {options.map((opt: string, index: number) => (
+                                <li
+                                    key={index}
+                                    className={`flex items-center gap-3 text-sm p-3 rounded-md ${question.answer === opt
+                                            ? 'bg-green-100 text-green-900 font-semibold'
+                                            : 'bg-slate-100 text-slate-700'
+                                        }`}
+                                >
+                                    {question.answer === opt && (
+                                        <CheckCircle size={16} className="text-green-600 flex-shrink-0" />
+                                    )}
+                                    <span>{opt || `Option ${index + 1}`}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    ) : (
+                        <p className="mt-2 text-xs text-slate-500 italic">
+                            No {activeLang.toUpperCase()} options available
+                        </p>
+                    )}
                 </div>
+
+                {/* Categories */}
                 <div className="pt-4 border-t space-y-5">
-                    <DetailItem icon={CheckCircle} label="Status"><StatusBadge /></DetailItem>
-                    <DetailItem icon={Tag} label="Tags">
+                    <DetailItem icon={CheckCircle} label="Status">
+                        <StatusBadge />
+                    </DetailItem>
+
+                    <DetailItem icon={Tag} label={`Tags (${activeLang.toUpperCase()})`}>
                         {categories && categories.length > 0 ? (
                             <div className="flex flex-wrap gap-2">
-                                {categories.map(categories => (<span key={categories} className="text-xs font-semibold bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full">{categories}</span>))}
+                                {categories.map((cat: string) => (
+                                    <span
+                                        key={cat}
+                                        className="text-xs font-semibold bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full"
+                                    >
+                                        {cat}
+                                    </span>
+                                ))}
                             </div>
-                        ) : (<p className="text-xs text-slate-500">No tags assigned</p>)}
+                        ) : (
+                            <p className="text-xs text-slate-500 italic">
+                                No {activeLang.toUpperCase()} tags assigned
+                            </p>
+                        )}
                     </DetailItem>
-                    {/* --- "Available Lifelines" DetailItem removed --- */}
                 </div>
             </div>
+
+            {/* Footer buttons */}
             <div className="p-4 bg-slate-50 border-t flex gap-3">
-                <button onClick={onEdit} className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 h-10 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700"><Edit size={16} /> Edit</button>
-                <button onClick={() => onDelete(question._id!)} className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-white border h-10 text-sm font-semibold text-red-600 hover:bg-red-50 hover:border-red-200"><Trash2 size={16} /> Delete</button>
+                <button
+                    onClick={onEdit}
+                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 h-10 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700"
+                >
+                    <Edit size={16} /> Edit
+                </button>
+                <button
+                    onClick={() => onDelete(question._id!)}
+                    className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg bg-white border h-10 text-sm font-semibold text-red-600 hover:bg-red-50 hover:border-red-200"
+                >
+                    <Trash2 size={16} /> Delete
+                </button>
             </div>
         </div>
     );
