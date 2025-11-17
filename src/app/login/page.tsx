@@ -1,3 +1,5 @@
+
+
 'use client';
 
 import React, { useState } from 'react';
@@ -7,21 +9,22 @@ import Link from 'next/link';
 import { useMutation } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { Toaster, toast } from 'react-hot-toast';
-import api from '@/lib/axios'; // Adjust the import path if needed
+import api from '@/lib/axios';
+import Header from "@/components/Header";
 
-// --- TYPES ---
+import { useSetAtom } from "jotai";
+import { loggedInUserAtom } from "@/state/auth"; // <-- this is your role atom
+
 type FormData = {
   email: string;
   password: string;
 };
 
-// --- API FUNCTION ---
 const loginUser = async (credentials: FormData) => {
   const { data } = await api.post('/api/auth/login', credentials);
   return data;
 };
 
-// --- COMPONENT ---
 export default function LoginPage() {
   const router = useRouter();
   const [formData, setFormData] = useState<FormData>({
@@ -29,16 +32,24 @@ export default function LoginPage() {
     password: '',
   });
 
+  // ✅ we only set the role atom
+  const setLoggedInRole = useSetAtom(loggedInUserAtom);
+
   const mutation = useMutation({
     mutationFn: loginUser,
     onSuccess: (data) => {
       toast.success(data.message || 'Login successful!');
+
+      // ✅ mark this session as "user"
+      setLoggedInRole("user");
+
       setTimeout(() => {
         router.push('/play');
       }, 1000);
     },
     onError: (error: AxiosError<{ message: string }>) => {
-      const errorMessage = error.response?.data?.message || 'An unexpected error occurred.';
+      const errorMessage =
+        error.response?.data?.message || 'An unexpected error occurred.';
       toast.error(errorMessage);
     },
   });
@@ -55,10 +66,11 @@ export default function LoginPage() {
 
   return (
     <>
+      <Header />
       <Toaster position="top-center" reverseOrder={false} />
-      <div className="flex items-center justify-center min-h-screen bg-slate-50 p-4">
+
+      <div className="flex items-center justify-center min-h-screen bg-slate-50 pt-16">
         <div className="w-full max-w-md mx-auto bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
-          
           <div className="text-center mb-8">
               <div className="mx-auto bg-indigo-100 rounded-full w-16 h-16 flex items-center justify-center mb-4">
                   <LogIn className="text-indigo-600" size={32} />

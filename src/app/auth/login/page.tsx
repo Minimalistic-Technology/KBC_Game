@@ -1,100 +1,112 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import AuthLayout from '../_components/AuthLayout';
-import Link from 'next/link';
-import Input from '../_components/Input';
-import Banner from '../_components/Banner';
-import axiosInstance from '@/utils/axiosInstance';
-
-import axios from 'axios';
-import { useQuery, QueryClient, QueryClientProvider } from '@tanstack/react-query';
-
-const queryClient = new QueryClient();
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import AuthLayout from "../_components/AuthLayout";
+import Link from "next/link";
+import Input from "../_components/Input";
+import Banner from "../_components/Banner";
+import axiosInstance from "@/utils/axiosInstance";
+import { useSetAtom } from "jotai";
+import { loggedInUserAtom } from "@/state/auth";
 
 export default function LoginPageWrapper() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <LoginPage />
-    </QueryClientProvider>
-  );
+  return <LoginPage />;
 }
 
-  function LoginPage() {
+function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const setLoggedInUser = useSetAtom(loggedInUserAtom);
 
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-   const loginAdmin = async () => {
-    const { data } = await axiosInstance.post(
-      `/auth/admins/login`,
-      { email, password },
-      { withCredentials: true, headers: { 'Content-Type': 'application/json' } }
-    );
-    return data;
-  };
-
-  const { data, isFetching, isError, error: queryError, refetch } = useQuery({
-    queryKey: ['login', email],
-    queryFn: loginAdmin,
-    enabled: false, // prevent auto fetch on mount
-    retry: false,
-  });
-  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     if (!email || !password) {
       setError("Please fill in both fields.");
       return;
     }
 
     try {
-      
-      const result = await refetch();
+      setLoading(true);
 
-        if(result.status === 'success'){
-          localStorage.setItem("adminLoggedIN", 'true');
-          router.push('/admin');
-        }
-      else {
-        setError(result.data?.message || "Login failed. Please try again.");
+      const resp = await axiosInstance.post(
+        `/auth/admins/login`,
+        { email, password },
+        { withCredentials: true, headers: { "Content-Type": "application/json" } }
+      );
+
+      const data = resp.data;
+      console.log("Login response:", data);
+
+      // direct, simple check
+      if (data?.role === "admin" || data?.status === "success") {
+        // set Jotai atom so UI updates immediately
+        console.log("Login: about to setLoggedInUser -> admin");
+        setLoggedInUser("admin");
+        console.log("Login: setLoggedInUser done");
+
+        console.log("Login: navigating to /admin");
+        router.push("/admin");
+        console.log("DEBUG: stayed on page after setLoggedInUser");
+        return;
       }
-    } catch (err) {
-      setError("Something went wrong. Please try again later.");
-      console.error(err);
-    }
 
+      // otherwise show server message
+      setError(data?.message || "Login failed. Please try again.");
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || "Something went wrong";
+      setError(msg);
+      console.error("Login error:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <AuthLayout title="Admin Login">
       <form onSubmit={handleSubmit} className="space-y-4">
-  
-        {(error || (isError && queryError)) && (
-          <Banner
-            type="error"
-            message={error || (queryError as any)?.response?.data?.message || "Login failed"}
-          />
-        )}
+        {error && <Banner type="error" message={error} />}
 
-        <Input label="Email Address" id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
-        
+        <Input
+          label="Email Address"
+          id="email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+
         <div className="flex justify-between items-center">
-            <label className="text-sm font-medium text-slate-600 invisible">Password</label> 
-            <Link href="/auth/forgot-password" tabIndex={-1} className="text-sm text-indigo-600 hover:underline">Forgot password?</Link>
+          <label className="text-sm font-medium text-slate-600 invisible">Password</label>
+          <Link href="/auth/forgot-password" tabIndex={-1} className="text-sm text-indigo-600 hover:underline">
+            Forgot password?
+          </Link>
         </div>
-        <Input label="Password" id="password" type="password" value={password} onChange={e => setPassword(e.target.value)} required />
-        
-        <button type="submit" className="w-full !mt-6 p-3 font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700" disabled={isFetching}>
-          {isFetching ? "Logging in..." : "Login"}
+
+        <Input
+          label="Password"
+          id="password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+
+        <button
+          type="submit"
+          className="w-full !mt-6 p-3 font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
+          disabled={loading}
+        >
+          {loading ? "Logging in..." : "Login"}
         </button>
 
-         <p className="text-center text-sm text-slate-500">
-          Need an account?{' '}
+        <p className="text-center text-sm text-slate-500">
+          Need an account?{" "}
           <Link href="/auth/register" className="font-semibold text-indigo-600 hover:underline">
             Register now
           </Link>

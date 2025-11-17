@@ -10,6 +10,8 @@ import type { QuestionBank } from '@/lib/types';
 import { QuestionBankCard } from '../components/question bank/QuestionBankCard';
 import { BankEditorModal } from '../components/question bank/BankEditorModal';
 import { PinVerificationModal } from '../components/question bank/PinVerificationModal';
+import { useAtomValue } from "jotai";
+import { authHydratedAtom, isAdminAtom } from "@/state/auth";
 import { Router } from 'next/router';
 
 // Create QueryClient
@@ -40,7 +42,23 @@ function QuestionBanksPageContent() {
   const [status, setStatus] = useState<"all" | "published" | "draft">("all");
   const [format, setFormat] = useState<"csv" | "xlsx" | "json">("csv");
   const [loading, setLoading] = useState(false);
+
+  
+    const hydrated = useAtomValue(authHydratedAtom);
+    const isAdmin = useAtomValue(isAdminAtom);
+    
+    // Redirect if not admin
+    useEffect(() => {
+        if (!hydrated) return; // wait for auth to load
+    
+        if (!isAdmin) {
+            router.replace("/auth/login");
+        }
+    }, [hydrated, isAdmin, router]);
+
+
   const handleExport = async () => {
+    
     try {
       if (!bankId) {
         alert("Please select a Question Bank (single bank only).");
@@ -114,14 +132,6 @@ function QuestionBanksPageContent() {
     }
   }
 
-  const correctPin = process.env.NEXT_PUBLIC_ADMIN_PIN || '1234';
-
-  useEffect(() => {
-    const loggedIn = localStorage.getItem('adminLoggedIN');
-    if (loggedIn !== 'true') {
-      router.push('/auth/login');
-    }
-  }, [router]);
 
   // Fetch all question banks
   const { data: allBanks = [], isLoading, isError } = useQuery<QuestionBank[]>({

@@ -52,7 +52,7 @@ export default function GamePage() {
   const [usedLifelinesArr, setUsedLifelinesArr] = useState<string[]>([]);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [answerState, setAnswerState] = useState<AnswerState>('idle');
-  const [removedOptions, setRemovedOptions] = useState<string[]>([]);
+  const [removedOptions, setRemovedOptions] = useState<number[]>([]);
 
   // ---------- Modals ----------
   const [isPollOpen, setIsPollOpen] = useState(false);
@@ -229,7 +229,6 @@ export default function GamePage() {
       setAnswerState('idle');
       setRemovedOptions([]);
 
-      // Optional: persist latest question swap
       try {
         await api.put('/api/session/update', {
           questions: (prev => {
@@ -239,13 +238,12 @@ export default function GamePage() {
           })(questions),
           currentQuestionIndex,
         });
-      } catch {}
+      } catch { }
     } catch (error) {
       console.error('Error flipping question:', error);
     }
   };
 
-  // ---------- Bootstrap session ----------
   useEffect(() => {
     (async () => {
       try {
@@ -267,7 +265,7 @@ export default function GamePage() {
             setQuestions(gameData.cleanedQuestions);
           }
         } else if (session.isCompleted) {
-          router.push('/play/game-over');
+          router.push('/');
           return;
         } else {
           // Resume
@@ -295,15 +293,21 @@ export default function GamePage() {
         setIsLoading(false);
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ---------- Language/Question change: reset UI selection ----------
   useEffect(() => {
     setSelectedOption(null);
     setAnswerState('idle');
+  }, [lang]);
+
+  // When QUESTION changes: reset everything including 50:50
+  useEffect(() => {
+    setSelectedOption(null);
+    setAnswerState('idle');
     setRemovedOptions([]);
-  }, [lang, currentQuestionIndex]);
+  }, [currentQuestionIndex]);
+
 
   // ---------- Lifelines ----------
   const handleUseLifeline = async (lifeline: keyof Lifeline) => {
@@ -330,8 +334,14 @@ export default function GamePage() {
             answer: displayAnswer,
           },
         });
+
         if (data.removedOptions) {
-          setRemovedOptions(data.removedOptions);
+          // data.removedOptions: string[] (option texts in current language)
+          const removedIndexes = data.removedOptions
+            .map((optText: string) => displayOptions.indexOf(optText))
+            .filter((idx: number) => idx !== -1);
+
+          setRemovedOptions(removedIndexes);          
           setUsedLifelinesArr(prev => [...prev, '50:50']);
         }
       } else if (lifeline === 'Audience Poll') {
@@ -389,7 +399,7 @@ export default function GamePage() {
     setExpertAdvice({ text, confidence });
   };
 
-  // ---------- Ending / scoring ----------
+  // ---------- Ending / scoring ----------  
   const endGame = async (
     prizeValue: string | number,
     prizeType: 'money' | 'gift',
@@ -402,7 +412,7 @@ export default function GamePage() {
 
       const payload = {
         gameConfigId: activeConfig?.gameConfigId,
-        questions, // raw multilingual
+        questions,
         langUsed: lang,
         correctAnswered: isWinner ? currentQuestionIndex + 1 : currentQuestionIndex,
         isWinner,
@@ -416,14 +426,11 @@ export default function GamePage() {
         console.warn('⚠️ Unexpected response while saving result:', response);
       }
 
-      router.push(
-        `/play/game-over?prizeValue=${prizeValue}&prizeType=${prizeType}&winner=${isWinner}&score=${finalScore}`
-      );
+      router.push(`/play/game-over?gameConfigId=${activeConfig?.gameConfigId}`);
+
     } catch (error: any) {
       console.error('❌ Error saving game result:', error);
-      router.push(
-        `/play/game-over?prizeValue=${prizeValue}&prizeType=${prizeType}&winner=${isWinner}&score=${finalScore}`
-      );
+      router.push(`/play/game-over?gameConfigId=${activeConfig?.gameConfigId}`);
     }
   };
 
@@ -617,13 +624,12 @@ export default function GamePage() {
                     setLang(l);
                     try {
                       await api.put('/api/session/update', { lang: l });
-                    } catch {}
+                    } catch { }
                   }}
-                  className={`px-3 py-1 rounded-md border text-sm ${
-                    lang === l
+                  className={`px-3 py-1 rounded-md border text-sm ${lang === l
                       ? 'bg-indigo-600 text-white border-indigo-600'
                       : 'bg-white border-slate-300 text-slate-700'
-                  }`}
+                    }`}
                   aria-pressed={lang === l}
                 >
                   {l.toUpperCase()}
@@ -635,7 +641,7 @@ export default function GamePage() {
           <div className="relative flex-grow flex flex-col gap-6 bg-white border border-slate-200 rounded-lg p-6 shadow-md">
             <AnimatePresence mode="wait">
               <motion.div
-                key={`${currentQuestionRaw.id}-${lang}`}
+                key={currentQuestionRaw.id} // ✅ only changes when question changes
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
@@ -644,7 +650,7 @@ export default function GamePage() {
               >
                 <Timer
                   duration={45}
-                  questionKey={`${currentQuestionRaw.id}-${lang}`} // re-initialize if language changes
+                  questionKey={currentQuestionRaw.id}  // ✅ no lang
                   isPaused={selectedOption !== null}
                   onTimeUp={handleTimeUp}
                   onTimeTaken={handleTimeTaken}

@@ -1,13 +1,22 @@
 // lib/types.ts
 
-export type PrizeLevel = {
-  id: number;
+export interface MediaAsset {
+  public_id: string;
+  url: string;
+  type: string;
+  format: string;
+}
+
+export interface PrizeLevel {
+  id: number;              // local React id
+  mongoId?: string;        // <-- _id of prizeLadder subdoc from Mongo
   level: number;
   type: 'money' | 'gift';
-  value: string | number;
-  media?: any;
+  giftDesc?: string;
+  value: number | string;
   isSafe: boolean;
-};
+  media?: MediaAsset;
+}
 
 export type QuestionBank = {
   _id? : string;
@@ -44,14 +53,6 @@ export type DerivedFormat = {
   resolution: string;
 };
 
-export type MediaAsset = {
-  id: string;
-  url: string;
-  type: 'image' | 'video' | 'audio';
-  fileName: string;
-  derivedFormats: DerivedFormat[];
-  defaultFormat?: DerivedFormat;
-};
 
 export type Question = {
   _id?: string;

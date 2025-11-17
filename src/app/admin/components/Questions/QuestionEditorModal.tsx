@@ -5,7 +5,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { X, Save, Eye, CheckCircle, Library } from 'lucide-react';
 import type { Question, MediaAsset, DerivedFormat } from '@/lib/types';
 import { MediaUploader } from '../Media/MediaUploader';
-import { MediaLibraryModal } from '../Media/MediaLibraryModal';
 import { MediaPreview } from '../Media/MediaPreview';
 
 type LangKey = 'en' | 'hi' | 'gu';
@@ -277,9 +276,7 @@ useEffect(() => {
           </motion.div>
         )}
 
-        {isLibraryOpen && (
-          <MediaLibraryModal onClose={() => setIsLibraryOpen(false)} onSelect={handleSelectFromLibrary} filter="all" />
-        )}
+       
       </AnimatePresence>
 
       <motion.div

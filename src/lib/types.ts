@@ -41,19 +41,27 @@ export type GameConfig = {
 };
 
 export type DerivedFormat = {
-  name: string;
-  resolution: string;
+  name: string;        // e.g. "Thumbnail", "HD", "MP3"
+  resolution: string;  // e.g. "300x200", "720p", "128kbps"
+  url?: string;        // optional – if you later generate real URLs
 };
 
 export type MediaAsset = {
+  // Local/client id for React lists, etc.
   id: string;
-  url: string;
+
+  // Main file info
+  url: string;                          // object URL or real URL
   type: 'image' | 'video' | 'audio';
   fileName: string;
-  derivedFormats: DerivedFormat[];
-  defaultFormat?: DerivedFormat;
-};
 
+  // Optional backend/meta fields
+  public_id?: string;                   // e.g. Cloudinary public_id
+  format?: string;                      // extension/format like "jpg", "mp4"
+
+  // Available versions / qualities
+  derivedFormats: DerivedFormat[];
+};
 export type Question = {
   id?: number;
   _id?:string;

@@ -8,24 +8,26 @@ interface OptionsGridProps {
   selectedOption: string | null;
   answerState: 'idle' | 'revealed';
   onOptionSelect: (option: string) => void;
-  removedOptions: string[];
+  removedOptions: number[]; // indices of removed options
 }
 
-export const OptionsGrid = ({ 
-  options, 
-  correctAnswer, 
-  selectedOption, 
+export const OptionsGrid = ({
+  options,
+  correctAnswer,
+  selectedOption,
   answerState,
   onOptionSelect,
   removedOptions,
 }: OptionsGridProps) => {
-
   const getButtonClass = (option: string) => {
-    const baseClass = "w-full text-left p-5 rounded-lg border-2 font-semibold transition-all duration-300 flex items-center gap-4 text-xl disabled:cursor-not-allowed min-h-[80px]";
-    
+    const baseClass =
+      'w-full text-left p-5 rounded-lg border-2 font-semibold transition-all duration-300 flex items-center gap-4 text-xl disabled:cursor-not-allowed min-h-[80px]';
+
     if (answerState === 'revealed') {
-      if (option === correctAnswer) return `${baseClass} bg-green-500 border-green-400 text-white animate-pulse`;
-      if (option === selectedOption) return `${baseClass} bg-red-500 border-red-400 text-white`;
+      if (option === correctAnswer)
+        return `${baseClass} bg-green-500 border-green-400 text-white animate-pulse`;
+      if (option === selectedOption)
+        return `${baseClass} bg-red-500 border-red-400 text-white`;
       return `${baseClass} bg-slate-100 border-slate-200 text-slate-400 opacity-60`;
     }
 
@@ -40,23 +42,28 @@ export const OptionsGrid = ({
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {options.map((option, index) => (
-        <motion.button
-           key={`${option}-${index}`}
-          onClick={() => onOptionSelect(option)}
-          disabled={selectedOption !== null}
-          className={getButtonClass(option)}
-          style={{
-            visibility: removedOptions.includes(option) ? 'hidden' : 'visible'
-          }}
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.98 }}
-          transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-        >
-          <span className="text-indigo-600">{optionLabels[index]}:</span>
-          <span>{option}</span>
-        </motion.button>
-      ))}
+      {options.map((option, index) => {
+        const isRemoved = removedOptions.includes(index); // ✅ index-based
+
+        return (
+          <motion.button
+            key={`${index}-${option}`}
+            onClick={() => onOptionSelect(option)}
+            disabled={selectedOption !== null || isRemoved}
+            className={getButtonClass(option)}
+            style={{
+              // hide removed options
+              visibility: isRemoved ? 'hidden' : 'visible',
+            }}
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+          >
+            <span className="text-indigo-600">{optionLabels[index]}:</span>
+            <span>{option}</span>
+          </motion.button>
+        );
+      })}
     </div>
   );
 };
