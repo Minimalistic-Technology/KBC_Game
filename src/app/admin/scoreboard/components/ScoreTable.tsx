@@ -6,6 +6,7 @@ import { ChevronRight } from 'lucide-react';
 
 type ApiScore = {
   _id: string;
+  gameConfigId?:string;
   userName:string;
   userId: string;
   finalScore: number;

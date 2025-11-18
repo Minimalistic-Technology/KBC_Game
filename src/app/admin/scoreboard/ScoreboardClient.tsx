@@ -1,10 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import axiosInstance from "@/utils/axiosInstance";
 import { ScoreTable } from "./components/ScoreTable";
 import { PaginationControls } from "./components/PaginationControls";
+import { useAtomValue } from "jotai";
+import { authHydratedAtom, isAdminAtom } from "@/state/auth";
 
 export function ScoreboardClient() {
   const searchParams = useSearchParams();
@@ -15,11 +17,28 @@ export function ScoreboardClient() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
 
+  const router = useRouter();
+  const hydrated = useAtomValue(authHydratedAtom);
+  const isAdmin = useAtomValue(isAdminAtom);
+
+  // Redirect non-admins
   useEffect(() => {
+    if (!hydrated) return; // wait for auth to load
+
+    if (!isAdmin) {
+      router.replace("/auth/login");
+    }
+  }, [hydrated, isAdmin, router]);
+
+  // Fetch scores ONLY when admin + hydrated
+  useEffect(() => {
+    if (!hydrated) return;
+    if (!isAdmin) return;
+
     const fetchScores = async () => {
       try {
         setLoading(true);
-        const res = await axiosInstance.get("/api/score/get", {
+        const res = await axiosInstance.get("/api/score/admin/get", {
           params: { page, limit },
           withCredentials: true,
         });
@@ -35,7 +54,7 @@ export function ScoreboardClient() {
     };
 
     fetchScores();
-  }, [page, limit]);
+  }, [page, limit, hydrated, isAdmin]);
 
   if (loading) {
     return (

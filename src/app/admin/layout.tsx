@@ -12,6 +12,7 @@ import {
   Package2,
   Settings,
   Gamepad2,
+  Trophy,
   LogOut,
   CircleUserRound,
 } from 'lucide-react';
@@ -92,6 +93,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </NavLink>
           <NavLink href="/admin/game-config" icon={Settings} isCollapsed={isCollapsed}>
             Game Config
+          </NavLink>
+           <NavLink href="/admin/scoreboard" icon={Trophy} isCollapsed={isCollapsed}>
+            Score Board
           </NavLink>
         </nav>
 
