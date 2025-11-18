@@ -115,7 +115,7 @@ function QuestionBanksPageContent() {
   }) {
     const bankName = allBanks.find((b) => b._id === bankId)?.name ?? `bank_${bankId.slice(-6)}`;
     const statusTag = status === "all" ? "all-status" : status;
-    const ext = format === "xlsx" ? "xlsx" : format; // if json unsupported, we used csv above
+    const ext = format === "xlsx" ? "xlsx" : format; 
     const stamp = new Date().toISOString().replace(/[:.]/g, "-");
     return `${slugify(bankName)}_${statusTag}_questions_${stamp}.${ext}`;
   }
@@ -200,10 +200,6 @@ function QuestionBanksPageContent() {
       }
     }
   };
-
-  const onMove = async (bank: QuestionBank) => {
-
-  }
 
 
   const handleSaveBank = async (bank: QuestionBank) => {
@@ -408,7 +404,6 @@ function QuestionBanksPageContent() {
                 index={index}
                 isFirst={index === 0}
                 isLast={index === filteredBanks.length - 1}
-                onMove={(e) => { e.preventDefault(); onMove(bank); }}
                 onEdit={(e) => { e.preventDefault(); handleOpenEditor(bank); }}
                 onDelete={(e) => { e.preventDefault(); if (bank._id) handleDeleteBank(bank._id); }}
               />

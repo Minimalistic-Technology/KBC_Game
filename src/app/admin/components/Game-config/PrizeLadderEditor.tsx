@@ -56,16 +56,46 @@ export const PrizeLadderEditor = ({ value, onChange, configId }: PrizeLadderEdit
     setPreviewUrls(prev => ({ ...prev, [levelId]: preview }));
   };
 
-  const handleRemoveImage = (id: number) => {
+const handleRemoveImage = async (id: number) => {
+  const level = value.find(l => l.id === id);
+  if (!level) return;
+
+  if (!configId) {
+    alert('Config ID missing.');
+    return;
+  }
+
+  if (!level.mongoId) {
+    alert('Please save the config first.');
+    return;
+  }
+
+  try {
+    // Optional: confirm with user
+    // if (!window.confirm('Remove image for this prize level?')) return;
+
+    const { data } = await api.post('/api/v1/game-config/remove/PL-media', {
+      configId,
+      prizeLadderId: level.mongoId,
+    });
+
+    // Update local state: remove media from that level
     onChange(
-      value.map(level =>
-        level.id === id ? { ...level, media: undefined } : level
+      value.map(l =>
+        l.id === id ? { ...l, media: undefined } : l
       )
     );
 
+    // Clear pending file + preview
     setPendingFiles(prev => ({ ...prev, [id]: null }));
     setPreviewUrls(prev => ({ ...prev, [id]: null }));
-  };
+
+    alert(data?.message || 'Image removed.');
+  } catch (err: any) {
+    console.error(err);
+    alert(err?.response?.data?.message || 'Failed to remove image.');
+  }
+};
 
   // -------------------- Upload Image -------------------- //
 

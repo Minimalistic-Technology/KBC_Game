@@ -11,12 +11,11 @@ interface CardProps {
     index: number;
     onEdit: (e: React.MouseEvent) => void;
     onDelete: (e: React.MouseEvent) => void;
-    onMove: (e: React.MouseEvent, direction: 'up' | 'down') => void;
     isFirst: boolean;
     isLast: boolean;
 }
 
-export const QuestionBankCard = ({ bank, index, onEdit, onDelete, onMove, isFirst, isLast }: CardProps) => {
+export const QuestionBankCard = ({ bank, index, onEdit, onDelete, isFirst, isLast }: CardProps) => {
     const [questionCount, setQuestionCount] = useState('');
 
      useEffect(() => {
@@ -86,8 +85,6 @@ export const QuestionBankCard = ({ bank, index, onEdit, onDelete, onMove, isFirs
                     <span className="flex items-center gap-1.5" title="Number of questions"><FileText size={14} /> {questionCount}</span>
                 </div>
                 <div className="flex items-center gap-1">
-                    <button onClick={(e) => onMove(e, 'up')} disabled={isFirst} className="p-2 rounded-md text-slate-500 hover:bg-slate-200 disabled:opacity-30"><ArrowUp size={16} /></button>
-                    <button onClick={(e) => onMove(e, 'down')} disabled={isLast} className="p-2 rounded-md text-slate-500 hover:bg-slate-200 disabled:opacity-30"><ArrowDown size={16} /></button>
                     <button onClick={onEdit} className="p-2 rounded-md text-slate-500 hover:bg-slate-200" title="Edit"><Edit size={16} /></button>
                     <button onClick={onDelete} className="p-2 rounded-md text-slate-500 hover:bg-red-100 hover:text-red-600" title="Delete"><Trash2 size={16} /></button>
                 </div>
