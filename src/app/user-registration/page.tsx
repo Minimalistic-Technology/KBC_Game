@@ -6,14 +6,14 @@ import { UserPlus, ArrowRight, Loader2, Eye, EyeOff } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { AxiosError } from 'axios';
 import { Toaster, toast } from 'react-hot-toast';
-import api from '@/lib/axios'; // Adjust the import path if needed
+import api from '@/lib/axios';
 
-// --- TYPES ---
 type FormData = {
   firstName: string;
   lastName: string;
-  email: string;
-  phone: string;
+  userName: string;
+  email?: string;
+  phone?: string;
   age: string;
   password: string;
   confirmPassword: string;
@@ -23,68 +23,84 @@ type FormErrors = {
   [K in keyof FormData]?: string;
 };
 
-// --- API FUNCTION ---
 const registerUser = async (userData: Omit<FormData, 'confirmPassword'>) => {
-  const { data } = await api.post('/api/users/register', userData);
+  const payload: any = {
+    ...userData,
+    age: parseInt(userData.age, 10),
+  };
+
+  if (!payload.email) delete payload.email;
+  if (!payload.phone) delete payload.phone;
+
+  const { data } = await api.post('/api/users/register', payload);
   return data;
 };
 
-
-// --- COMPONENT ---
 export default function RegisterPage() {
   const router = useRouter();
   const [formData, setFormData] = useState<FormData>({
     firstName: '',
     lastName: '',
+    userName: '',
     email: '',
     phone: '',
     age: '',
     password: '',
     confirmPassword: '',
   });
+
   const [errors, setErrors] = useState<FormErrors>({});
   const [showPassword, setShowPassword] = useState(false);
 
   const mutation = useMutation({
     mutationFn: registerUser,
     onSuccess: (data) => {
-      // **UPDATED**: Changed the success message and redirect path
-      toast.success('Registration successful! Please log in.');
-      setTimeout(() => {
-        router.push('/login'); // Redirects to the login page now
-      }, 1500);
+      toast.success(data?.message || 'Registration successful!');
+      setTimeout(() => router.push('/login'), 1500);
     },
-    onError: (error: AxiosError<{ message: string }>) => {
-      const errorMessage = error.response?.data?.message || 'An unexpected error occurred.';
-      toast.error(errorMessage);
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(error.response?.data?.message || 'Something went wrong.');
     },
   });
-
 
   const validate = () => {
     const newErrors: FormErrors = {};
 
-    if (!/^[a-zA-Z\s]+$/.test(formData.firstName)) {
+    if (!/^[a-zA-Z\s]+$/.test(formData.firstName.trim())) {
       newErrors.firstName = 'Please enter a valid first name.';
     }
-    if (!/^[a-zA-Z\s]+$/.test(formData.lastName)) {
+
+    if (!/^[a-zA-Z\s]+$/.test(formData.lastName.trim())) {
       newErrors.lastName = 'Please enter a valid last name.';
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address.';
+
+    if (!formData.userName.trim()) {
+      newErrors.userName = 'Username is required.';
+    } else if (!/^[a-zA-Z0-9_.-]{3,}$/.test(formData.userName.trim())) {
+      newErrors.userName = 'Username must be at least 3 characters.';
     }
+
+    // OPTIONAL email --> validate only if entered
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Invalid email format.';
+    }
+
+    // OPTIONAL phone --> validate only if entered
+    if (formData.phone && !/^\d{10}$/.test(formData.phone)) {
+      newErrors.phone = 'Phone number must be 10 digits.';
+    }
+
     if (formData.password.length < 8) {
-      newErrors.password = 'Password must be at least 8 characters long.';
+      newErrors.password = 'Password must be at least 8 characters.';
     }
+
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match.';
     }
-    if (!/^\d{10}$/.test(formData.phone)) {
-      newErrors.phone = 'Please enter a valid 10-digit mobile number.';
-    }
-    const ageNum = parseInt(formData.age);
+
+    const ageNum = parseInt(formData.age, 10);
     if (isNaN(ageNum) || ageNum < 5 || ageNum > 100) {
-      newErrors.age = 'Please enter a valid age (5-100).';
+      newErrors.age = 'Age must be between 5 and 100.';
     }
 
     setErrors(newErrors);
@@ -94,9 +110,7 @@ export default function RegisterPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    if (errors[name as keyof FormErrors]) {
-      setErrors(prev => ({ ...prev, [name]: undefined }));
-    }
+    setErrors(prev => ({ ...prev, [name]: undefined }));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -107,125 +121,104 @@ export default function RegisterPage() {
     }
   };
 
-  const getInputClass = (fieldName: keyof FormErrors) => {
-    const baseClass = "w-full h-11 px-4 border bg-slate-50 border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2";
-    return errors[fieldName]
-      ? `${baseClass} border-red-500 ring-red-500 focus:ring-red-500`
-      : `${baseClass} focus:ring-indigo-500`;
-  };
+  const inputClasses = (field: keyof FormErrors) =>
+    `w-full h-11 px-4 bg-slate-50 border rounded-lg focus:ring-2 
+    ${errors[field] ? 'border-red-500 ring-red-500' : 'border-slate-300 focus:ring-indigo-500'}`;
 
   return (
     <>
-      <Toaster position="top-center" reverseOrder={false} />
+      <Toaster />
+
       <div className="flex items-center justify-center min-h-screen bg-slate-50 p-4">
-        <div className="w-full max-w-lg mx-auto bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
-          
+        <div className="w-full max-w-lg bg-white shadow-xl rounded-2xl p-8 border border-slate-200">
+
           <div className="text-center mb-8">
-              <div className="mx-auto bg-indigo-100 rounded-full w-16 h-16 flex items-center justify-center mb-4">
-              <UserPlus className="text-indigo-600" size={32} />
-              </div>
-              <h1 className="text-3xl font-bold text-slate-900">
-              Create Your Account
-              </h1>
-              <p className="text-slate-600 mt-2">
-              Enter your details to get started.
-              </p>
+            <div className="w-16 h-16 mx-auto rounded-full bg-indigo-100 flex items-center justify-center mb-4">
+              <UserPlus size={32} className="text-indigo-600" />
+            </div>
+            <h1 className="text-3xl font-bold text-slate-900">Create Your Account</h1>
+            <p className="text-slate-600 mt-2">Fill in your details to continue.</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* First Name & Last Name */}
+
+            {/* First + Last Name */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="firstName" className="block text-sm font-medium text-slate-700 mb-2">First Name</label>
-                <input
-                  type="text" id="firstName" name="firstName" value={formData.firstName} onChange={handleChange} required className={getInputClass('firstName')} placeholder="First Name"
-                />
-                {errors.firstName && <p className="text-red-600 text-xs mt-1">{errors.firstName}</p>}
+                <label className="text-sm font-medium">First Name</label>
+                <input name="firstName" value={formData.firstName} onChange={handleChange} className={inputClasses('firstName')} />
+                {errors.firstName && <p className="text-red-600 text-xs">{errors.firstName}</p>}
               </div>
+
               <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-slate-700 mb-2">Last Name</label>
-                <input
-                  type="text" id="lastName" name="lastName" value={formData.lastName} onChange={handleChange} required className={getInputClass('lastName')} placeholder="Last Name"
-                />
-                {errors.lastName && <p className="text-red-600 text-xs mt-1">{errors.lastName}</p>}
+                <label className="text-sm font-medium">Last Name</label>
+                <input name="lastName" value={formData.lastName} onChange={handleChange} className={inputClasses('lastName')} />
+                {errors.lastName && <p className="text-red-600 text-xs">{errors.lastName}</p>}
               </div>
             </div>
 
-            {/* Email */}
+            {/* Username */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">Email Address</label>
-              <input
-                type="email" id="email" name="email" value={formData.email} onChange={handleChange} required className={getInputClass('email')} placeholder="you@example.com"
-              />
-              {errors.email && <p className="text-red-600 text-xs mt-1">{errors.email}</p>}
+              <label className="text-sm font-medium">Username</label>
+              <input name="userName" value={formData.userName} onChange={handleChange} className={inputClasses('userName')} />
+              {errors.userName && <p className="text-red-600 text-xs">{errors.userName}</p>}
             </div>
 
-            {/* Password & Confirm Password */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-2">Password</label>
-                 <div className="relative">
-                   <input
-                     type={showPassword ? "text" : "password"}
-                     id="password" name="password"
-                     value={formData.password} onChange={handleChange} required
-                     className={getInputClass('password')} placeholder="••••••••"
-                   />
-                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 flex items-center pr-3 cursor-pointer">
-                     {showPassword ? <EyeOff className="h-5 w-5 text-slate-400" /> : <Eye className="h-5 w-5 text-slate-400" />}
-                   </button>
-                 </div>
-                {errors.password && <p className="text-red-600 text-xs mt-1">{errors.password}</p>}
-              </div>
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 mb-2">Confirm Password</label>
-                <input
-                  type="password" id="confirmPassword" name="confirmPassword"
-                  value={formData.confirmPassword} onChange={handleChange} required
-                  className={getInputClass('confirmPassword')} placeholder="••••••••"
-                />
-                {errors.confirmPassword && <p className="text-red-600 text-xs mt-1">{errors.confirmPassword}</p>}
-              </div>
+            {/* OPTIONAL Email */}
+            <div>
+              <label className="text-sm font-medium">Email (Optional)</label>
+              <input name="email" value={formData.email} onChange={handleChange} className={inputClasses('email')} placeholder="you@email.com" />
+              {errors.email && <p className="text-red-600 text-xs">{errors.email}</p>}
             </div>
 
-            {/* Phone & Age */}
+            {/* Password */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-slate-700 mb-2">Phone No.</label>
-                <div className={`flex items-center w-full h-11 border bg-slate-50 border-slate-300 rounded-lg focus-within:ring-2 transition-all ${errors.phone ? 'border-red-500 ring-red-500 focus-within:ring-red-500' : 'focus-within:ring-indigo-500'}`}>
-                  <span className="px-3 text-slate-500 border-r border-slate-300">+91</span>
+                <label className="text-sm font-medium">Password</label>
+                <div className="relative">
                   <input
-                    type="tel" id="phone" name="phone" value={formData.phone} onChange={handleChange} required pattern="\d{10}" maxLength={10} title="Please enter a valid 10-digit Indian mobile number" className="w-full h-full px-4 bg-transparent border-none rounded-r-lg text-slate-900 focus:outline-none" placeholder="9876543210"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={formData.password}
+                    onChange={handleChange}
+                    className={inputClasses('password')}
                   />
+                  <button type="button" className="absolute right-3 top-3" onClick={() => setShowPassword(!showPassword)}>
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
                 </div>
-                {errors.phone && <p className="text-red-600 text-xs mt-1">{errors.phone}</p>}
+                {errors.password && <p className="text-red-600 text-xs">{errors.password}</p>}
               </div>
+
               <div>
-                <label htmlFor="age" className="block text-sm font-medium text-slate-700 mb-2">Age</label>
-                <input
-                  type="number" id="age" name="age" value={formData.age} onChange={handleChange} required min="1" className={getInputClass('age')} placeholder="18"
-                />
-                {errors.age && <p className="text-red-600 text-xs mt-1">{errors.age}</p>}
+                <label className="text-sm font-medium">Confirm Password</label>
+                <input name="confirmPassword" type="password" value={formData.confirmPassword} onChange={handleChange} className={inputClasses('confirmPassword')} />
+                {errors.confirmPassword && <p className="text-red-600 text-xs">{errors.confirmPassword}</p>}
               </div>
             </div>
 
-            {/* Submit Button */}
-            <button 
+            {/* OPTIONAL Phone */}
+            <div>
+              <label className="text-sm font-medium">Phone (Optional)</label>
+              <input name="phone" maxLength={10} value={formData.phone} onChange={handleChange} className={inputClasses('phone')} placeholder="9876543210" />
+              {errors.phone && <p className="text-red-600 text-xs">{errors.phone}</p>}
+            </div>
+
+            {/* Age */}
+            <div>
+              <label className="text-sm font-medium">Age</label>
+              <input name="age" type="number" value={formData.age} onChange={handleChange} className={inputClasses('age')} placeholder="18" />
+              {errors.age && <p className="text-red-600 text-xs">{errors.age}</p>}
+            </div>
+
+            {/* Submit */}
+            <button
               type="submit"
               disabled={mutation.isPending}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-6 py-3 text-lg font-semibold text-white shadow-sm transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed mt-6"
+              className="w-full flex justify-center items-center gap-2 bg-indigo-600 text-white py-3 rounded-lg text-lg font-semibold hover:scale-105 transition disabled:opacity-50"
             >
-              {mutation.isPending ? (
-                <>
-                  <Loader2 size={20} className="animate-spin" />
-                  <span>Registering...</span>
-                </>
-              ) : (
-                <>
-                  <span>Register</span>
-                  <ArrowRight size={20} />
-                </>
-              )}
+              {mutation.isPending ? <Loader2 className="animate-spin" /> : 'Register'}
+              <ArrowRight />
             </button>
           </form>
         </div>
