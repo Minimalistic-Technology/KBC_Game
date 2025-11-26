@@ -4,30 +4,22 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { useDropzone, Accept } from 'react-dropzone';
 import { UploadCloud, File as FileIcon } from 'lucide-react';
 import type { MediaAsset } from '@/lib/types';
-
-// Simulate processing/uploading the file to generate a MediaAsset
 const processUploadedFile = (file: File): Promise<MediaAsset> => {
   return new Promise(resolve => {
     const objectUrl = URL.createObjectURL(file);
-    setTimeout(() => {
-      let type: 'image' | 'video' | 'audio' = 'image';
-      if (file.type.startsWith('video')) type = 'video';
-      if (file.type.startsWith('audio')) type = 'audio';
 
-      const newAsset: MediaAsset = {
-        id: `media_${Date.now()}`,
-        url: objectUrl,
-        type,
-        fileName: file.name,
-        derivedFormats:
-          type === 'image'
-            ? [{ name: 'Thumbnail', resolution: '300x200' }, { name: 'Medium', resolution: '600x400' }]
-            : type === 'video'
-            ? [{ name: 'SD', resolution: '480p' }, { name: 'HD', resolution: '720p' }]
-            : [{ name: 'MP3', resolution: '128kbps' }],
-      };
-      resolve(newAsset);
-    }, 1000);
+    let type: 'image' | 'video' | 'audio' = 'image';
+    if (file.type.startsWith('video')) type = 'video';
+    if (file.type.startsWith('audio')) type = 'audio';
+
+    const newAsset: MediaAsset = {
+      id: `media_${Date.now()}`,
+      url: objectUrl,
+      type,
+      fileName: file.name,
+    };
+
+    resolve(newAsset);
   });
 };
 

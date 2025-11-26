@@ -59,8 +59,6 @@ export type MediaAsset = {
   public_id?: string;                   // e.g. Cloudinary public_id
   format?: string;                      // extension/format like "jpg", "mp4"
 
-  // Available versions / qualities
-  derivedFormats: DerivedFormat[];
 };
 export type Question = {
   id?: number;

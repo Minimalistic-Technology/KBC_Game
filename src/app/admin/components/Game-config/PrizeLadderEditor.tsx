@@ -71,22 +71,17 @@ const handleRemoveImage = async (id: number) => {
   }
 
   try {
-    // Optional: confirm with user
-    // if (!window.confirm('Remove image for this prize level?')) return;
-
     const { data } = await api.post('/api/v1/game-config/remove/PL-media', {
       configId,
       prizeLadderId: level.mongoId,
     });
 
-    // Update local state: remove media from that level
     onChange(
       value.map(l =>
         l.id === id ? { ...l, media: undefined } : l
       )
     );
 
-    // Clear pending file + preview
     setPendingFiles(prev => ({ ...prev, [id]: null }));
     setPreviewUrls(prev => ({ ...prev, [id]: null }));
 
@@ -258,7 +253,6 @@ const handleRemoveImage = async (id: number) => {
         })}
       </div>
 
-      {/* No "Add Level" button anymore → length controlled by parent */}
     </div>
   );
 };
