@@ -344,7 +344,6 @@ useEffect(() => {
                   <MediaPreview
                     asset={formData.media}
                     onRemove={handleRemoveMedia}
-                    onDefaultFormatChange={handleDefaultFormatChange}
                   />
                 ) : (
                   <div className="space-y-3">
