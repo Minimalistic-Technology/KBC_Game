@@ -191,6 +191,9 @@ const [initialLang, setInitialLang] = useState<any | null>(null);
     handleCloseEditor();
   } catch (err) {
     console.error("Failed to save question", err);
+    alert("Error saving question. Please try again.");
+    handleCloseEditor();
+
   }
 };
 
