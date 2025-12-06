@@ -1,106 +1,103 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { PlayerDetailModal } from './PlayerDetailModal';
-import { Score } from './data';
+import { ChevronRight } from 'lucide-react';
 
-type SortConfig = {
-  key: keyof Score;
-  direction: 'ascending' | 'descending';
-} | null;
-
-const SortableHeader = ({ children, onClick, sortConfig, columnKey }: any) => {
-  const isSorted = sortConfig?.key === columnKey;
-  const directionIcon = isSorted ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : '';
-
-  return (
-    <button onClick={onClick} className="flex items-center gap-2 group">
-      {children}
-      <span className={`text-indigo-500 ${isSorted ? 'opacity-100' : 'opacity-0 group-hover:opacity-50'}`}>
-        {directionIcon}
-      </span>
-    </button>
-  );
+type ApiScore = {
+  _id: string;
+  gameConfigId?:string;
+  userName:string;
+  userId: string;
+  finalScore: number;
+  isWinner: boolean;
+  totalTimeSeconds?: number;
+  createdAt: string;
+  lifelinesUsed?: string[];
+  questions?: unknown[]; // or your concrete question type
 };
 
-export const ScoreTable = ({ scores }: { scores: Score[] }) => {
-  const [selectedScore, setSelectedScore] = useState<Score | null>(null);
-  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'date', direction: 'descending' });
+function shorten(id: string) {
+  if (!id) return '-';
+  return id.length > 12 ? `${id.slice(0, 6)}…${id.slice(-4)}` : id;
+}
 
-  const sortedScores = useMemo(() => {
-    let sortableScores = [...scores];
-    if (sortConfig !== null) {
-      sortableScores.sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) {
-          return sortConfig.direction === 'ascending' ? -1 : 1;
-        }
-        if (a[sortConfig.key] > b[sortConfig.key]) {
-          return sortConfig.direction === 'ascending' ? 1 : -1;
-        }
-        return 0;
-      });
-    }
-    return sortableScores;
-  }, [scores, sortConfig]);
+function formatDate(iso: string) {
+  try { return new Date(iso).toLocaleDateString('en-GB'); } catch { return iso; }
+}
 
-  const requestSort = (key: keyof Score) => {
-    let direction: 'ascending' | 'descending' = 'ascending';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
-      direction = 'descending';
-    }
-    setSortConfig({ key, direction });
-  };
+function formatDuration(sec?: number) {
+  if (typeof sec !== 'number') return '-';
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${m}m ${s}s`;
+}
 
+export const ScoreTable = ({ scores }: { scores: ApiScore[] }) => {
+  // ✅ keep the FULL row here so the modal has all fields
+  const [selectedScore, setSelectedScore] = useState<ApiScore | null>(null);
 
   return (
     <>
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-sm text-left text-slate-700">
-          <thead className="bg-slate-50 text-xs text-slate-600 uppercase">
-            <tr>
-              <th scope="col" className="px-6 py-3">
-                <SortableHeader onClick={() => requestSort('playerName')} sortConfig={sortConfig} columnKey="playerName">Player Name</SortableHeader>
-              </th>
-              <th scope="col" className="px-6 py-3">Question Bank</th>
-              <th scope="col" className="px-6 py-3">
-                <SortableHeader onClick={() => requestSort('finalScore')} sortConfig={sortConfig} columnKey="finalScore">Final Score</SortableHeader>
-              </th>
-              <th scope="col" className="px-6 py-3">
-                 <SortableHeader onClick={() => requestSort('date')} sortConfig={sortConfig} columnKey="date">Date</SortableHeader>
-              </th>
-              <th scope="col" className="px-6 py-3 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {sortedScores.map((score) => (
-              <tr key={score.id} className="bg-white border-b hover:bg-slate-50">
-                <td className="px-6 py-4 font-medium text-slate-900 whitespace-nowrap">{score.playerName}</td>
-                <td className="px-6 py-4">{score.questionBank}</td>
-                <td className="px-6 py-4 font-semibold text-indigo-600">{score.finalScore}%</td>
-                <td className="px-6 py-4">
-                  {new Date(score.date).toLocaleDateString('en-CA', { timeZone: 'UTC' })}
-                </td>
-                <td className="px-6 py-4 text-right">
-                  <button onClick={() => setSelectedScore(score)} className="font-medium text-indigo-600 hover:underline">
-                    View Details
-                  </button>
-                </td>
-              </tr>
-            ))}
-             {scores.length === 0 && (
-                <tr className="bg-white">
-                  <td colSpan={5} className="text-center py-10 text-slate-500">
-                    No results found.
-                  </td>
-                </tr>
-            )}
-          </tbody>
-        </table>
+      <div className="space-y-3">
+        {scores.map((row) => (
+          <div
+            key={row._id}
+            onClick={() => setSelectedScore(row)}  // ✅ pass full row
+            className="flex cursor-pointer items-center justify-between rounded-lg border bg-white p-4 transition-all duration-200 hover:border-indigo-500 hover:shadow-md"
+          >
+            <div className="flex items-center gap-3">
+              <span
+                className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${
+                  row.isWinner ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-700'
+                }`}
+              >
+                {row.isWinner ? 'Winner' : 'Played'}
+              </span>
+
+              <p className="text-base font-semibold text-slate-800">
+                {row.userName}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-8">
+              <div className="hidden text-right md:block">
+                <p className="text-xs text-slate-500">Time</p>
+                <p className="font-medium text-slate-700">
+                  {formatDuration(row.totalTimeSeconds)}
+                </p>
+              </div>
+
+              <div className="text-right">
+                <p className="text-xs text-slate-500">Score</p>
+                <p className="font-bold text-indigo-600">{row.finalScore}%</p>
+              </div>
+
+              <div className="hidden text-right md:block">
+                <p className="font-medium text-slate-700">
+                  {formatDate(row.createdAt)}
+                </p>
+                <p className="text-xs text-slate-500">Date Played</p>
+              </div>
+
+              <ChevronRight className="h-5 w-5 text-slate-400" />
+            </div>
+          </div>
+        ))}
+
+        {scores.length === 0 && (
+          <div className="text-center py-10 text-slate-500">
+            <p>No results found.</p>
+          </div>
+        )}
       </div>
-      
-      {selectedScore && (
-        <PlayerDetailModal score={selectedScore} onClose={() => setSelectedScore(null)} />
-      )}
+
+{selectedScore && (
+  <PlayerDetailModal
+    score={selectedScore as ApiScore}
+    onClose={() => setSelectedScore(null)}
+  />
+)}
     </>
   );
 };

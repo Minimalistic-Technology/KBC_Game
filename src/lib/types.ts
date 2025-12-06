@@ -1,36 +1,29 @@
 // lib/types.ts
 
-export interface Question1 {
-  id: number;
-  question: string;
-  options: string[];
-  answer: string;
-}
-
 export type PrizeLevel = {
   id: number;
   level: number;
-  amount: number;
+  type: 'money' | 'gift';
+  value: string | number;
+  media?: MediaAsset;
   isSafe: boolean;
 };
 
 export type QuestionBank = {
-  id: string;
-  title: string;
+  id?: string;
+   _id?: string;
+  name: string;
   slug: string;
   description: string;
-  status: 'Published' | 'Draft'; // --- UPDATED THIS LINE ---
-  tags: string[];
+  published: boolean;
+  categories: string[];
   ageGroup?: string;
   questionCount: number;
-  prize: string;
-  prizeMedia?: MediaAsset;
-  onlySafePoints?: boolean;
   defaultTimer: number; // in seconds
-  // --- REMOVED scheduledFor ---
   prizeLadder: PrizeLevel[];
 };
 
+// --- ADDED THIS TYPE BACK ---
 export type Lifeline = {
   '50:50': boolean;
   'Audience Poll': boolean;
@@ -38,29 +31,44 @@ export type Lifeline = {
   'Flip Question': boolean;
 };
 
-export type DerivedFormat = {
+export type GameConfig = {
+  id: string;
   name: string;
-  resolution: string;
+  isActive: boolean; // <-- ADDED THIS
+  selectedBankIds: string[];
+  prizeLadder: PrizeLevel[];
+  lifelines: Lifeline;
+};
+
+export type DerivedFormat = {
+  name: string;        // e.g. "Thumbnail", "HD", "MP3"
+  resolution: string;  // e.g. "300x200", "720p", "128kbps"
+  url?: string;        // optional – if you later generate real URLs
 };
 
 export type MediaAsset = {
+  // Local/client id for React lists, etc.
   id: string;
-  url: string;
+
+  // Main file info
+  url: string;                          // object URL or real URL
   type: 'image' | 'video' | 'audio';
   fileName: string;
-  derivedFormats: DerivedFormat[];
-  defaultFormat?: DerivedFormat;
-};
 
+  // Optional backend/meta fields
+  public_id?: string;                   // e.g. Cloudinary public_id
+  format?: string;                      // extension/format like "jpg", "mp4"
+
+};
 export type Question = {
-  id: number;
-  level: number;
+  id?: number;
+  _id?:string;
   bankId: string;
   question: string;
   options: string[];
   answer: string;
-  media?: MediaAsset;
+  media?: any;
+  mediaRef?: any;
   status: 'Draft' | 'Published';
-  tags: string[];
-  lifelines: Lifeline;
+  categories: string[];
 };

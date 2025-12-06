@@ -1,8 +1,35 @@
+"use client";
+
 import Link from 'next/link';
-import { initialBanks } from '@/lib/data';
-import { PackageCheck, ArrowRight } from 'lucide-react';
+import { PackageCheck, ArrowRight, ListOrdered, Zap, Users, Lightbulb, RefreshCw } from 'lucide-react';
+import axiosInstance from '@/utils/axiosInstance';
+import { useEffect, useState } from "react";
 
 export default function LobbyPage() {
+  const [config, setConfig] = useState<{ totalQuestions: number; lifelines: Record<string, boolean> } | null>(null);
+
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const response = await axiosInstance.get("/api/game/config", { withCredentials: true });
+        setConfig(response.data);
+      } catch (error) {
+        console.error("Error fetching game config:", error);
+      }
+    };
+
+    fetchConfig();
+  }, []);
+
+  // Extract data safely
+  const totalQuestions = config?.totalQuestions ?? 0;
+  const lifelines = config?.lifelines ?? {};
+
+  // Get list of enabled lifelines
+  const enabledLifelines = Object.entries(lifelines)
+    .filter(([, value]) => value)
+    .map(([key]) => key);
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-slate-50">
       <div className="w-full max-w-md mx-auto bg-white rounded-2xl shadow-lg border border-slate-200 p-8 text-center">
@@ -15,20 +42,34 @@ export default function LobbyPage() {
           Your Quiz Session
         </h1>
         <p className="text-slate-600 mb-8">
-          The following topics will be covered in order. Good luck!
+          Ready to test your knowledge? Good luck!
         </p>
 
-        <div className="text-left bg-slate-50 border rounded-lg p-4 mb-8">
-          <ol className="space-y-3">
-            {initialBanks.map((bank, index) => (
-              <li key={bank.id} className="flex items-center gap-3">
-                <span className="flex items-center justify-center w-6 h-6 rounded-full bg-indigo-600 text-white font-bold text-sm">
-                  {index + 1}
-                </span>
-                <span className="font-medium text-slate-800">{bank.title}</span>
-              </li>
-            ))}
-          </ol>
+        {/* --- Session Details Section --- */}
+        <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 space-y-4 text-left mb-8">
+          <div className="flex items-center gap-3">
+            <ListOrdered className="h-6 w-6 text-indigo-600 flex-shrink-0" />
+            <div>
+              <p className="font-semibold text-slate-800">Total Questions</p>
+              <p className="text-sm text-slate-600">{totalQuestions} questions in this session</p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-3">
+            <Zap className="h-6 w-6 text-indigo-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-semibold text-slate-800">Available Lifelines</p>
+              <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
+                {enabledLifelines.length > 0 ? (
+                  enabledLifelines.map(lifeline => (
+                    <span key={lifeline} className="text-sm text-slate-600">{lifeline}</span>
+                  ))
+                ) : (
+                  <span className="text-sm text-slate-500">None</span>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
 
         <Link 
@@ -38,7 +79,6 @@ export default function LobbyPage() {
           <span>Start Game</span>
           <ArrowRight size={20} />
         </Link>
-        
       </div>
     </div>
   );
