@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import {
   Bell,
   ChevronLeft,
@@ -59,11 +60,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const isAdmin = useAtomValue(isAdminAtom);
   const adminUser = useAtomValue(loggedInUserAtom);
   const setLoggedInUser = useSetAtom(loggedInUserAtom);
+  const router = useRouter();
 
   const handleLogout = async () => {
     try {
       await axiosInstance.post('/auth/admins/logout');
       setLoggedInUser(null);
+      router.push('/auth/login');
     } catch (err) {
       console.error('Logout error:', err);
     }
