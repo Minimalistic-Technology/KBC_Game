@@ -73,26 +73,33 @@ export default function LoginPage() {
   };
 
   return (
+    
     <>
       <Header />
       <Toaster position="top-center" reverseOrder={false} />
 
-      <div className="flex items-center justify-center min-h-screen bg-slate-50 pt-16">
+      <div className="flex items-center justify-center min-h-screen bg-slate-50 pt-16 text-slate-900">
         <div className="w-full max-w-md mx-auto bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
+          
+          {/* Header */}
           <div className="text-center mb-8">
             <div className="mx-auto bg-indigo-100 rounded-full w-16 h-16 flex items-center justify-center mb-4">
               <LogIn className="text-indigo-600" size={32} />
             </div>
+
             <h1 className="text-3xl font-bold text-slate-900">
               Welcome Back
             </h1>
+
             <p className="text-slate-600 mt-2">
               Sign in to continue to your account.
             </p>
           </div>
 
+          {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Username instead of Email */}
+            
+            {/* Username */}
             <div>
               <label
                 htmlFor="userName"
@@ -106,12 +113,13 @@ export default function LoginPage() {
                 name="userName"
                 value={formData.userName}
                 onChange={handleChange}
-                required
-                className="w-full h-11 px-4 border bg-slate-50 border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 placeholder="your_username"
+                required
+                className="w-full h-11 px-4 rounded-lg border border-slate-300 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
+            {/* Password */}
             <div>
               <label
                 htmlFor="password"
@@ -125,20 +133,21 @@ export default function LoginPage() {
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
-                required
-                className="w-full h-11 px-4 border bg-slate-50 border-slate-300 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 placeholder="••••••••"
+                required
+                className="w-full h-11 px-4 rounded-lg border border-slate-300 bg-slate-50 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
             </div>
 
+            {/* Submit */}
             <button
               type="submit"
               disabled={mutation.isPending}
-              className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-6 py-3 text-lg font-semibold text-white shadow-sm transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-6 py-3 text-lg font-semibold text-white shadow-sm transition-transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {mutation.isPending ? (
                 <>
-                  <Loader2 size={20} className="animate-spin" />
+                  <Loader2 size={20} className="animate-spin text-white" />
                   <span>Signing In...</span>
                 </>
               ) : (
@@ -150,8 +159,9 @@ export default function LoginPage() {
             </button>
           </form>
 
+          {/* Footer */}
           <p className="text-center text-sm text-slate-600 mt-8">
-            Don't have an account?{' '}
+            Don&apos;t have an account?{' '}
             <Link
               href="/user-registration"
               className="font-semibold text-indigo-600 hover:underline"
