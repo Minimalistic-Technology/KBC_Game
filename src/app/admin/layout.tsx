@@ -97,6 +97,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
            <NavLink href="/admin/scoreboard" icon={Trophy} isCollapsed={isCollapsed}>
             Score Board
           </NavLink>
+          <NavLink href="/auth/create-pin" icon={Settings} isCollapsed={isCollapsed}>
+            PIN 
+          </NavLink>
         </nav>
 
         <div className="mt-auto border-t p-4">
