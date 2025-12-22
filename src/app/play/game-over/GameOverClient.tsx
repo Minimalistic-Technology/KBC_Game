@@ -1,4 +1,3 @@
-
 "use client";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState, useMemo } from "react";
@@ -26,10 +25,10 @@ export interface MediaAsset {
 }
 
 export interface PrizeLadderItem {
-  id: number;              // local React id
-  mongoId?: string;        // <-- _id of prizeLadder subdoc from Mongo
+  id: number; // local React id
+  mongoId?: string; // <-- _id of prizeLadder subdoc from Mongo
   level: number;
-  type: 'money' | 'gift';
+  type: "money" | "gift";
   giftDesc?: string;
   value: number | string;
   isSafe: boolean;
@@ -206,8 +205,9 @@ export default function GameOverClient() {
             scale: { delay: 0.2, type: "spring", stiffness: 200 },
             rotate: { delay: 0.4, duration: 0.5 },
           }}
-          className={`mx-auto ${finalIsWinner ? "bg-indigo-100" : "bg-slate-100"
-            } rounded-full w-20 h-20 flex items-center justify-center mb-4`}
+          className={`mx-auto ${
+            finalIsWinner ? "bg-indigo-100" : "bg-slate-100"
+          } rounded-full w-20 h-20 flex items-center justify-center mb-4`}
         >
           {finalIsWinner ? (
             <PartyPopper className="text-indigo-600" size={48} />
@@ -247,82 +247,84 @@ export default function GameOverClient() {
       </motion.div>
 
       {/* Won Prize Ladder */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.5, ease: "easeOut" }}
-        className="w-full max-w-lg mx-auto bg-white rounded-2xl shadow-lg border border-slate-200 p-6 mt-8"
-      >
-        <h2 className="text-xl font-bold text-slate-800 mb-4">
-          Won Prize Ladder
-        </h2>
+      {gameConfigId && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2, duration: 0.5, ease: "easeOut" }}
+          className="w-full max-w-lg mx-auto bg-white rounded-2xl shadow-lg border border-slate-200 p-6 mt-8"
+        >
+          <h2 className="text-xl font-bold text-slate-800 mb-4">
+            Won Prize Ladder
+          </h2>
 
-        {loadingUserResult && (
-          <div className="text-slate-500 text-sm">Loading your result…</div>
-        )}
+          {loadingUserResult && (
+            <div className="text-slate-500 text-sm">Loading your result…</div>
+          )}
 
-        {userResultError && (
-          <div className="text-red-600 text-sm">{userResultError}</div>
-        )}
+          {userResultError && (
+            <div className="text-red-600 text-sm">{userResultError}</div>
+          )}
 
-        {!loadingUserResult && !userResultError && (
-          <>
-            {wonPrizeLadder.length === 0 ? (
-              <div className="text-slate-500 text-sm">No safe prize level reached yet.</div>
-            ) : (
-              <div className="space-y-3">
-                {wonPrizeLadder.map((item) => {
-                  const isGift = item.type === "gift";
-                  const hasImage = Boolean(item.media?.url);
+          {!loadingUserResult && !userResultError && (
+            <>
+              {wonPrizeLadder.length === 0 ? (
+                <div className="text-slate-500 text-sm">
+                  No safe prize level reached yet.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {wonPrizeLadder.map((item) => {
+                    const isGift = item.type === "gift";
+                    const hasImage = Boolean(item.media?.url);
 
-                  return (
-                    <div
-                      key={item.level}
-                      className={`rounded-xl px-4 py-3 border ${item.isSafe
-                          ? "bg-emerald-50 border-emerald-200"
-                          : "bg-slate-50 border-slate-200"
+                    return (
+                      <div
+                        key={item.level}
+                        className={`rounded-xl px-4 py-3 border ${
+                          item.isSafe
+                            ? "bg-emerald-50 border-emerald-200"
+                            : "bg-slate-50 border-slate-200"
                         }`}
-                    >
-                      {/* 🔹 Gift Layout */}
-                      {isGift && hasImage ? (
-                        <div className="flex items-center justify-between gap-4">
-                          {/* Left Side: Text */}
-                          <div>
-                            <p className="text-sm text-slate-600 font-semibold">
-                              Level {item.level} • Gift
-                            </p>
-                            <p className="text-lg font-bold text-slate-800 mt-1">
-                              {String(item.value)}
-                            </p>
+                      >
+                        {/* Gift Layout */}
+                        {isGift && hasImage ? (
+                          <div className="flex items-center justify-between gap-4">
+                            <div>
+                              <p className="text-sm text-slate-600 font-semibold">
+                                Level {item.level} • Gift
+                              </p>
+                              <p className="text-lg font-bold text-slate-800 mt-1">
+                                {String(item.value)}
+                              </p>
+                            </div>
+
+                            <img
+                              src={item.media!.url}
+                              alt="Gift image"
+                              className="h-24 w-24 rounded-lg object-cover border border-slate-300 shadow-sm"
+                            />
                           </div>
-
-                          {/* Right Side: Image */}
-                          <img
-                            src={item.media!.url}
-                            alt="Gift image"
-                            className="h-24 w-24 rounded-lg object-cover border border-slate-300 shadow-sm"
-                          />
-                        </div>
-                      ) : (
-                        /* 🔹 Money Layout */
-                        <div className="flex items-center justify-between">
-                          <span className="font-semibold text-slate-800">
-                            Level {item.level} • Money
-                          </span>
-                          <span className="font-bold text-indigo-600">
-                            ${Number(item.value).toLocaleString()}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-          </>
-        )}
-      </motion.div>
+                        ) : (
+                          /* Money Layout */
+                          <div className="flex items-center justify-between">
+                            <span className="font-semibold text-slate-800">
+                              Level {item.level} • Money
+                            </span>
+                            <span className="font-bold text-indigo-600">
+                              ${Number(item.value).toLocaleString()}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          )}
+        </motion.div>
+      )}
 
       {/* Leaderboard (from backend only) */}
       <motion.div
