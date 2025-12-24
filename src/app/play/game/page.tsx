@@ -14,6 +14,7 @@ import { AudiencePollModal } from '@/components/game/AudiencePollModal';
 import { ExpertAdviceModal } from '@/components/game/ExpertAdviceModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '@/lib/axios';
+import { ClipLoader } from "react-spinners";
 import axiosInstance from '@/utils/axiosInstance';
 
 type AnswerState = 'idle' | 'revealed';
@@ -550,16 +551,39 @@ export default function GamePage() {
   };
 
   // ---------- Derived UI values ----------
-  if (isLoading || !activeConfig || questions.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 text-slate-800 text-center p-4">
-        <h2 className="text-2xl font-bold text-slate-800">No Quizzes Configured</h2>
-        <p className="text-slate-600 mt-2">
-          There are no published question banks selected in the current game configuration.
-        </p>
-      </div>
-    );
-  }
+
+  function GameLoader() {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50">
+      <ClipLoader
+        color="#4f46e5"   // indigo-600
+        size={48}
+        speedMultiplier={1}
+      />
+      <p className="mt-4 text-slate-600 text-sm">
+        Preparing your quiz session…
+      </p>
+    </div>
+  );
+}
+
+ if (isLoading) {
+ return <GameLoader />;
+}
+
+// 2. Session loaded but invalid / empty
+if (!activeConfig || questions.length === 0) {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 text-center p-4">
+      <h2 className="text-2xl font-bold text-slate-800">
+        No Quizzes Configured
+      </h2>
+      <p className="text-slate-600 mt-2">
+        There are no published question banks selected in the current game configuration.
+      </p>
+    </div>
+  );
+}
 
   const containerVariants = {
     hidden: { opacity: 0 },
