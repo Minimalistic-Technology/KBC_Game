@@ -1,27 +1,10 @@
 // src/app/admin/page.tsx
 import { Activity, DollarSign, Users, Package } from 'lucide-react';
 import { StatCard } from './components/StatCard';
+import { ScreenBackgroundManager } from './components/ScreenBackgroundManager';
 
 export default function DashboardPage() {
-  const a = true; // toggle this
-
-  // 🔹 CASE 1: Coming Soon
-  if (a) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold text-slate-900">
-            Coming Soon 🚧
-          </h1>
-          <p className="mt-3 text-slate-600">
-            This dashboard is under development. Please check back later.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // 🔹 CASE 2: Full Dashboard
+  // 🔹 Full Dashboard
   return (
     <div className="flex flex-col gap-8">
       <div>
@@ -82,6 +65,11 @@ export default function DashboardPage() {
             A list of upcoming scheduled banks would go here...
           </p>
         </div>
+      </div>
+
+      {/* Screen Background Management Section */}
+      <div className="mt-4">
+        <ScreenBackgroundManager />
       </div>
     </div>
   );

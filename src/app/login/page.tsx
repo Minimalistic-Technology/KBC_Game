@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { LogIn, ArrowRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
@@ -9,6 +9,7 @@ import { AxiosError } from 'axios';
 import { Toaster, toast } from 'react-hot-toast';
 import api from '@/lib/axios';
 import Header from "@/components/Header";
+import { getScreenBackground } from '@/lib/backgroundApi'; // Import the service
 
 import { useSetAtom } from "jotai";
 import { loggedInUserAtom } from "@/state/auth"; // <-- this is your role atom
@@ -30,6 +31,7 @@ export default function LoginPage() {
     userName: '',
     password: '',
   });
+  const [bgUrl, setBgUrl] = useState<string>(''); // State for background URL
 
   const setLoggedInRole = useSetAtom(loggedInUserAtom);
 
@@ -52,6 +54,20 @@ export default function LoginPage() {
     },
   });
 
+  // Fetch background on mount
+  useEffect(() => {
+    getScreenBackground('login').then(result => {
+      // Expecting result structure: { success: true, data: { screenName, mediaRef: { url, ... } } }
+      // Adjust based on actual API response structure
+      if (result?.data?.mediaRef?.url) {
+        setBgUrl(result.data.mediaRef.url);
+      } else if (result?.url) {
+        // Fallback if structure is flat
+        setBgUrl(result.url);
+      }
+    });
+  }, []);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -73,14 +89,23 @@ export default function LoginPage() {
   };
 
   return (
-    
+
     <>
       <Header />
       <Toaster position="top-center" reverseOrder={false} />
 
-      <div className="flex items-center justify-center min-h-screen bg-slate-50 pt-16 text-slate-900">
-        <div className="w-full max-w-md mx-auto bg-white rounded-2xl shadow-lg border border-slate-200 p-8">
-          
+      <div
+        className="flex items-center justify-center min-h-screen pt-16 text-slate-900 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: bgUrl ? `url(${bgUrl})` : undefined,
+          backgroundColor: bgUrl ? undefined : '#f8fafc' // Fallback color (slate-50)
+        }}
+      >
+        {/* Overlay for better readability if background is present */}
+        {bgUrl && <div className="absolute inset-0 bg-black/30 backdrop-blur-[2px] z-0" />}
+
+        <div className="w-full max-w-md mx-auto bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border border-slate-200 p-8 z-10 relative">
+
           {/* Header */}
           <div className="text-center mb-8">
             <div className="mx-auto bg-indigo-100 rounded-full w-16 h-16 flex items-center justify-center mb-4">
@@ -98,7 +123,7 @@ export default function LoginPage() {
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            
+
             {/* Username */}
             <div>
               <label

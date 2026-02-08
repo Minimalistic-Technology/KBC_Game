@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '@/lib/axios';
 import { ClipLoader } from "react-spinners";
 import axiosInstance from '@/utils/axiosInstance';
+import { getScreenBackground } from '@/lib/backgroundApi';
 
 type AnswerState = 'idle' | 'revealed';
 type LangKey = 'en' | 'hi' | 'gu';
@@ -65,6 +66,20 @@ export default function GamePage() {
   const totalTimeRef = useRef(0);
   const [totalTimeSeconds, setTotalTimeSeconds] = useState(0);
   const perQRef = useRef<Record<string, number>>({});
+
+  // ---------- Background State ----------
+  const [bgUrl, setBgUrl] = useState<string>('');
+
+  // Fetch background on mount
+  useEffect(() => {
+    getScreenBackground('game').then(result => {
+      if (result?.data?.mediaRef?.url) {
+        setBgUrl(result.data.mediaRef.url);
+      } else if (result?.url) {
+        setBgUrl(result.url);
+      }
+    });
+  }, []);
 
   // ---------- Helpers ----------
   const getDisplayFromRaw = (q: RawQuestion, currentLang: LangKey) => {
@@ -342,7 +357,7 @@ export default function GamePage() {
             .map((optText: string) => displayOptions.indexOf(optText))
             .filter((idx: number) => idx !== -1);
 
-          setRemovedOptions(removedIndexes);          
+          setRemovedOptions(removedIndexes);
           setUsedLifelinesArr(prev => [...prev, '50:50']);
         }
       } else if (lifeline === 'Audience Poll') {
@@ -553,37 +568,37 @@ export default function GamePage() {
   // ---------- Derived UI values ----------
 
   function GameLoader() {
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50">
-      <ClipLoader
-        color="#4f46e5"   // indigo-600
-        size={48}
-        speedMultiplier={1}
-      />
-      <p className="mt-4 text-slate-600 text-sm">
-        Preparing your quiz session…
-      </p>
-    </div>
-  );
-}
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50">
+        <ClipLoader
+          color="#4f46e5"   // indigo-600
+          size={48}
+          speedMultiplier={1}
+        />
+        <p className="mt-4 text-slate-600 text-sm">
+          Preparing your quiz session…
+        </p>
+      </div>
+    );
+  }
 
- if (isLoading) {
- return <GameLoader />;
-}
+  if (isLoading) {
+    return <GameLoader />;
+  }
 
-// 2. Session loaded but invalid / empty
-if (!activeConfig || questions.length === 0) {
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 text-center p-4">
-      <h2 className="text-2xl font-bold text-slate-800">
-        No Quizzes Configured
-      </h2>
-      <p className="text-slate-600 mt-2">
-        There are no published question banks selected in the current game configuration.
-      </p>
-    </div>
-  );
-}
+  // 2. Session loaded but invalid / empty
+  if (!activeConfig || questions.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 text-center p-4">
+        <h2 className="text-2xl font-bold text-slate-800">
+          No Quizzes Configured
+        </h2>
+        <p className="text-slate-600 mt-2">
+          There are no published question banks selected in the current game configuration.
+        </p>
+      </div>
+    );
+  }
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -627,12 +642,20 @@ if (!activeConfig || questions.length === 0) {
       )}
 
       <motion.main
-        className="grid grid-cols-1 lg:grid-cols-4 min-h-screen bg-gradient-to-br from-slate-50 to-indigo-100 text-slate-800 p-8 lg:p-12 gap-8"
+        className="grid grid-cols-1 lg:grid-cols-4 min-h-screen bg-cover bg-center bg-no-repeat bg-slate-50 text-slate-800 p-8 lg:p-12 gap-8 relative"
+        style={{
+          backgroundImage: bgUrl ? `url(${bgUrl})` : undefined,
+          // Removed gradient to let image show, added fallback color
+        }}
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        <motion.div className="lg:col-span-3 flex flex-col gap-4" variants={itemVariants}>
+        {/* Overlay */}
+        {bgUrl && <div className="absolute inset-0 bg-white/80 backdrop-blur-[2px] z-0" />}
+
+        {/* Content wrapper to ensure z-index on top of overlay */}
+        <div className="lg:col-span-3 flex flex-col gap-4 z-10 relative">
           {/* Language Switcher + HUD */}
           <div className="flex items-center justify-between">
             <GameHUD
@@ -651,8 +674,8 @@ if (!activeConfig || questions.length === 0) {
                     } catch { }
                   }}
                   className={`px-3 py-1 rounded-md border text-sm ${lang === l
-                      ? 'bg-indigo-600 text-white border-indigo-600'
-                      : 'bg-white border-slate-300 text-slate-700'
+                    ? 'bg-indigo-600 text-white border-indigo-600'
+                    : 'bg-white border-slate-300 text-slate-700'
                     }`}
                   aria-pressed={lang === l}
                 >
@@ -697,9 +720,9 @@ if (!activeConfig || questions.length === 0) {
               </motion.div>
             </AnimatePresence>
           </div>
-        </motion.div>
+        </div>
 
-        <motion.div className="lg:col-span-1 flex flex-col gap-6" variants={itemVariants}>
+        <motion.div className="lg:col-span-1 flex flex-col gap-6 z-10 relative" variants={itemVariants}>
           <LifelineBar
             lifelines={
               activeConfig?.lifelines ?? {

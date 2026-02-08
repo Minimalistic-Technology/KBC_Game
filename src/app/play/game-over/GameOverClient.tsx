@@ -5,6 +5,7 @@ import axiosInstance from "@/utils/axiosInstance";
 import { PartyPopper, Frown, RotateCcw, Trophy } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { getScreenBackground } from '@/lib/backgroundApi';
 
 type ApiScore = {
   _id: string;
@@ -69,6 +70,20 @@ export default function GameOverClient() {
   const [userResult, setUserResult] = useState<UserGameResult | null>(null);
   const [userResultError, setUserResultError] = useState<string | null>(null);
   const [loadingUserResult, setLoadingUserResult] = useState(true);
+
+  // Background state
+  const [bgUrl, setBgUrl] = useState<string>('');
+
+  // Fetch background
+  useEffect(() => {
+    getScreenBackground('scoreboard').then(result => {
+      if (result?.data?.mediaRef?.url) {
+        setBgUrl(result.data.mediaRef.url);
+      } else if (result?.url) {
+        setBgUrl(result.url);
+      }
+    });
+  }, []);
 
   // 🔹 Fetch leaderboard (same as before)
   useEffect(() => {
@@ -190,189 +205,196 @@ export default function GameOverClient() {
   const finalIsWinner = userResult?.isWinner ?? false;
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 p-4 py-12">
-      {/* Main Game Over Card */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="w-full max-w-lg mx-auto bg-white rounded-2xl shadow-lg border border-slate-200 p-8 text-center"
-      >
+    <div
+      className="flex flex-col items-center justify-center min-h-screen bg-cover bg-center bg-no-repeat bg-slate-50 p-4 py-12 relative"
+      style={{ backgroundImage: bgUrl ? `url(${bgUrl})` : undefined }}
+    >
+      {/* Overlay */}
+      {bgUrl && <div className="absolute inset-0 bg-white/80 backdrop-blur-[2px] z-0" />}
+
+      {/* Content Wrapper */}
+      <div className="w-full max-w-lg mx-auto z-10 relative">
+        {/* Main Game Over Card */}
         <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1, rotate: [0, 15, -15, 0] }}
-          transition={{
-            scale: { delay: 0.2, type: "spring", stiffness: 200 },
-            rotate: { delay: 0.4, duration: 0.5 },
-          }}
-          className={`mx-auto ${
-            finalIsWinner ? "bg-indigo-100" : "bg-slate-100"
-          } rounded-full w-20 h-20 flex items-center justify-center mb-4`}
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+          className="w-full max-w-lg mx-auto bg-white rounded-2xl shadow-lg border border-slate-200 p-8 text-center"
         >
-          {finalIsWinner ? (
-            <PartyPopper className="text-indigo-600" size={48} />
-          ) : (
-            <Frown className="text-slate-600" size={48} />
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1, rotate: [0, 15, -15, 0] }}
+            transition={{
+              scale: { delay: 0.2, type: "spring", stiffness: 200 },
+              rotate: { delay: 0.4, duration: 0.5 },
+            }}
+            className={`mx-auto ${finalIsWinner ? "bg-indigo-100" : "bg-slate-100"
+              } rounded-full w-20 h-20 flex items-center justify-center mb-4`}
+          >
+            {finalIsWinner ? (
+              <PartyPopper className="text-indigo-600" size={48} />
+            ) : (
+              <Frown className="text-slate-600" size={48} />
+            )}
+          </motion.div>
+
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">
+            {finalIsWinner ? "Congratulations!" : "Game Over"}
+          </h1>
+
+          <p className="text-lg text-slate-600 mb-2">
+            You&apos;re walking away with
+          </p>
+
+          {/* ✅ Prize from backend (wonPrizeLadder) */}
+          <div className="text-5xl font-bold text-indigo-600 mb-4">
+            {displayPrizeText}
+          </div>
+
+          {/* Optional: show correct answered from backend */}
+          {userResult && (
+            <p className="text-sm text-slate-500 mb-4">
+              Correct answers:{" "}
+              <span className="font-semibold">{userResult.correctAnswered}</span>
+            </p>
           )}
+
+          <Link
+            href="/play"
+            className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-6 py-3 text-lg font-semibold text-white shadow-sm transition-transform hover:scale-105"
+          >
+            <RotateCcw size={20} />
+            <span>Play Again</span>
+          </Link>
         </motion.div>
 
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">
-          {finalIsWinner ? "Congratulations!" : "Game Over"}
-        </h1>
+        {/* Won Prize Ladder */}
+        {gameConfigId && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2, duration: 0.5, ease: "easeOut" }}
+            className="w-full max-w-lg mx-auto bg-white rounded-2xl shadow-lg border border-slate-200 p-6 mt-8"
+          >
+            <h2 className="text-xl font-bold text-slate-800 mb-4">
+              Won Prize Ladder
+            </h2>
 
-        <p className="text-lg text-slate-600 mb-2">
-          You&apos;re walking away with
-        </p>
+            {loadingUserResult && (
+              <div className="text-slate-500 text-sm">Loading your result…</div>
+            )}
 
-        {/* ✅ Prize from backend (wonPrizeLadder) */}
-        <div className="text-5xl font-bold text-indigo-600 mb-4">
-          {displayPrizeText}
-        </div>
+            {userResultError && (
+              <div className="text-red-600 text-sm">{userResultError}</div>
+            )}
 
-        {/* Optional: show correct answered from backend */}
-        {userResult && (
-          <p className="text-sm text-slate-500 mb-4">
-            Correct answers:{" "}
-            <span className="font-semibold">{userResult.correctAnswered}</span>
-          </p>
+            {!loadingUserResult && !userResultError && (
+              <>
+                {wonPrizeLadder.length === 0 ? (
+                  <div className="text-slate-500 text-sm">
+                    No safe prize level reached yet.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {wonPrizeLadder.map((item) => {
+                      const isGift = item.type === "gift";
+                      const hasImage = Boolean(item.media?.url);
+
+                      return (
+                        <div
+                          key={item.level}
+                          className={`rounded-xl px-4 py-3 border ${item.isSafe
+                              ? "bg-emerald-50 border-emerald-200"
+                              : "bg-slate-50 border-slate-200"
+                            }`}
+                        >
+                          {/* Gift Layout */}
+                          {isGift && hasImage ? (
+                            <div className="flex items-center justify-between gap-4">
+                              <div>
+                                <p className="text-sm text-slate-600 font-semibold">
+                                  Level {item.level} • Gift
+                                </p>
+                                <p className="text-lg font-bold text-slate-800 mt-1">
+                                  {String(item.value)}
+                                </p>
+                              </div>
+
+                              <img
+                                src={item.media!.url}
+                                alt="Gift image"
+                                className="h-24 w-24 rounded-lg object-cover border border-slate-300 shadow-sm"
+                              />
+                            </div>
+                          ) : (
+                            /* Money Layout */
+                            <div className="flex items-center justify-between">
+                              <span className="font-semibold text-slate-800">
+                                Level {item.level} • Money
+                              </span>
+                              <span className="font-bold text-indigo-600">
+                                ${Number(item.value).toLocaleString()}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
+            )}
+          </motion.div>
         )}
 
-        <Link
-          href="/play"
-          className="w-full inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-6 py-3 text-lg font-semibold text-white shadow-sm transition-transform hover:scale-105"
-        >
-          <RotateCcw size={20} />
-          <span>Play Again</span>
-        </Link>
-      </motion.div>
-
-      {/* Won Prize Ladder */}
-      {gameConfigId && (
+        {/* Leaderboard (from backend only) */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.5, ease: "easeOut" }}
-          className="w-full max-w-lg mx-auto bg-white rounded-2xl shadow-lg border border-slate-200 p-6 mt-8"
+          transition={{ delay: 0.3, duration: 0.5, ease: "easeOut" }}
+          className="w-full max-w-lg mx-auto bg-white rounded-2xl shadow-lg border border-slate-200 p-8 mt-8"
         >
-          <h2 className="text-xl font-bold text-slate-800 mb-4">
-            Won Prize Ladder
-          </h2>
+          <div className="flex items-center justify-center gap-2 mb-6">
+            <Trophy className="text-yellow-500" size={24} />
+            <h2 className="text-2xl font-bold text-slate-800">
+              {loadingLeaderboard ? "Loading Leaderboard…" : "Leaderboard"}
+            </h2>
+          </div>
 
-          {loadingUserResult && (
-            <div className="text-slate-500 text-sm">Loading your result…</div>
+          {leaderboardError && (
+            <div className="text-center text-red-600">{leaderboardError}</div>
           )}
 
-          {userResultError && (
-            <div className="text-red-600 text-sm">{userResultError}</div>
-          )}
-
-          {!loadingUserResult && !userResultError && (
+          {!loadingLeaderboard && !leaderboardError && (
             <>
-              {wonPrizeLadder.length === 0 ? (
-                <div className="text-slate-500 text-sm">
-                  No safe prize level reached yet.
-                </div>
+              {topPlayers.length === 0 ? (
+                <div className="text-center text-slate-500">No scores yet.</div>
               ) : (
                 <div className="space-y-3">
-                  {wonPrizeLadder.map((item) => {
-                    const isGift = item.type === "gift";
-                    const hasImage = Boolean(item.media?.url);
-
-                    return (
-                      <div
-                        key={item.level}
-                        className={`rounded-xl px-4 py-3 border ${
-                          item.isSafe
-                            ? "bg-emerald-50 border-emerald-200"
-                            : "bg-slate-50 border-slate-200"
-                        }`}
-                      >
-                        {/* Gift Layout */}
-                        {isGift && hasImage ? (
-                          <div className="flex items-center justify-between gap-4">
-                            <div>
-                              <p className="text-sm text-slate-600 font-semibold">
-                                Level {item.level} • Gift
-                              </p>
-                              <p className="text-lg font-bold text-slate-800 mt-1">
-                                {String(item.value)}
-                              </p>
-                            </div>
-
-                            <img
-                              src={item.media!.url}
-                              alt="Gift image"
-                              className="h-24 w-24 rounded-lg object-cover border border-slate-300 shadow-sm"
-                            />
-                          </div>
-                        ) : (
-                          /* Money Layout */
-                          <div className="flex items-center justify-between">
-                            <span className="font-semibold text-slate-800">
-                              Level {item.level} • Money
-                            </span>
-                            <span className="font-bold text-indigo-600">
-                              ${Number(item.value).toLocaleString()}
-                            </span>
-                          </div>
-                        )}
+                  {topPlayers.map((player, index) => (
+                    <div
+                      key={player.id}
+                      className="flex items-center justify-between p-3 rounded-lg bg-slate-50"
+                    >
+                      <div className="flex items-center gap-4">
+                        <span className="font-bold text-slate-500 text-lg w-6">
+                          {index + 1}
+                        </span>
+                        <span className="font-semibold text-slate-800">
+                          {player.name}
+                        </span>
                       </div>
-                    );
-                  })}
+                      <span className="font-bold text-indigo-600">
+                        {player.score} pts
+                      </span>
+                    </div>
+                  ))}
                 </div>
               )}
             </>
           )}
         </motion.div>
-      )}
-
-      {/* Leaderboard (from backend only) */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.5, ease: "easeOut" }}
-        className="w-full max-w-lg mx-auto bg-white rounded-2xl shadow-lg border border-slate-200 p-8 mt-8"
-      >
-        <div className="flex items-center justify-center gap-2 mb-6">
-          <Trophy className="text-yellow-500" size={24} />
-          <h2 className="text-2xl font-bold text-slate-800">
-            {loadingLeaderboard ? "Loading Leaderboard…" : "Leaderboard"}
-          </h2>
-        </div>
-
-        {leaderboardError && (
-          <div className="text-center text-red-600">{leaderboardError}</div>
-        )}
-
-        {!loadingLeaderboard && !leaderboardError && (
-          <>
-            {topPlayers.length === 0 ? (
-              <div className="text-center text-slate-500">No scores yet.</div>
-            ) : (
-              <div className="space-y-3">
-                {topPlayers.map((player, index) => (
-                  <div
-                    key={player.id}
-                    className="flex items-center justify-between p-3 rounded-lg bg-slate-50"
-                  >
-                    <div className="flex items-center gap-4">
-                      <span className="font-bold text-slate-500 text-lg w-6">
-                        {index + 1}
-                      </span>
-                      <span className="font-semibold text-slate-800">
-                        {player.name}
-                      </span>
-                    </div>
-                    <span className="font-bold text-indigo-600">
-                      {player.score} pts
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </>
-        )}
-      </motion.div>
+      </div>
     </div>
   );
 }
