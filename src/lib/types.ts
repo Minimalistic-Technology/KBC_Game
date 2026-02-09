@@ -11,7 +11,7 @@ export type PrizeLevel = {
 
 export type QuestionBank = {
   id?: string;
-   _id?: string;
+  _id?: string;
   name: string;
   slug: string;
   description: string;
@@ -62,13 +62,19 @@ export type MediaAsset = {
 };
 export type Question = {
   id?: number;
-  _id?:string;
+  _id?: string;
   bankId: string;
   question: string;
   options: string[];
-  answer: string;
+  answer?: string; // Kept for backward compatibility if needed, but correctIndices is preferred
+  correctIndices?: number[]; // indices of correct options
   media?: any;
   mediaRef?: any;
   status: 'Draft' | 'Published';
   categories: string[];
+  lang?: {
+    en: { text: string; options: string[]; categories: string[] };
+    hi?: { text: string; options: string[]; categories: string[] };
+    gu?: { text: string; options: string[]; categories: string[] };
+  };
 };

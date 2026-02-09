@@ -15,7 +15,7 @@ export default function QuestionsPageClient() {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(null);
   const [activeBank, setActiveBank] = useState<QuestionBank | null>(null);
-const [initialLang, setInitialLang] = useState<any | null>(null);
+  const [initialLang, setInitialLang] = useState<any | null>(null);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
 
@@ -66,24 +66,33 @@ const [initialLang, setInitialLang] = useState<any | null>(null);
           ? block.options.map((o: any) => (typeof o === 'string' ? o : o?.text ?? ''))
           : ['', '', '', ''];
 
+        // Map correctIndices or correctIndex or answer string
+        let indices: number[] = [];
+        if (Array.isArray(q.correctIndices)) {
+          indices = q.correctIndices;
+        } else if (typeof q.correctIndex === 'number') {
+          indices = [q.correctIndex];
+        }
+
         return {
           _id: q._id,
           bankId: q.bankId,
           question: block.text || '',
           options: opts,
-          answer: opts[q.correctIndex] ?? '',
+          answer: '', // Deprecated in favor of correctIndices
+          correctIndices: indices,
           status: q.status === 'published' ? 'Published' : 'Draft',
           categories: block.categories || [],
           mediaRef: q.mediaRef
             ? {
-                public_id: q.mediaRef.public_id,
-                url: q.mediaRef.url,
-                type: q.mediaRef.type,
-                format: q.mediaRef.format
-              }
+              public_id: q.mediaRef.public_id,
+              url: q.mediaRef.url,
+              type: q.mediaRef.type,
+              format: q.mediaRef.format
+            }
             : undefined,
 
-            lang: q.lang || {},
+          lang: q.lang || {},
         };
       });
 
@@ -110,33 +119,34 @@ const [initialLang, setInitialLang] = useState<any | null>(null);
   }, [bankId]);
 
   // --- Open Editor ---
- const handleOpenEditor = async (q: Question | null) => {
-  if (q?._id) {
-    try {
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL_DEV}/api/questions/byId/${q._id}`,
-        { withCredentials: true }
-      );
-      setInitialLang(res.data?.lang || null);   // <-- pass full langs
-    } catch (e) {
-      console.error("Failed to fetch full question (langs)", e);
+  const handleOpenEditor = async (q: Question | null) => {
+    if (q?._id) {
+      try {
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL_DEV}/api/questions/byId/${q._id}`,
+          { withCredentials: true }
+        );
+        setInitialLang(res.data?.lang || null);   // <-- pass full langs
+      } catch (e) {
+        console.error("Failed to fetch full question (langs)", e);
+        setInitialLang(null);
+      }
+      setEditingQuestion(q);
+    } else if (activeBank) {
       setInitialLang(null);
+      setEditingQuestion({
+        _id: undefined,
+        bankId: activeBank._id || '',
+        question: '',
+        options: ['', '', '', ''],
+        answer: '',
+        correctIndices: [], // Default to empty
+        status: 'Draft',
+        categories: [],
+      });
     }
-    setEditingQuestion(q);
-  } else if (activeBank) {
-    setInitialLang(null);
-    setEditingQuestion({
-      _id: undefined,
-      bankId: activeBank._id || '',
-      question: '',
-      options: ['', '', '', ''],
-      answer: '',
-      status: 'Draft',
-      categories: [],
-    });
-  }
-  setIsEditorOpen(true);
-};
+    setIsEditorOpen(true);
+  };
 
   const handleCloseEditor = () => {
     setIsEditorOpen(false);
@@ -144,58 +154,57 @@ const [initialLang, setInitialLang] = useState<any | null>(null);
   };
 
   // --- Save (new schema: send lang JSON) ---
- const handleSaveQuestion = async (
-  savedQuestion: Question,
-  file?: File | null,
-  langPayload?: any              // <-- accept from modal
-) => {
-  try {
-    const formDataToSend = new FormData();
+  const handleSaveQuestion = async (
+    savedQuestion: Question,
+    file?: File | null,
+    langPayload?: any              // <-- accept from modal
+  ) => {
+    try {
+      const formDataToSend = new FormData();
 
-    formDataToSend.append("bankId", savedQuestion.bankId);
-    formDataToSend.append("status", (savedQuestion.status || "Draft").toLowerCase());
+      formDataToSend.append("bankId", savedQuestion.bankId);
+      formDataToSend.append("status", (savedQuestion.status || "Draft").toLowerCase());
 
-    // ✅ use langPayload from modal (contains en and optional hi/gu)
-    formDataToSend.append("lang", JSON.stringify(
-      langPayload ?? {
-        en: {
-          text: savedQuestion.question,
-          options: (savedQuestion.options || []).slice(0, 4).map(t => ({ text: t || "" })),
-          categories: savedQuestion.categories || []
+      // ✅ use langPayload from modal (contains en and optional hi/gu)
+      formDataToSend.append("lang", JSON.stringify(
+        langPayload ?? {
+          en: {
+            text: savedQuestion.question,
+            options: (savedQuestion.options || []).slice(0, 4).map(t => ({ text: t || "" })),
+            categories: savedQuestion.categories || []
+          }
         }
-      }
-    ));
+      ));
 
-    const correctIndex = Math.max(
-      0,
-      (savedQuestion.options || []).findIndex(t => t === savedQuestion.answer)
-    );
-    formDataToSend.append("correctIndex", String(correctIndex));
+      // Send correctIndices as JSON string
+      const indices = savedQuestion.correctIndices || [];
+      // Also support single index for backward compatibility if needed, but best to stick to array
+      formDataToSend.append("correctIndices", JSON.stringify(indices));
 
-    if (file) formDataToSend.append("file", file);
+      if (file) formDataToSend.append("file", file);
 
-    const url = savedQuestion._id
-      ? `${process.env.NEXT_PUBLIC_API_URL_DEV}/api/questions/${savedQuestion._id}`
-      : `${process.env.NEXT_PUBLIC_API_URL_DEV}/api/questions`;
-    const method = savedQuestion._id ? "put" : "post";
+      const url = savedQuestion._id
+        ? `${process.env.NEXT_PUBLIC_API_URL_DEV}/api/questions/${savedQuestion._id}`
+        : `${process.env.NEXT_PUBLIC_API_URL_DEV}/api/questions`;
+      const method = savedQuestion._id ? "put" : "post";
 
-    await axios({
-      method,
-      url,
-      data: formDataToSend,
-      withCredentials: true,
-      headers: { "Content-Type": "multipart/form-data" }
-    });
+      await axios({
+        method,
+        url,
+        data: formDataToSend,
+        withCredentials: true,
+        headers: { "Content-Type": "multipart/form-data" }
+      });
 
-    if (bankId) fetchQuestions(bankId);
-    handleCloseEditor();
-  } catch (err) {
-    console.error("Failed to save question", err);
-    alert("Error saving question. Please try again.");
-    handleCloseEditor();
+      if (bankId) fetchQuestions(bankId);
+      handleCloseEditor();
+    } catch (err) {
+      console.error("Failed to save question", err);
+      alert("Error saving question. Please try again.");
+      handleCloseEditor();
 
-  }
-};
+    }
+  };
 
   // --- Delete Question ---
   const handleDelete = async (_id: string) => {
@@ -213,18 +222,18 @@ const [initialLang, setInitialLang] = useState<any | null>(null);
 
   return (
     <>
-     <AnimatePresence>
-  {isEditorOpen ? (
-    editingQuestion ? (
-      <QuestionEditorModal
-        question={editingQuestion}     // now narrowed to Question
-        onSave={handleSaveQuestion}
-        onClose={handleCloseEditor}
-        initialLang={initialLang}
-      />
-    ) : null
-  ) : null}
-</AnimatePresence>
+      <AnimatePresence>
+        {isEditorOpen ? (
+          editingQuestion ? (
+            <QuestionEditorModal
+              question={editingQuestion}     // now narrowed to Question
+              onSave={handleSaveQuestion}
+              onClose={handleCloseEditor}
+              initialLang={initialLang}
+            />
+          ) : null
+        ) : null}
+      </AnimatePresence>
 
       <div className="flex flex-col gap-8 h-full">
         {/* Header */}

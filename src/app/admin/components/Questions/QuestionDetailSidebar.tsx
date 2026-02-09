@@ -320,38 +320,36 @@ export const QuestionDetailSidebar = ({ question, onDelete, onEdit }: SidebarPro
 
   const categories = block.categories || [];
 
-  // ⭐ Compute correct option index once (position-based)
-  const correctOptionIndex = useMemo(() => {
-    // 1) If backend already gives an index, use it
+  // ⭐ Compute correct option indices
+  const correctIndices = useMemo(() => {
+    if (Array.isArray(qAny.correctIndices)) {
+      return qAny.correctIndices;
+    }
+    // Fallback logic
     if (typeof qAny.correctOptionIndex === 'number') {
-      return qAny.correctOptionIndex; // 0,1,2,3
+      return [qAny.correctOptionIndex];
+    }
+    if (typeof qAny.correctIndex === 'number') {
+      return [qAny.correctIndex]; // Handle what the backend might send
     }
 
-    // 2) If backend gives a letter: 'A' | 'B' | 'C' | 'D'
-    if (typeof qAny.correctOption === 'string') {
-      const idx = 'ABCD'.indexOf(qAny.correctOption.toUpperCase());
-      if (idx !== -1) return idx;
-    }
-
-    // 3) Fallback (old style): derive from English text
+    // Legacy mapping
     if (lang?.en?.options && qAny.answer) {
       const enOptions = lang.en.options.map((o: any) =>
         typeof o === 'string' ? o : o.text
       );
       const idx = enOptions.findIndex((o: string) => o === qAny.answer);
-      return idx === -1 ? null : idx;
+      return idx === -1 ? [] : [idx];
     }
-
-    return null;
-  }, [lang, qAny.correctOptionIndex, qAny.correctOption, qAny.answer]);
+    return [];
+  }, [lang, qAny]);
 
   const StatusBadge = () => (
     <span
-      className={`inline-flex items-center gap-1.5 text-xs font-bold capitalize px-3 py-1 rounded-full ${
-        status === 'Published'
+      className={`inline-flex items-center gap-1.5 text-xs font-bold capitalize px-3 py-1 rounded-full ${status === 'Published'
           ? 'bg-green-100 text-green-800'
           : 'bg-yellow-100 text-yellow-800'
-      }`}
+        }`}
     >
       {status === 'Published' ? <CheckCircle size={12} /> : <FileEdit size={12} />}
       {status}
@@ -387,13 +385,12 @@ export const QuestionDetailSidebar = ({ question, onDelete, onEdit }: SidebarPro
                 type="button"
                 onClick={() => setActiveLang(k)}
                 disabled={!exists}
-                className={`px-2 py-1 text-xs rounded-md border transition-all ${
-                  activeLang === k
+                className={`px-2 py-1 text-xs rounded-md border transition-all ${activeLang === k
                     ? 'bg-indigo-600 text-white border-indigo-600'
                     : exists
-                    ? 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
-                    : 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
-                }`}
+                      ? 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                      : 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
+                  }`}
               >
                 {k.toUpperCase()}
               </button>
@@ -459,17 +456,15 @@ export const QuestionDetailSidebar = ({ question, onDelete, onEdit }: SidebarPro
           {options.length > 0 ? (
             <ul className="mt-2 space-y-2">
               {options.map((opt: string, index: number) => {
-                const isCorrect =
-                  correctOptionIndex !== null && index === correctOptionIndex;
+                const isCorrect = correctIndices.includes(index);
 
                 return (
                   <li
                     key={index}
-                    className={`flex items-center gap-3 text-sm p-3 rounded-md ${
-                      isCorrect
+                    className={`flex items-center gap-3 text-sm p-3 rounded-md ${isCorrect
                         ? 'bg-green-100 text-green-900 font-semibold'
                         : 'bg-slate-100 text-slate-700'
-                    }`}
+                      }`}
                   >
                     {isCorrect && (
                       <CheckCircle

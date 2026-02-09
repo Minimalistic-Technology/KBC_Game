@@ -20,21 +20,23 @@ export const QuestionEditorModal = ({
   question,
   onSave,
   onClose,
-  initialLang, // ✅ add here
+  initialLang,
 }: {
   question: Question;
   onSave: (question: Question, file?: File | null, langPayload?: any) => void;
   onClose: () => void;
-  initialLang?: any; // ✅ add type here
+  initialLang?: any;
 }) => {
-  // Base EN fields for compatibility with your existing Question type
   const [formData, setFormData] = useState<Question>(question);
   const [tagsInput, setTagsInput] = useState(question.categories.join(', '));
 
-  // Multi-lang editor state
   const [activeLang, setActiveLang] = useState<LangKey>('en');
   const [blocks, setBlocks] = useState<Record<LangKey, LangBlock>>({
-    en: { text: question.question || '', options: question.options || ['', '', '', ''], categories: question.categories || [] },
+    en: {
+      text: question.question || '',
+      options: question.options || ['', '', '', ''],
+      categories: question.categories || []
+    },
     hi: emptyBlock(),
     gu: emptyBlock(),
   });
@@ -43,47 +45,57 @@ export const QuestionEditorModal = ({
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const [rawFile, setRawFile] = useState<File | null>(null);
 
+  // New state for multiple correct answers (indices 0-3)
+  const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
+
   const handleMediaUploadComplete = (asset: MediaAsset, file?: File) => {
     setFormData((prev) => ({ ...prev, media: asset }));
     if (file) setRawFile(file);
   };
 
-  // Sync incoming question -> EN block + base fields
-useEffect(() => {
-  setFormData(question);
-  setTagsInput(question.categories.join(', '));
+  useEffect(() => {
+    setFormData(question);
+    setTagsInput(question.categories.join(', '));
 
-  const toTextArray4 = (arr: any): string[] => {
-    const list = Array.isArray(arr) ? arr.map((o: any) => (typeof o === 'string' ? o : o?.text ?? '')) : [];
-    return list.slice(0, 4).concat(['', '', '', '']).slice(0, 4);
-  };
+    const toTextArray4 = (arr: any): string[] => {
+      const list = Array.isArray(arr) ? arr.map((o: any) => (typeof o === 'string' ? o : o?.text ?? '')) : [];
+      return list.slice(0, 4).concat(['', '', '', '']).slice(0, 4);
+    };
 
-  const enBlock = {
-    text: question.question || '',
-    options: toTextArray4(question.options || []),
-    categories: question.categories || [],
-  };
+    const enBlock = {
+      text: question.question || '',
+      options: toTextArray4(question.options || []),
+      categories: question.categories || [],
+    };
 
-  const hiBlock = initialLang?.hi
-    ? {
+    const hiBlock = initialLang?.hi
+      ? {
         text: initialLang.hi.text || '',
         options: toTextArray4(initialLang.hi.options),
         categories: initialLang.hi.categories || [],
       }
-    : emptyBlock();
+      : emptyBlock();
 
-  const guBlock = initialLang?.gu
-    ? {
+    const guBlock = initialLang?.gu
+      ? {
         text: initialLang.gu.text || '',
         options: toTextArray4(initialLang.gu.options),
         categories: initialLang.gu.categories || [],
       }
-    : emptyBlock();
+      : emptyBlock();
 
-  setBlocks({ en: enBlock, hi: hiBlock, gu: guBlock });
-}, [question, initialLang]);
+    setBlocks({ en: enBlock, hi: hiBlock, gu: guBlock });
 
-  // Helpers to edit the current language block
+    // Initialize selectedIndices
+    if (question.correctIndices && Array.isArray(question.correctIndices)) {
+      setSelectedIndices(question.correctIndices);
+    } else {
+      // Fallback logic for legacy single answer
+      const idx = question.options?.indexOf(question.answer || '');
+      setSelectedIndices(idx >= 0 ? [idx] : []);
+    }
+  }, [question, initialLang]);
+
   const cur = blocks[activeLang];
 
   const setCur = (patch: Partial<LangBlock>) => {
@@ -96,13 +108,11 @@ useEffect(() => {
     }));
   };
 
-  // ----- Handlers -----
   const handleLangTab = (k: LangKey) => setActiveLang(k);
 
   const handleQuestionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     setCur({ text: value });
-    // keep EN mirrored into base Question for preview/list
     if (activeLang === 'en') {
       setFormData((p) => ({ ...p, question: value }));
     }
@@ -113,19 +123,23 @@ useEffect(() => {
     next[index] = value;
     setCur({ options: next });
     if (activeLang === 'en') {
-      // mirror EN options to base
       setFormData((p) => {
         const mirrored = [...p.options];
         mirrored[index] = value;
         return { ...p, options: mirrored };
       });
-      // if the correct answer equals the edited option, keep it; otherwise leave answer as-is
     }
   };
 
-  const handleAnswerChange = (option: string) => {
-    // shared correctIndex; we still store display answer in base Question
-    setFormData((prev) => ({ ...prev, answer: option }));
+  // Toggle correct index
+  const toggleCorrectIndex = (index: number) => {
+    setSelectedIndices(prev => {
+      if (prev.includes(index)) {
+        return prev.filter(i => i !== index);
+      } else {
+        return [...prev, index].sort((a, b) => a - b);
+      }
+    });
   };
 
   const handleTagsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -147,27 +161,18 @@ useEffect(() => {
     setFormData((prev) => ({ ...prev, media: undefined }));
   };
 
-  const handleDefaultFormatChange = (format: DerivedFormat) => {
-    if (formData.media) {
-      setFormData((prev) => ({ ...prev, media: { ...prev.media!, defaultFormat: format } }));
-    }
-  };
-
-  // Validation helpers
   const isFilledBlock = (b: LangBlock) =>
     (b.text?.trim()?.length ?? 0) > 0 || b.options.some((o) => (o?.trim()?.length ?? 0) > 0) || (b.categories?.length ?? 0) > 0;
 
   const exactlyFour = (arr: string[]) => Array.isArray(arr) && arr.length === 4 && arr.every((s) => typeof s === 'string');
 
   const validateBlocks = (): { ok: boolean; msg?: string } => {
-    // EN required
     const en = blocks.en;
     if (!en.text.trim() || en.options.some((o) => !o.trim())) {
       return { ok: false, msg: 'Please complete English text and all 4 English options.' };
     }
     if (!exactlyFour(en.options)) return { ok: false, msg: 'English must have exactly 4 options.' };
 
-    // If HI present, must be complete (4 options)
     const hi = blocks.hi;
     if (isFilledBlock(hi)) {
       if (!hi.text.trim() || hi.options.some((o) => !o.trim())) {
@@ -176,7 +181,6 @@ useEffect(() => {
       if (!exactlyFour(hi.options)) return { ok: false, msg: 'Hindi must have exactly 4 options when provided.' };
     }
 
-    // If GU present, must be complete (4 options)
     const gu = blocks.gu;
     if (isFilledBlock(gu)) {
       if (!gu.text.trim() || gu.options.some((o) => !o.trim())) {
@@ -185,10 +189,8 @@ useEffect(() => {
       if (!exactlyFour(gu.options)) return { ok: false, msg: 'Gujarati must have exactly 4 options when provided.' };
     }
 
-    // Shared correctIndex must exist in EN options
-    const idx = blocks.en.options.findIndex((o) => o === formData.answer);
-    if (idx < 0) {
-      return { ok: false, msg: 'Please select a correct answer (based on English options).' };
+    if (selectedIndices.length === 0) {
+      return { ok: false, msg: 'Please select at least one correct answer (based on English options).' };
     }
 
     return { ok: true };
@@ -203,7 +205,6 @@ useEffect(() => {
     }
     if (status === 'Published' && !window.confirm('Are you sure you want to publish this question?')) return;
 
-    // Build lang payload (only include HI/GU if user filled them)
     const langPayload: any = {
       en: {
         text: blocks.en.text,
@@ -226,16 +227,16 @@ useEffect(() => {
       };
     }
 
-    // Mirror EN into base Question for preview/list compatibility
     const next: Question = {
       ...formData,
       question: blocks.en.text,
       options: blocks.en.options,
       categories: blocks.en.categories,
       status,
+      correctIndices: selectedIndices,
+      answer: '', // clear legacy single answer
     };
 
-    // Pass data + file + langPayload to parent
     onSave(next, rawFile, langPayload);
   };
 
@@ -263,9 +264,8 @@ useEffect(() => {
                 {blocks.en.options.map((opt, index) => (
                   <div
                     key={index}
-                    className={`flex items-center gap-3 p-4 rounded-lg border-2 ${
-                      formData.answer === opt ? 'border-green-500 bg-green-500/20' : 'border-slate-600 bg-slate-700'
-                    }`}
+                    className={`flex items-center gap-3 p-4 rounded-lg border-2 ${selectedIndices.includes(index) ? 'border-green-500 bg-green-500/20' : 'border-slate-600 bg-slate-700'
+                      }`}
                   >
                     <span className="font-bold text-indigo-400">{String.fromCharCode(65 + index)}:</span>
                     <span>{opt || `Option ${String.fromCharCode(65 + index)}`}</span>
@@ -275,8 +275,6 @@ useEffect(() => {
             </motion.div>
           </motion.div>
         )}
-
-       
       </AnimatePresence>
 
       <motion.div
@@ -305,18 +303,15 @@ useEffect(() => {
           </div>
 
           <div className="flex-grow grid grid-cols-1 md:grid-cols-3 overflow-hidden">
-            {/* Form */}
             <form onSubmit={(e) => handleSubmit(e, 'Draft')} className="md:col-span-2 p-6 space-y-6 overflow-y-auto">
-              {/* Language Tabs */}
               <div className="flex gap-2 mb-2">
                 {(['en', 'hi', 'gu'] as LangKey[]).map((k) => (
                   <button
                     key={k}
                     type="button"
                     onClick={() => handleLangTab(k)}
-                    className={`px-3 py-1.5 rounded-md text-sm border ${
-                      activeLang === k ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-800 border-slate-300'
-                    }`}
+                    className={`px-3 py-1.5 rounded-md text-sm border ${activeLang === k ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-800 border-slate-300'
+                      }`}
                   >
                     {k.toUpperCase()}
                   </button>
@@ -337,7 +332,6 @@ useEffect(() => {
                 />
               </div>
 
-              {/* Media (shared) */}
               <div>
                 <label className="text-sm font-medium text-slate-800 mb-2 block">Media (Image/Video/Audio)</label>
                 {formData.media ? (
@@ -371,7 +365,6 @@ useEffect(() => {
                 )}
               </div>
 
-              {/* Options */}
               <div>
                 <label className="text-sm font-medium text-slate-800 mb-2 block">
                   Options & Correct Answer ({activeLang.toUpperCase()})
@@ -379,12 +372,10 @@ useEffect(() => {
                 <div className="space-y-3">
                   {cur.options.map((opt, index) => (
                     <div key={index} className="flex items-center gap-3">
-                      {/* Correct answer is selected against EN only (shared index) */}
                       <input
-                        type="radio"
-                        name="correct-option"
-                        checked={activeLang === 'en' && formData.answer === opt}
-                        onChange={() => activeLang === 'en' && handleAnswerChange(opt)}
+                        type="checkbox"
+                        checked={activeLang === 'en' && selectedIndices.includes(index)}
+                        onChange={() => activeLang === 'en' && toggleCorrectIndex(index)}
                         className="h-5 w-5 text-indigo-600 focus:ring-indigo-500"
                         disabled={activeLang !== 'en'}
                         title={activeLang !== 'en' ? 'Select correct option in English tab' : 'Mark as correct'}
@@ -405,7 +396,6 @@ useEffect(() => {
                 </div>
               </div>
 
-              {/* Categories (per language) */}
               <div>
                 <label htmlFor="tags" className="text-sm font-medium text-slate-800 mb-2 block">
                   Category Tag(s) ({activeLang.toUpperCase()})
@@ -422,7 +412,6 @@ useEffect(() => {
               </div>
             </form>
 
-            {/* Side Actions */}
             <div className="md:col-span-1 bg-slate-50 border-l p-6 space-y-6 overflow-y-auto">
               <div>
                 <h3 className="font-semibold text-slate-900 mb-4">Actions</h3>
