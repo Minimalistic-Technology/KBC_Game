@@ -6,7 +6,11 @@ export const getScreenBackground = async (screenName: string) => {
     try {
         const response = await api.get(`/api/screen-background/${screenName}`);
         return response.data;
-    } catch (error) {
+    } catch (error: any) {
+        // If 404, it just means no background is set; return null gracefully.
+        if (error.response && error.response.status === 404) {
+            return null;
+        }
         console.error(`Error fetching background for ${screenName}:`, error);
         return null;
     }

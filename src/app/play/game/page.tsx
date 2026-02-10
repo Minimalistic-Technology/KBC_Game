@@ -31,7 +31,7 @@ type RawQuestion = {
   id: string;
   bankId: string;
   lang: Partial<Record<LangKey | string, LangPack>>;
-  correctIndex: number;
+  correctIndices: number[]; // Changed from correctIndex
   status?: string;
   categories?: string[];
   media?: { url: string; type: string } | null;
@@ -52,7 +52,7 @@ export default function GamePage() {
   // ---------- Lifelines & state ----------
   const [usedLifelines, setUsedLifelines] = useState<{ [key in keyof Lifeline]?: boolean }>({});
   const [usedLifelinesArr, setUsedLifelinesArr] = useState<string[]>([]);
-  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [selectedOptions, setSelectedOptions] = useState<string[]>([]); // Changed to array
   const [answerState, setAnswerState] = useState<AnswerState>('idle');
   const [removedOptions, setRemovedOptions] = useState<number[]>([]);
 
@@ -90,9 +90,9 @@ export default function GamePage() {
 
     const options = (pack?.options ?? []).map(o => o.text);
     const questionText = pack?.text ?? '';
-    const answer = options[q.correctIndex] ?? '';
+    const answers = q.correctIndices.map(idx => options[idx] ?? '');
 
-    return { questionText, options, answer };
+    return { questionText, options, answers };
   };
 
   const setupGameQuestions = async (config: any) => {
@@ -107,7 +107,7 @@ export default function GamePage() {
         id: q._id,
         bankId: q.bankId,
         lang: q.lang || {},
-        correctIndex: q.correctIndex ?? 0,
+        correctIndices: q.correctIndices && q.correctIndices.length > 0 ? q.correctIndices : [q.correctIndex ?? 0],
         status: q.status,
         categories: q.lang?.en?.categories ?? [],
         media: q.mediaRef ? { url: q.mediaRef.url, type: q.mediaRef.type } : null,
@@ -152,7 +152,7 @@ export default function GamePage() {
         id: q._id,
         bankId: q.bankId,
         lang: q.lang || {},
-        correctIndex: q.correctIndex ?? 0,
+        correctIndices: q.correctIndices && q.correctIndices.length > 0 ? q.correctIndices : [q.correctIndex ?? 0],
         status: q.status,
         categories: q.lang?.en?.categories ?? [],
         media: q.mediaRef ? { url: q.mediaRef.url, type: q.mediaRef.type } : null,
@@ -218,7 +218,7 @@ export default function GamePage() {
         id: q._id,
         bankId: q.bankId,
         lang: q.lang || {},
-        correctIndex: q.correctIndex ?? 0,
+        correctIndices: q.correctIndices && q.correctIndices.length > 0 ? q.correctIndices : [q.correctIndex ?? 0],
         status: q.status,
         categories: q.lang?.en?.categories ?? [],
         media: q.mediaRef ? { url: q.mediaRef.url, type: q.mediaRef.type } : null,
@@ -241,7 +241,7 @@ export default function GamePage() {
         return updated;
       });
 
-      setSelectedOption(null);
+      setSelectedOptions([]);
       setAnswerState('idle');
       setRemovedOptions([]);
 
@@ -313,13 +313,13 @@ export default function GamePage() {
 
   // ---------- Language/Question change: reset UI selection ----------
   useEffect(() => {
-    setSelectedOption(null);
+    setSelectedOptions([]);
     setAnswerState('idle');
   }, [lang]);
 
   // When QUESTION changes: reset everything including 50:50
   useEffect(() => {
-    setSelectedOption(null);
+    setSelectedOptions([]);
     setAnswerState('idle');
     setRemovedOptions([]);
   }, [currentQuestionIndex]);
@@ -327,7 +327,7 @@ export default function GamePage() {
 
   // ---------- Lifelines ----------
   const handleUseLifeline = async (lifeline: keyof Lifeline) => {
-    if (usedLifelines[lifeline] === false || selectedOption) return;
+    if (usedLifelines[lifeline] === false || answerState !== 'idle') return;
 
     const updatedLifelines = { ...usedLifelines, [lifeline]: false };
     setUsedLifelines(updatedLifelines);
@@ -338,7 +338,7 @@ export default function GamePage() {
       });
 
       const currentQuestionRaw = questions[currentQuestionIndex];
-      const { options: displayOptions, answer: displayAnswer } = getDisplayFromRaw(currentQuestionRaw, lang);
+      const { options: displayOptions } = getDisplayFromRaw(currentQuestionRaw, lang);
 
       if (lifeline === 'Flip Question') {
         findAndFlipQuestion();
@@ -347,7 +347,7 @@ export default function GamePage() {
         const { data } = await api.post('/api/game/lifeline/50-50', {
           question: {
             options: displayOptions,
-            answer: displayAnswer,
+            correctIndices: currentQuestionRaw.correctIndices,
           },
         });
 
@@ -376,15 +376,18 @@ export default function GamePage() {
 
   const generatePollResults = () => {
     const currentQuestionRaw = questions[currentQuestionIndex];
-    const { options: displayOptions, answer: displayAnswer } = getDisplayFromRaw(currentQuestionRaw, lang);
+    const { options: displayOptions, answers: displayAnswers } = getDisplayFromRaw(currentQuestionRaw, lang);
 
     let remaining = 100;
     const correctPct = Math.floor(Math.random() * 31) + 40; // 40..70
     remaining -= correctPct;
 
+    // Split correct pct among correct answers if multiple
+    const correctPctPerAnswer = Math.floor(correctPct / displayAnswers.length);
+
     const results = displayOptions.map(opt => ({
       option: opt,
-      percentage: opt === displayAnswer ? correctPct : 0,
+      percentage: displayAnswers.includes(opt) ? correctPctPerAnswer : 0,
     }));
 
     const incorrect = results.filter(r => r.percentage === 0);
@@ -403,12 +406,12 @@ export default function GamePage() {
 
   const generateExpertAdvice = () => {
     const currentQuestionRaw = questions[currentQuestionIndex];
-    const { options: displayOptions, answer: displayAnswer } = getDisplayFromRaw(currentQuestionRaw, lang);
+    const { options: displayOptions, answers: displayAnswers } = getDisplayFromRaw(currentQuestionRaw, lang);
 
     const isCorrect = Math.random() < 0.8;
-    const wrongOptions = displayOptions.filter(o => o !== displayAnswer);
+    const wrongOptions = displayOptions.filter(o => !displayAnswers.includes(o));
     const chosenOption = isCorrect
-      ? displayAnswer
+      ? displayAnswers[Math.floor(Math.random() * displayAnswers.length)]
       : wrongOptions.sort(() => Math.random() - 0.5)[0];
     const confidence = isCorrect ? Math.floor(Math.random() * 21) + 75 : Math.floor(Math.random() * 31) + 40;
     const text = `I'm about ${confidence}% sure the answer is "${chosenOption}".`;
@@ -450,84 +453,113 @@ export default function GamePage() {
     }
   };
 
-  const handleOptionSelect = async (option: string) => {
-    if (selectedOption || !activeConfig) return;
-    setSelectedOption(option);
+  /* ---------- Submission Logic ---------- */
+  const checkAnswer = async (finalSelection: string[]) => {
+    if (!activeConfig) return;
 
-    setTimeout(() => {
-      setAnswerState('revealed');
+    // Immediate reveal state
+    setAnswerState('revealed');
 
-      setTimeout(async () => {
-        const prizeLadder: PrizeLevel[] = activeConfig.prizeLadder;
-        const currentQuestionRaw = questions[currentQuestionIndex];
-        const { answer: displayAnswer } = getDisplayFromRaw(currentQuestionRaw, lang);
+    // Wait 2s then proceed
+    setTimeout(async () => {
+      const prizeLadder: PrizeLevel[] = activeConfig.prizeLadder;
+      const currentQuestionRaw = questions[currentQuestionIndex];
+      const { answers: correctAnswers } = getDisplayFromRaw(currentQuestionRaw, lang);
 
-        const isCorrect = option === displayAnswer;
-        const nextIndex = currentQuestionIndex + 1;
-        const isLast = nextIndex >= questions.length;
+      // Check if selection matches exactly (ignoring order)
+      const isCorrect =
+        finalSelection.length === correctAnswers.length &&
+        finalSelection.every(s => correctAnswers.includes(s));
 
-        try {
-          await axiosInstance.put('/api/session/update', {
-            questionId: currentQuestionRaw.id,
-            isCorrect,
-            currentQuestionIndex: isCorrect ? nextIndex : currentQuestionIndex,
-          });
+      const nextIndex = currentQuestionIndex + 1;
+      const isLast = nextIndex >= questions.length;
 
-          if (isCorrect && isLast) {
-            await axiosInstance.put('/api/session/end');
-          }
-        } catch (error) {
-          console.error('Error updating session:', error);
+      try {
+        await axiosInstance.put('/api/session/update', {
+          questionId: currentQuestionRaw.id,
+          isCorrect,
+          currentQuestionIndex: isCorrect ? nextIndex : currentQuestionIndex,
+        });
+
+        if (isCorrect && isLast) {
+          await axiosInstance.put('/api/session/end');
         }
+      } catch (error) {
+        console.error('Error updating session:', error);
+      }
 
-        if (isCorrect) {
-          const score = nextIndex;
+      if (isCorrect) {
+        const score = nextIndex;
 
-          if (!isLast) {
-            setCurrentQuestionIndex(nextIndex);
-            setSelectedOption(null);
-            setAnswerState('idle');
-            setRemovedOptions([]);
-          } else {
-            const finalPrizeLevel = prizeLadder[prizeLadder.length - 1];
-
-            if (finalPrizeLevel?.type === 'gift') {
-              endGame(finalPrizeLevel.value, 'gift', true, score);
-            } else {
-              const totalWinnings = prizeLadder
-                .filter(l => l.type === 'money' && typeof l.value === 'number')
-                .reduce((sum, l) => sum + (l.value as number), 0);
-              endGame(totalWinnings, 'money', true, score);
-            }
-          }
+        if (!isLast) {
+          setCurrentQuestionIndex(nextIndex);
+          // Auto reset handled by useEffect
         } else {
-          const score = currentQuestionIndex;
-          const lastSafeLevel = prizeLadder
-            .slice(0, currentQuestionIndex)
-            .reverse()
-            .find((p: PrizeLevel) => p.isSafe);
+          // Win Game
+          const finalPrizeLevel = prizeLadder[prizeLadder.length - 1];
 
-          if (lastSafeLevel?.type === 'gift') {
-            endGame(lastSafeLevel.value, 'gift', false, score);
+          if (finalPrizeLevel?.type === 'gift') {
+            endGame(finalPrizeLevel.value, 'gift', true, score);
           } else {
-            let winnings = 0;
-            if (lastSafeLevel) {
-              const levelsToSum = prizeLadder.slice(0, lastSafeLevel.level);
-              winnings = levelsToSum
-                .filter(l => l.type === 'money' && typeof l.value === 'number')
-                .reduce((sum, l) => sum + (l.value as number), 0);
-            }
-            endGame(winnings, 'money', false, score);
+            const totalWinnings = prizeLadder
+              .filter(l => l.type === 'money' && typeof l.value === 'number')
+              .reduce((sum, l) => sum + (l.value as number), 0);
+            endGame(totalWinnings, 'money', true, score);
           }
         }
-      }, 2000);
-    }, 1500);
+      } else {
+        // Lost Game
+        const score = currentQuestionIndex;
+        const lastSafeLevel = prizeLadder
+          .slice(0, currentQuestionIndex)
+          .reverse()
+          .find((p: PrizeLevel) => p.isSafe);
+
+        if (lastSafeLevel?.type === 'gift') {
+          endGame(lastSafeLevel.value, 'gift', false, score);
+        } else {
+          let winnings = 0;
+          if (lastSafeLevel) {
+            const levelsToSum = prizeLadder.slice(0, lastSafeLevel.level);
+            winnings = levelsToSum
+              .filter(l => l.type === 'money' && typeof l.value === 'number')
+              .reduce((sum, l) => sum + (l.value as number), 0);
+          }
+          endGame(winnings, 'money', false, score);
+        }
+      }
+    }, 2000);
+  };
+
+  const handleOptionSelect = (option: string) => {
+    if (answerState !== 'idle' || !activeConfig) return;
+
+    const currentQuestionRaw = questions[currentQuestionIndex];
+    const isMultiple = currentQuestionRaw.correctIndices && currentQuestionRaw.correctIndices.length > 1;
+
+    if (isMultiple) {
+      // Toggle
+      setSelectedOptions(prev => {
+        if (prev.includes(option)) return prev.filter(o => o !== option);
+        return [...prev, option];
+      });
+    } else {
+      // Single Select & Submit
+      setSelectedOptions([option]);
+      // Small delay for UI feedback then submit
+      setTimeout(() => checkAnswer([option]), 1500);
+    }
+  };
+
+  const handleSubmitMultiple = () => {
+    if (selectedOptions.length === 0) return;
+    checkAnswer(selectedOptions);
   };
 
   const handleTimeUp = () => {
-    if (selectedOption || !activeConfig) return;
+    if (answerState !== 'idle' || !activeConfig) return;
 
-    setSelectedOption('__TIME_UP__');
+    setSelectedOptions(['__TIME_UP__']);
 
     const DURATION = 45;
     const score = currentQuestionIndex;
@@ -616,10 +648,12 @@ export default function GamePage() {
     );
   }
 
-  const { questionText, options: displayOptions, answer: displayAnswer } = getDisplayFromRaw(
+  const { questionText, options: displayOptions, answers: displayAnswers } = getDisplayFromRaw(
     currentQuestionRaw,
     lang
   );
+
+  const isMultipleChoice = currentQuestionRaw.correctIndices && currentQuestionRaw.correctIndices.length > 1;
 
   const totalQuestions = questions.length;
   const sessionPrizeLadder: PrizeLevel[] = activeConfig.prizeLadder;
@@ -698,7 +732,7 @@ export default function GamePage() {
                 <Timer
                   duration={45}
                   questionKey={currentQuestionRaw.id}  // ✅ no lang
-                  isPaused={selectedOption !== null}
+                  isPaused={answerState !== 'idle'}
                   onTimeUp={handleTimeUp}
                   onTimeTaken={handleTimeTaken}
                 />
@@ -711,12 +745,25 @@ export default function GamePage() {
 
                 <OptionsGrid
                   options={displayOptions}
-                  correctAnswer={displayAnswer}
-                  selectedOption={selectedOption}
+                  correctAnswers={displayAnswers}
+                  selectedOptions={selectedOptions}
                   answerState={answerState}
                   onOptionSelect={handleOptionSelect}
                   removedOptions={removedOptions}
+                  multipleSelectMode={isMultipleChoice}
                 />
+
+                {isMultipleChoice && answerState === 'idle' && (
+                  <motion.button
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="w-full mt-4 bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 transition disabled:opacity-50"
+                    onClick={handleSubmitMultiple}
+                    disabled={selectedOptions.length === 0}
+                  >
+                    Confirm Answer
+                  </motion.button>
+                )}
               </motion.div>
             </AnimatePresence>
           </div>

@@ -2,36 +2,42 @@
 
 import { motion } from 'framer-motion';
 
-interface OptionsGridProps {
-  options: string[];
-  correctAnswer: string;
-  selectedOption: string | null;
-  answerState: 'idle' | 'revealed';
-  onOptionSelect: (option: string) => void;
-  removedOptions: number[]; // indices of removed options
-}
+
 
 export const OptionsGrid = ({
   options,
-  correctAnswer,
-  selectedOption,
+  correctAnswers,
+  selectedOptions,
   answerState,
   onOptionSelect,
   removedOptions,
-}: OptionsGridProps) => {
+  multipleSelectMode = false,
+}: {
+  options: string[];
+  correctAnswers: string[];
+  selectedOptions: string[];
+  answerState: 'idle' | 'revealed';
+  onOptionSelect: (option: string) => void;
+  removedOptions: number[];
+  multipleSelectMode?: boolean;
+}) => {
   const getButtonClass = (option: string) => {
     const baseClass =
       'w-full text-left p-5 rounded-lg border-2 font-semibold transition-all duration-300 flex items-center gap-4 text-xl disabled:cursor-not-allowed min-h-[80px]';
 
+    const isSelected = selectedOptions.includes(option);
+    const isCorrect = correctAnswers.includes(option);
+
     if (answerState === 'revealed') {
-      if (option === correctAnswer)
+      if (isCorrect)
         return `${baseClass} bg-green-500 border-green-400 text-white animate-pulse`;
-      if (option === selectedOption)
+      if (isSelected && !isCorrect)
         return `${baseClass} bg-red-500 border-red-400 text-white`;
+      // If not selected and not correct, fade it out
       return `${baseClass} bg-slate-100 border-slate-200 text-slate-400 opacity-60`;
     }
 
-    if (option === selectedOption) {
+    if (isSelected) {
       return `${baseClass} bg-gradient-to-r from-indigo-500 to-violet-500 border-indigo-400 text-white shadow-lg shadow-indigo-500/50`;
     }
 
@@ -43,16 +49,15 @@ export const OptionsGrid = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {options.map((option, index) => {
-        const isRemoved = removedOptions.includes(index); // ✅ index-based
+        const isRemoved = removedOptions.includes(index);
 
         return (
           <motion.button
             key={`${index}-${option}`}
             onClick={() => onOptionSelect(option)}
-            disabled={selectedOption !== null || isRemoved}
+            disabled={(answerState !== 'idle') || isRemoved}
             className={getButtonClass(option)}
             style={{
-              // hide removed options
               visibility: isRemoved ? 'hidden' : 'visible',
             }}
             whileHover={{ scale: 1.03 }}
@@ -61,6 +66,9 @@ export const OptionsGrid = ({
           >
             <span className="text-indigo-600">{optionLabels[index]}:</span>
             <span>{option}</span>
+            {multipleSelectMode && selectedOptions.includes(option) && (
+              <span className="ml-auto text-sm bg-white/20 px-2 py-1 rounded">Selected</span>
+            )}
           </motion.button>
         );
       })}
