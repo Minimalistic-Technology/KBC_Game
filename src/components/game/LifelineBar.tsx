@@ -1,7 +1,7 @@
 'use client';
 
 import type { Lifeline } from '@/lib/types1';
-import { Zap, Users, Lightbulb, RefreshCw } from 'lucide-react';
+import { Zap, Users, Lightbulb, RefreshCw, Repeat } from 'lucide-react';
 import React from 'react';
 import { motion } from 'framer-motion';
 
@@ -34,17 +34,16 @@ const LifelineButton = ({ icon: Icon, label, isAvailable, onClick }: LifelineBut
         className={`transition-colors ${isUsed ? 'text-slate-300' : 'text-indigo-600 group-hover:text-indigo-500'}`}
       />
       <span
-        className={`text-[10px] font-bold mt-1 transition-colors ${
-          isUsed ? 'text-slate-300' : 'text-slate-600 group-hover:text-indigo-500'
-        }`}
+        className={`text-[10px] font-bold mt-1 transition-colors ${isUsed ? 'text-slate-300' : 'text-slate-600 group-hover:text-indigo-500'
+          }`}
       >
-        {label === 'Audience Poll'
-          ? 'Poll'
+        {label === 'Double Dip'
+          ? 'Dip'
           : label === 'Expert Advice'
-          ? 'Advice'
-          : label === 'Flip Question'
-          ? 'Flip'
-          : label}
+            ? 'Advice'
+            : label === 'Flip Question'
+              ? 'Flip'
+              : label}
       </span>
       {isUsed && (
         <div className="absolute top-1/2 left-1/2 w-[120%] h-1 bg-red-500/80 transform -translate-x-1/2 -translate-y-1/2 rotate-[30deg] rounded-full" />
@@ -70,10 +69,10 @@ export const LifelineBar = ({ lifelines, usedLifelines, onUseLifeline }: Lifelin
           onClick={() => onUseLifeline('50:50')}
         />
         <LifelineButton
-          label="Audience Poll"
-          icon={Users}
-          isAvailable={mergedLifelines['Audience Poll']}
-          onClick={() => onUseLifeline('Audience Poll')}
+          label="Double Dip"
+          icon={Repeat}
+          isAvailable={mergedLifelines['Double Dip']}
+          onClick={() => onUseLifeline('Double Dip')}
         />
         <LifelineButton
           label="Expert Advice"

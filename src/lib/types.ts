@@ -26,7 +26,7 @@ export type QuestionBank = {
 // --- ADDED THIS TYPE BACK ---
 export type Lifeline = {
   '50:50': boolean;
-  'Audience Poll': boolean;
+  'Double Dip': boolean;
   'Expert Advice': boolean;
   'Flip Question': boolean;
 };

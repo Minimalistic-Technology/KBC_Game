@@ -2,7 +2,19 @@
 
 import { motion } from 'framer-motion';
 
+<<<<<<< Updated upstream
 
+=======
+interface OptionsGridProps {
+  options: string[];
+  correctAnswer: string;
+  selectedOption: string | null;
+  answerState: 'idle' | 'revealed';
+  onOptionSelect: (option: string) => void;
+  removedOptions: number[]; // indices of removed options
+  doubleDipWrongAnswer?: string | null; // First wrong answer in Double Dip mode
+}
+>>>>>>> Stashed changes
 
 export const OptionsGrid = ({
   options,
@@ -11,6 +23,7 @@ export const OptionsGrid = ({
   answerState,
   onOptionSelect,
   removedOptions,
+<<<<<<< Updated upstream
   multipleSelectMode = false,
 }: {
   options: string[];
@@ -21,12 +34,23 @@ export const OptionsGrid = ({
   removedOptions: number[];
   multipleSelectMode?: boolean;
 }) => {
+=======
+  doubleDipWrongAnswer,
+}: OptionsGridProps) => {
+>>>>>>> Stashed changes
   const getButtonClass = (option: string) => {
     const baseClass =
       'w-full text-left p-5 rounded-lg border-2 font-semibold transition-all duration-300 flex items-center gap-4 text-xl disabled:cursor-not-allowed min-h-[80px]';
 
+<<<<<<< Updated upstream
     const isSelected = selectedOptions.includes(option);
     const isCorrect = correctAnswers.includes(option);
+=======
+    // Show first Double Dip wrong answer in red (without revealing correct answer)
+    if (doubleDipWrongAnswer && option === doubleDipWrongAnswer && answerState === 'idle') {
+      return `${baseClass} bg-red-500 border-red-400 text-white`;
+    }
+>>>>>>> Stashed changes
 
     if (answerState === 'revealed') {
       if (isCorrect)
@@ -49,13 +73,25 @@ export const OptionsGrid = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {options.map((option, index) => {
+<<<<<<< Updated upstream
         const isRemoved = removedOptions.includes(index);
+=======
+        const isRemoved = removedOptions.includes(index); // ✅ index-based
+        const isFirstDoubleDipWrong = doubleDipWrongAnswer && option === doubleDipWrongAnswer;
+
+        // Allow clicking if Double Dip first wrong attempt is showing (selectedOption is null but doubleDipWrongAnswer is set)
+        const isDisabled = isRemoved || isFirstDoubleDipWrong || (selectedOption !== null && !doubleDipWrongAnswer);
+>>>>>>> Stashed changes
 
         return (
           <motion.button
             key={`${index}-${option}`}
             onClick={() => onOptionSelect(option)}
+<<<<<<< Updated upstream
             disabled={(answerState !== 'idle') || isRemoved}
+=======
+            disabled={isDisabled}
+>>>>>>> Stashed changes
             className={getButtonClass(option)}
             style={{
               visibility: isRemoved ? 'hidden' : 'visible',

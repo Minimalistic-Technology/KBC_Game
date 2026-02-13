@@ -7,7 +7,7 @@ import {
   Save,
   Search,
   Zap,
-  Users,
+  Repeat,
   Lightbulb,
   RefreshCw,
   Plus,
@@ -345,7 +345,7 @@ export default function GameConfigPage() {
       prizeLadder: [],
       lifelines: {
         '50:50': true,
-        'Audience Poll': true,
+        'Double Dip': true,
         'Expert Advice': false,
         'Flip Question': false,
       },
@@ -434,11 +434,10 @@ export default function GameConfigPage() {
                 {configList?.map((config) => (
                   <div
                     key={config.id}
-                    className={`group flex items-center justify-between p-3 rounded-lg border-2 transition-all ${
-                      selectedConfigId === config.id
+                    className={`group flex items-center justify-between p-3 rounded-lg border-2 transition-all ${selectedConfigId === config.id
                         ? 'border-indigo-500 bg-indigo-50'
                         : 'border-transparent hover:bg-slate-50'
-                    }`}
+                      }`}
                   >
                     <button
                       onClick={() => setSelectedConfigId(config.id)}
@@ -621,9 +620,9 @@ export default function GameConfigPage() {
                       onToggle={handleLifelineToggle}
                     />
                     <LifelineToggle
-                      label="Audience Poll"
-                      icon={Users}
-                      isEnabled={currentFullConfig.lifelines['Audience Poll']}
+                      label="Double Dip"
+                      icon={Repeat}
+                      isEnabled={currentFullConfig.lifelines['Double Dip']}
                       onToggle={handleLifelineToggle}
                     />
                     <LifelineToggle

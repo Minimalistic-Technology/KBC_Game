@@ -10,7 +10,6 @@ import { GameHUD } from '@/components/game/GameHUD';
 import { QuestionCard } from '@/components/game/QuestionCard';
 import { OptionsGrid } from '@/components/game/OptionsGrid';
 import { Timer } from '@/components/game/Timer';
-import { AudiencePollModal } from '@/components/game/AudiencePollModal';
 import { ExpertAdviceModal } from '@/components/game/ExpertAdviceModal';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '@/lib/axios';
@@ -57,8 +56,8 @@ export default function GamePage() {
   const [removedOptions, setRemovedOptions] = useState<number[]>([]);
 
   // ---------- Modals ----------
-  const [isPollOpen, setIsPollOpen] = useState(false);
-  const [pollResults, setPollResults] = useState<{ option: string; percentage: number }[]>([]);
+  const [isDoubleDipActive, setIsDoubleDipActive] = useState(false);
+  const [firstDoubleDipAnswer, setFirstDoubleDipAnswer] = useState<string | null>(null);
   const [isAdviceOpen, setIsAdviceOpen] = useState(false);
   const [expertAdvice, setExpertAdvice] = useState<{ text: string; confidence: number } | null>(null);
 
@@ -182,7 +181,7 @@ export default function GamePage() {
         lifelines:
           config?.lifelines || {
             '50:50': true,
-            'Audience Poll': true,
+            'Double Dip': true,
             'Expert Advice': true,
             'Flip Question': true,
           },
@@ -192,7 +191,7 @@ export default function GamePage() {
       const response = await api.post('/api/session/start', payload, { withCredentials: true });
 
       if (response.status === 206) {
-        alert('🎉 You’ve already completed this session!');
+        alert("🎉 You've already completed this session!");
         router.push('/play/game-over');
         return null;
       }
@@ -241,9 +240,16 @@ export default function GamePage() {
         return updated;
       });
 
+<<<<<<< Updated upstream
       setSelectedOptions([]);
+=======
+      // ✅ Reset all Double Dip state when flipping question
+      setSelectedOption(null);
+>>>>>>> Stashed changes
       setAnswerState('idle');
       setRemovedOptions([]);
+      setIsDoubleDipActive(false);
+      setFirstDoubleDipAnswer(null);
 
       try {
         await api.put('/api/session/update', {
@@ -317,17 +323,24 @@ export default function GamePage() {
     setAnswerState('idle');
   }, [lang]);
 
-  // When QUESTION changes: reset everything including 50:50
+  // ✅ When QUESTION changes: reset everything including 50:50 and Double Dip
   useEffect(() => {
     setSelectedOptions([]);
     setAnswerState('idle');
     setRemovedOptions([]);
+    setIsDoubleDipActive(false);
+    setFirstDoubleDipAnswer(null);
   }, [currentQuestionIndex]);
 
 
   // ---------- Lifelines ----------
   const handleUseLifeline = async (lifeline: keyof Lifeline) => {
+<<<<<<< Updated upstream
     if (usedLifelines[lifeline] === false || answerState !== 'idle') return;
+=======
+    // ✅ Prevent using lifeline if already used OR if answer has been revealed
+    if (usedLifelines[lifeline] === false || answerState === 'revealed') return;
+>>>>>>> Stashed changes
 
     const updatedLifelines = { ...usedLifelines, [lifeline]: false };
     setUsedLifelines(updatedLifelines);
@@ -360,10 +373,9 @@ export default function GamePage() {
           setRemovedOptions(removedIndexes);
           setUsedLifelinesArr(prev => [...prev, '50:50']);
         }
-      } else if (lifeline === 'Audience Poll') {
-        generatePollResults();
-        setIsPollOpen(true);
-        setUsedLifelinesArr(prev => [...prev, 'Audience Poll']);
+      } else if (lifeline === 'Double Dip') {
+        setIsDoubleDipActive(true);
+        setUsedLifelinesArr(prev => [...prev, 'Double Dip']);
       } else if (lifeline === 'Expert Advice') {
         generateExpertAdvice();
         setIsAdviceOpen(true);
@@ -374,6 +386,7 @@ export default function GamePage() {
     }
   };
 
+<<<<<<< Updated upstream
   const generatePollResults = () => {
     const currentQuestionRaw = questions[currentQuestionIndex];
     const { options: displayOptions, answers: displayAnswers } = getDisplayFromRaw(currentQuestionRaw, lang);
@@ -404,6 +417,8 @@ export default function GamePage() {
     setPollResults(results.sort(() => Math.random() - 0.5));
   };
 
+=======
+>>>>>>> Stashed changes
   const generateExpertAdvice = () => {
     const currentQuestionRaw = questions[currentQuestionIndex];
     const { options: displayOptions, answers: displayAnswers } = getDisplayFromRaw(currentQuestionRaw, lang);
@@ -453,6 +468,7 @@ export default function GamePage() {
     }
   };
 
+<<<<<<< Updated upstream
   /* ---------- Submission Logic ---------- */
   const checkAnswer = async (finalSelection: string[]) => {
     if (!activeConfig) return;
@@ -470,6 +486,46 @@ export default function GamePage() {
       const isCorrect =
         finalSelection.length === correctAnswers.length &&
         finalSelection.every(s => correctAnswers.includes(s));
+=======
+  const handleOptionSelect = async (option: string) => {
+    // ✅ Prevent selection if answer already revealed
+    if (answerState === 'revealed' || !activeConfig) return;
+
+    // ✅ For Double Dip: allow second selection after first wrong attempt
+    if (isDoubleDipActive && firstDoubleDipAnswer) {
+      // This is the second attempt - allow it
+      if (selectedOption) return; // But don't allow if already processing
+    } else if (selectedOption) {
+      // Normal mode: don't allow reselection
+      return;
+    }
+
+    setSelectedOption(option);
+
+    // Check correctness immediately to handle Double Dip
+    const currentQuestionRaw = questions[currentQuestionIndex];
+    const { answer: displayAnswer } = getDisplayFromRaw(currentQuestionRaw, lang);
+    const isCorrect = option === displayAnswer;
+
+    // ✅ Double Dip logic: First wrong attempt - don't reveal answer
+    if (!isCorrect && isDoubleDipActive && !firstDoubleDipAnswer) {
+      setFirstDoubleDipAnswer(option);
+      // Wait to show red option, then clear for second attempt
+      setTimeout(() => {
+        setSelectedOption(null);
+      }, 1500);
+      return; // Give player a second chance without revealing
+    }
+
+    // For all other cases (correct answer or second attempt or normal mode), reveal
+    setTimeout(() => {
+      setAnswerState('revealed');
+
+      setTimeout(async () => {
+        const prizeLadder: PrizeLevel[] = activeConfig.prizeLadder;
+        const nextIndex = currentQuestionIndex + 1;
+        const isLast = nextIndex >= questions.length;
+>>>>>>> Stashed changes
 
       const nextIndex = currentQuestionIndex + 1;
       const isLast = nextIndex >= questions.length;
@@ -491,9 +547,27 @@ export default function GamePage() {
       if (isCorrect) {
         const score = nextIndex;
 
+<<<<<<< Updated upstream
         if (!isLast) {
           setCurrentQuestionIndex(nextIndex);
           // Auto reset handled by useEffect
+=======
+          if (!isLast) {
+            // ✅ Move to next question - all state will be reset by useEffect
+            setCurrentQuestionIndex(nextIndex);
+          } else {
+            const finalPrizeLevel = prizeLadder[prizeLadder.length - 1];
+
+            if (finalPrizeLevel?.type === 'gift') {
+              endGame(finalPrizeLevel.value, 'gift', true, score);
+            } else {
+              const totalWinnings = prizeLadder
+                .filter(l => l.type === 'money' && typeof l.value === 'number')
+                .reduce((sum, l) => sum + (l.value as number), 0);
+              endGame(totalWinnings, 'money', true, score);
+            }
+          }
+>>>>>>> Stashed changes
         } else {
           // Win Game
           const finalPrizeLevel = prizeLadder[prizeLadder.length - 1];
@@ -662,11 +736,6 @@ export default function GamePage() {
 
   return (
     <>
-      <AudiencePollModal
-        isOpen={isPollOpen}
-        onClose={() => setIsPollOpen(false)}
-        pollResults={pollResults}
-      />
       {expertAdvice && (
         <ExpertAdviceModal
           isOpen={isAdviceOpen}
@@ -722,7 +791,7 @@ export default function GamePage() {
           <div className="relative flex-grow flex flex-col gap-6 bg-white border border-slate-200 rounded-lg p-6 shadow-md">
             <AnimatePresence mode="wait">
               <motion.div
-                key={currentQuestionRaw.id} // ✅ only changes when question changes
+                key={currentQuestionRaw.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
@@ -731,8 +800,13 @@ export default function GamePage() {
               >
                 <Timer
                   duration={45}
+<<<<<<< Updated upstream
                   questionKey={currentQuestionRaw.id}  // ✅ no lang
                   isPaused={answerState !== 'idle'}
+=======
+                  questionKey={currentQuestionRaw.id}
+                  isPaused={selectedOption !== null}
+>>>>>>> Stashed changes
                   onTimeUp={handleTimeUp}
                   onTimeTaken={handleTimeTaken}
                 />
@@ -750,7 +824,11 @@ export default function GamePage() {
                   answerState={answerState}
                   onOptionSelect={handleOptionSelect}
                   removedOptions={removedOptions}
+<<<<<<< Updated upstream
                   multipleSelectMode={isMultipleChoice}
+=======
+                  doubleDipWrongAnswer={firstDoubleDipAnswer}
+>>>>>>> Stashed changes
                 />
 
                 {isMultipleChoice && answerState === 'idle' && (
@@ -774,7 +852,7 @@ export default function GamePage() {
             lifelines={
               activeConfig?.lifelines ?? {
                 '50:50': true,
-                'Audience Poll': true,
+                'Double Dip': true,
                 'Expert Advice': true,
                 'Flip Question': true,
               }

@@ -20,7 +20,7 @@ export interface BackendPrizeLevel {
 
 export interface BackendLifelines {
   '50:50': boolean;
-  'Audience Poll': boolean;
+  'Double Dip': boolean;
   'Expert Advice': boolean;
   'Flip Question': boolean;
 }
@@ -92,7 +92,7 @@ export const backendListToFrontend = (config: BackendConfigListItem): FrontendCo
     isActive: config.isActive,
     selectedBankIds: [], // not loaded in list endpoint
     prizeLadder: [],
-    lifelines: { '50:50': false, 'Audience Poll': false, 'Expert Advice': false, 'Flip Question': false },
+    lifelines: { '50:50': false, 'Double Dip': false, 'Expert Advice': false, 'Flip Question': false },
   };
 };
 
@@ -103,7 +103,7 @@ export const frontendToBackend = (config: FrontendConfig) => {
   return {
     ...rest,
     configName: name,
-    selectedBanks: selectedBankIds, 
+    selectedBanks: selectedBankIds,
     prizeLadder: prizeLadder.map(pl => ({
       level: pl.level,
       type: pl.type,
