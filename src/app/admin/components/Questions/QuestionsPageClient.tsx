@@ -66,12 +66,12 @@ export default function QuestionsPageClient() {
           ? block.options.map((o: any) => (typeof o === 'string' ? o : o?.text ?? ''))
           : ['', '', '', ''];
 
-        // Map correctIndices or correctIndex or answer string
-        let indices: number[] = [];
-        if (Array.isArray(q.correctIndices)) {
-          indices = q.correctIndices;
-        } else if (typeof q.correctIndex === 'number') {
-          indices = [q.correctIndex];
+        // Map correctIndex (single) or correctIndices (legacy array) 
+        let correctIdx = 0;
+        if (typeof q.correctIndex === 'number') {
+          correctIdx = q.correctIndex;
+        } else if (Array.isArray(q.correctIndices) && q.correctIndices.length > 0) {
+          correctIdx = q.correctIndices[0];
         }
 
         return {
@@ -79,8 +79,9 @@ export default function QuestionsPageClient() {
           bankId: q.bankId,
           question: block.text || '',
           options: opts,
-          answer: '', // Deprecated in favor of correctIndices
-          correctIndices: indices,
+          answer: '', // Deprecated
+          correctIndex: correctIdx,
+          correctIndices: Array.isArray(q.correctIndices) ? q.correctIndices : [correctIdx], // Legacy compatibility
           status: q.status === 'published' ? 'Published' : 'Draft',
           categories: block.categories || [],
           mediaRef: q.mediaRef
@@ -140,7 +141,8 @@ export default function QuestionsPageClient() {
         question: '',
         options: ['', '', '', ''],
         answer: '',
-        correctIndices: [], // Default to empty
+        correctIndex: 0, // Default to first option
+        correctIndices: [], // Legacy
         status: 'Draft',
         categories: [],
       });
@@ -176,10 +178,16 @@ export default function QuestionsPageClient() {
         }
       ));
 
-      // Send correctIndices as JSON string
-      const indices = savedQuestion.correctIndices || [];
-      // Also support single index for backward compatibility if needed, but best to stick to array
-      formDataToSend.append("correctIndices", JSON.stringify(indices));
+      // Send correctIndex as a number (single answer)
+      if (typeof savedQuestion.correctIndex === 'number') {
+        formDataToSend.append("correctIndex", savedQuestion.correctIndex.toString());
+      } else if (Array.isArray(savedQuestion.correctIndices) && savedQuestion.correctIndices.length > 0) {
+        // Legacy: if correctIndices array exists, take first element
+        formDataToSend.append("correctIndex", savedQuestion.correctIndices[0].toString());
+      } else {
+        // Default to 0 if nothing specified
+        formDataToSend.append("correctIndex", "0");
+      }
 
       if (file) formDataToSend.append("file", file);
 

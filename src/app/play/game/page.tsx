@@ -12,7 +12,6 @@ import { OptionsGrid } from '@/components/game/OptionsGrid';
 import { Timer } from '@/components/game/Timer';
 import { ExpertAdviceModal } from '@/components/game/ExpertAdviceModal';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check } from 'lucide-react';
 import api from '@/lib/axios';
 import axiosInstance from '@/utils/axiosInstance';
 
@@ -29,8 +28,7 @@ type RawQuestion = {
   id: string;
   bankId: string;
   lang: Partial<Record<LangKey | string, LangPack>>;
-  correctIndex?: number; // For single answer questions
-  correctIndices?: number[]; // For multi-answer questions
+  correctIndex: number;
   status?: string;
   categories?: string[];
   media?: { url: string; type: string } | null;
@@ -52,7 +50,6 @@ export default function GamePage() {
   const [usedLifelines, setUsedLifelines] = useState<{ [key in keyof Lifeline]?: boolean }>({});
   const [usedLifelinesArr, setUsedLifelinesArr] = useState<string[]>([]);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
-  const [selectedOptions, setSelectedOptions] = useState<string[]>([]); // For multi-answer questions
   const [answerState, setAnswerState] = useState<AnswerState>('idle');
   const [removedOptions, setRemovedOptions] = useState<number[]>([]);
 
@@ -76,18 +73,9 @@ export default function GamePage() {
 
     const options = (pack?.options ?? []).map(o => o.text);
     const questionText = pack?.text ?? '';
+    const answer = options[q.correctIndex] ?? '';
 
-    // Check if multi-answer question
-    const isMultiAnswer = q.correctIndices && q.correctIndices.length > 1;
-
-    if (isMultiAnswer) {
-      const answers = q.correctIndices!.map(idx => options[idx]).filter(Boolean);
-      return { questionText, options, answer: '', answers, isMultiAnswer: true };
-    } else {
-      const correctIdx = q.correctIndices?.[0] ?? q.correctIndex ?? 0;
-      const answer = options[correctIdx] ?? '';
-      return { questionText, options, answer, answers: [answer], isMultiAnswer: false };
-    }
+    return { questionText, options, answer };
   };
 
   const setupGameQuestions = async (config: any) => {
@@ -102,8 +90,7 @@ export default function GamePage() {
         id: q._id,
         bankId: q.bankId,
         lang: q.lang || {},
-        correctIndex: q.correctIndex,
-        correctIndices: q.correctIndices,
+        correctIndex: q.correctIndex ?? 0,
         status: q.status,
         categories: q.lang?.en?.categories ?? [],
         media: q.mediaRef ? { url: q.mediaRef.url, type: q.mediaRef.type } : null,
@@ -313,14 +300,12 @@ export default function GamePage() {
   // ---------- Language/Question change: reset UI selection ----------
   useEffect(() => {
     setSelectedOption(null);
-    setSelectedOptions([]);
     setAnswerState('idle');
   }, [lang]);
 
   // ✅ When QUESTION changes: reset everything including 50:50 and Double Dip
   useEffect(() => {
     setSelectedOption(null);
-    setSelectedOptions([]);
     setAnswerState('idle');
     setRemovedOptions([]);
     setIsDoubleDipActive(false);
@@ -351,7 +336,7 @@ export default function GamePage() {
         const { data } = await api.post('/api/game/lifeline/50-50', {
           question: {
             options: displayOptions,
-            answer: displayAnswer,
+            correctIndex: currentQuestionRaw.correctIndex,
           },
         });
 
@@ -521,95 +506,6 @@ export default function GamePage() {
     }, 1500);
   };
 
-  // Handler for multi-answer questions - toggle selection
-  const handleMultiOptionToggle = (option: string) => {
-    if (answerState === 'revealed') return;
-
-    setSelectedOptions(prev => {
-      if (prev.includes(option)) {
-        return prev.filter(o => o !== option);
-      } else {
-        return [...prev, option];
-      }
-    });
-  };
-
-  // Handler to submit multi-answer
-  const handleSubmitMultiAnswer = async () => {
-    if (selectedOptions.length === 0 || !activeConfig) return;
-
-    const currentQuestionRaw = questions[currentQuestionIndex];
-    const { answers } = getDisplayFromRaw(currentQuestionRaw, lang);
-
-    // Check if all correct answers are selected and no wrong ones
-    const correctSelections = selectedOptions.filter(o => answers.includes(o)).length;
-    const isCorrect = correctSelections === answers.length && selectedOptions.length === answers.length;
-
-    // Reveal the answer
-    setTimeout(() => {
-      setAnswerState('revealed');
-
-      setTimeout(async () => {
-        const prizeLadder: PrizeLevel[] = activeConfig.prizeLadder;
-        const nextIndex = currentQuestionIndex + 1;
-        const isLast = nextIndex >= questions.length;
-
-        try {
-          await axiosInstance.put('/api/session/update', {
-            questionId: currentQuestionRaw.id,
-            isCorrect,
-            currentQuestionIndex: isCorrect ? nextIndex : currentQuestionIndex,
-          });
-
-          if (isCorrect && isLast) {
-            await axiosInstance.put('/api/session/end');
-          }
-        } catch (error) {
-          console.error('Error updating session:', error);
-        }
-
-        if (isCorrect) {
-          const score = nextIndex;
-
-          if (!isLast) {
-            // ✅ Move to next question - all state will be reset by useEffect
-            setCurrentQuestionIndex(nextIndex);
-          } else {
-            const finalPrizeLevel = prizeLadder[prizeLadder.length - 1];
-
-            if (finalPrizeLevel?.type === 'gift') {
-              endGame(finalPrizeLevel.value, 'gift', true, score);
-            } else {
-              const totalWinnings = prizeLadder
-                .filter(l => l.type === 'money' && typeof l.value === 'number')
-                .reduce((sum, l) => sum + (l.value as number), 0);
-              endGame(totalWinnings, 'money', true, score);
-            }
-          }
-        } else {
-          const score = currentQuestionIndex;
-          const lastSafeLevel = prizeLadder
-            .slice(0, currentQuestionIndex)
-            .reverse()
-            .find((p: PrizeLevel) => p.isSafe);
-
-          if (lastSafeLevel?.type === 'gift') {
-            endGame(lastSafeLevel.value, 'gift', false, score);
-          } else {
-            let winnings = 0;
-            if (lastSafeLevel) {
-              const levelsToSum = prizeLadder.slice(0, lastSafeLevel.level);
-              winnings = levelsToSum
-                .filter(l => l.type === 'money' && typeof l.value === 'number')
-                .reduce((sum, l) => sum + (l.value as number), 0);
-            }
-            endGame(winnings, 'money', false, score);
-          }
-        }
-      }, 2000);
-    }, 500);
-  };
-
   const handleTimeUp = () => {
     if (selectedOption || !activeConfig) return;
 
@@ -759,45 +655,7 @@ export default function GamePage() {
                   mediaType={currentQuestionRaw.media?.type}
                 />
 
-                {(() => {
-                  const { answer: displayAnswer, answers = [], isMultiAnswer = false } = getDisplayFromRaw(currentQuestionRaw, lang);
-
-                  return isMultiAnswer ? (
-                    <>
-                      <OptionsGrid
-                        options={displayOptions}
-                        correctAnswers={answers}
-                        selectedOptions={selectedOptions}
-                        answerState={answerState}
-                        onOptionSelect={handleMultiOptionToggle}
-                        removedOptions={removedOptions}
-                        isMultiAnswer={true}
-                      />
-                      {selectedOptions.length > 0 && answerState === 'idle' && (
-                        <motion.button
-                          onClick={handleSubmitMultiAnswer}
-                          className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white p-4 rounded-lg font-bold text-lg flex items-center justify-center gap-2 hover:from-green-600 hover:to-emerald-600 transition-all shadow-lg"
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                        >
-                          <Check size={24} />
-                          Submit Answer ({selectedOptions.length} selected)
-                        </motion.button>
-                      )}
-                    </>
-                  ) : (
-                    <OptionsGrid
-                      options={displayOptions}
-                      correctAnswer={displayAnswer}
-                      selectedOption={selectedOption}
-                      answerState={answerState}
-                      onOptionSelect={handleOptionSelect}
-                      removedOptions={removedOptions}
-                      doubleDipWrongAnswer={firstDoubleDipAnswer}
-                      isMultiAnswer={false}
-                    />
-                  );
-                })()}
+                <OptionsGrid options={displayOptions} correctAnswer={displayAnswer} selectedOption={selectedOption} answerState={answerState} onOptionSelect={handleOptionSelect} removedOptions={removedOptions} doubleDipWrongAnswer={firstDoubleDipAnswer} />
               </motion.div>
             </AnimatePresence>
           </div>

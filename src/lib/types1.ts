@@ -61,6 +61,7 @@ export type Question = {
   question: string;
   options: string[];
   answer: string;
+  correctIndex: number; // index of correct option (0-3)
   media?: any;
   status: 'Draft' | 'Published';
   categories: string[];

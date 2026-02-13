@@ -4,35 +4,26 @@ import { motion } from 'framer-motion';
 
 interface OptionsGridProps {
   options: string[];
-  correctAnswer?: string; // For single answer
-  correctAnswers?: string[]; // For multi-answer
-  selectedOption?: string | null; // For single answer
-  selectedOptions?: string[]; // For multi-answer
+  correctAnswer: string;
+  selectedOption: string | null;
   answerState: 'idle' | 'revealed';
   onOptionSelect: (option: string) => void;
   removedOptions: number[];
   doubleDipWrongAnswer?: string | null;
-  isMultiAnswer?: boolean; // Flag to determine mode
 }
 
 export const OptionsGrid = ({
   options,
   correctAnswer,
-  correctAnswers = [],
   selectedOption,
-  selectedOptions = [],
   answerState,
   onOptionSelect,
   removedOptions,
   doubleDipWrongAnswer,
-  isMultiAnswer = false,
 }: OptionsGridProps) => {
   const getButtonClass = (option: string) => {
     const baseClass =
       'w-full text-left p-5 rounded-lg border-2 font-semibold transition-all duration-300 flex items-center gap-4 text-xl disabled:cursor-not-allowed min-h-[80px]';
-
-    const isSelected = isMultiAnswer ? selectedOptions.includes(option) : option === selectedOption;
-    const isCorrect = isMultiAnswer ? correctAnswers.includes(option) : option === correctAnswer;
 
     // Show first Double Dip wrong answer in red (without revealing correct answer)
     if (doubleDipWrongAnswer && option === doubleDipWrongAnswer && answerState === 'idle') {
@@ -40,14 +31,14 @@ export const OptionsGrid = ({
     }
 
     if (answerState === 'revealed') {
-      if (isCorrect)
+      if (option === correctAnswer)
         return `${baseClass} bg-green-500 border-green-400 text-white animate-pulse`;
-      if (isSelected && !isCorrect)
+      if (option === selectedOption)
         return `${baseClass} bg-red-500 border-red-400 text-white`;
       return `${baseClass} bg-slate-100 border-slate-200 text-slate-400 opacity-60`;
     }
 
-    if (isSelected) {
+    if (option === selectedOption) {
       return `${baseClass} bg-gradient-to-r from-indigo-500 to-violet-500 border-indigo-400 text-white shadow-lg shadow-indigo-500/50`;
     }
 
@@ -62,11 +53,8 @@ export const OptionsGrid = ({
         const isRemoved = removedOptions.includes(index);
         const isFirstDoubleDipWrong = doubleDipWrongAnswer && option === doubleDipWrongAnswer;
 
-        // For multi-answer: always allow clicking if not revealed and not removed
-        // For single-answer: use existing Double Dip logic
-        const isDisabled = isMultiAnswer
-          ? (answerState === 'revealed' || isRemoved)
-          : (isRemoved || isFirstDoubleDipWrong || (selectedOption !== null && !doubleDipWrongAnswer));
+        // Disable if: removed, is the first wrong Double Dip answer, or already selected (unless Double Dip second attempt)
+        const isDisabled = isRemoved || isFirstDoubleDipWrong || (selectedOption !== null && !doubleDipWrongAnswer);
 
         return (
           <motion.button
@@ -83,9 +71,6 @@ export const OptionsGrid = ({
           >
             <span className="text-indigo-600">{optionLabels[index]}:</span>
             <span>{option}</span>
-            {isMultiAnswer && selectedOptions.includes(option) && answerState === 'idle' && (
-              <span className="ml-auto text-sm bg-white/20 px-2 py-1 rounded">✓</span>
-            )}
           </motion.button>
         );
       })}

@@ -45,8 +45,8 @@ export const QuestionEditorModal = ({
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   const [rawFile, setRawFile] = useState<File | null>(null);
 
-  // New state for multiple correct answers (indices 0-3)
-  const [selectedIndices, setSelectedIndices] = useState<number[]>([]);
+  // Single correct answer index (0-3)
+  const [selectedIndex, setSelectedIndex] = useState<number>(0);
 
   const handleMediaUploadComplete = (asset: MediaAsset, file?: File) => {
     setFormData((prev) => ({ ...prev, media: asset }));
@@ -86,13 +86,16 @@ export const QuestionEditorModal = ({
 
     setBlocks({ en: enBlock, hi: hiBlock, gu: guBlock });
 
-    // Initialize selectedIndices
-    if (question.correctIndices && Array.isArray(question.correctIndices)) {
-      setSelectedIndices(question.correctIndices);
+    // Initialize selectedIndex
+    if (typeof question.correctIndex === 'number') {
+      setSelectedIndex(question.correctIndex);
+    } else if (question.correctIndices && Array.isArray(question.correctIndices)) {
+      // Legacy multi-answer - take first index
+      setSelectedIndex(question.correctIndices[0] ?? 0);
     } else {
       // Fallback logic for legacy single answer
       const idx = question.options?.indexOf(question.answer || '');
-      setSelectedIndices(idx >= 0 ? [idx] : []);
+      setSelectedIndex(idx >= 0 ? idx : 0);
     }
   }, [question, initialLang]);
 
@@ -131,15 +134,9 @@ export const QuestionEditorModal = ({
     }
   };
 
-  // Toggle correct index
-  const toggleCorrectIndex = (index: number) => {
-    setSelectedIndices(prev => {
-      if (prev.includes(index)) {
-        return prev.filter(i => i !== index);
-      } else {
-        return [...prev, index].sort((a, b) => a - b);
-      }
-    });
+  // Set correct index (radio button behavior)
+  const setCorrectIndex = (index: number) => {
+    setSelectedIndex(index);
   };
 
   const handleTagsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -189,9 +186,7 @@ export const QuestionEditorModal = ({
       if (!exactlyFour(gu.options)) return { ok: false, msg: 'Gujarati must have exactly 4 options when provided.' };
     }
 
-    if (selectedIndices.length === 0) {
-      return { ok: false, msg: 'Please select at least one correct answer (based on English options).' };
-    }
+    // No validation needed for selectedIndex - always has a value (0-3)
 
     return { ok: true };
   };
@@ -233,7 +228,8 @@ export const QuestionEditorModal = ({
       options: blocks.en.options,
       categories: blocks.en.categories,
       status,
-      correctIndices: selectedIndices,
+      correctIndex: selectedIndex,
+      correctIndices: undefined, // clear legacy multi-answer
       answer: '', // clear legacy single answer
     };
 
@@ -264,7 +260,7 @@ export const QuestionEditorModal = ({
                 {blocks.en.options.map((opt, index) => (
                   <div
                     key={index}
-                    className={`flex items-center gap-3 p-4 rounded-lg border-2 ${selectedIndices.includes(index) ? 'border-green-500 bg-green-500/20' : 'border-slate-600 bg-slate-700'
+                    className={`flex items-center gap-3 p-4 rounded-lg border-2 ${selectedIndex === index ? 'border-green-500 bg-green-500/20' : 'border-slate-600 bg-slate-700'
                       }`}
                   >
                     <span className="font-bold text-indigo-400">{String.fromCharCode(65 + index)}:</span>
@@ -373,9 +369,10 @@ export const QuestionEditorModal = ({
                   {cur.options.map((opt, index) => (
                     <div key={index} className="flex items-center gap-3">
                       <input
-                        type="checkbox"
-                        checked={activeLang === 'en' && selectedIndices.includes(index)}
-                        onChange={() => activeLang === 'en' && toggleCorrectIndex(index)}
+                        type="radio"
+                        name="correctAnswer"
+                        checked={activeLang === 'en' && selectedIndex === index}
+                        onChange={() => activeLang === 'en' && setCorrectIndex(index)}
                         className="h-5 w-5 text-indigo-600 focus:ring-indigo-500"
                         disabled={activeLang !== 'en'}
                         title={activeLang !== 'en' ? 'Select correct option in English tab' : 'Mark as correct'}

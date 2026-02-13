@@ -66,8 +66,9 @@ export type Question = {
   bankId: string;
   question: string;
   options: string[];
-  answer?: string; // Kept for backward compatibility if needed, but correctIndices is preferred
-  correctIndices?: number[]; // indices of correct options
+  answer?: string; // Kept for backward compatibility if needed
+  correctIndex: number; // index of correct option (0-3)
+  correctIndices?: number[]; // Legacy - will be migrated to correctIndex
   media?: any;
   mediaRef?: any;
   status: 'Draft' | 'Published';
