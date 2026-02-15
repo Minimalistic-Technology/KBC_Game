@@ -119,9 +119,12 @@ export default function GamePage() {
   const autoFlipQuestionOnResume = async (originalQuestions: RawQuestion[], questionIndex: number) => {
     try {
       const currentQuestionBankId = originalQuestions[questionIndex].bankId;
+      // Collect all question IDs already in this session
+      const askedQuestionIds = originalQuestions.map(q => q.id);
+
       const { data } = await api.post(
         '/api/game/flip-question',
-        { currentQuestionBankId },
+        { currentQuestionBankId, askedQuestionIds },
         { withCredentials: true }
       );
 
@@ -190,9 +193,12 @@ export default function GamePage() {
   const fetchFlipQuestion = async (): Promise<RawQuestion | undefined> => {
     try {
       const currentQuestionBankId = questions[currentQuestionIndex].bankId;
+      // Collect all question IDs already in this session
+      const askedQuestionIds = questions.map(q => q.id);
+
       const { data } = await api.post(
         '/api/game/flip-question',
-        { currentQuestionBankId },
+        { currentQuestionBankId, askedQuestionIds },
         { withCredentials: true }
       );
       const q = data.question || data;
@@ -548,7 +554,22 @@ export default function GamePage() {
   };
 
   // ---------- Derived UI values ----------
-  if (isLoading || !activeConfig || questions.length === 0) {
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-indigo-100 text-slate-800 text-center p-4">
+        <div className="relative w-20 h-20 mb-6">
+          <div className="absolute inset-0 border-4 border-indigo-200 rounded-full"></div>
+          <div className="absolute inset-0 border-4 border-indigo-600 rounded-full border-t-transparent animate-spin"></div>
+        </div>
+        <h2 className="text-2xl font-bold text-slate-800 mb-2">Preparing Your Quiz...</h2>
+        <p className="text-slate-600">
+          Please wait while we check your session and load questions.
+        </p>
+      </div>
+    );
+  }
+
+  if (!activeConfig || questions.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-slate-50 text-slate-800 text-center p-4">
         <h2 className="text-2xl font-bold text-slate-800">No Quizzes Configured</h2>
