@@ -1,7 +1,6 @@
 // src/app/admin/page.tsx
 import { Activity, DollarSign, Users, Package } from 'lucide-react';
 import { StatCard } from './components/StatCard';
-import { ScreenBackgroundManager } from './components/ScreenBackgroundManager';
 
 export default function DashboardPage() {
   // 🔹 Full Dashboard
@@ -67,10 +66,6 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Screen Background Management Section */}
-      <div className="mt-4">
-        <ScreenBackgroundManager />
-      </div>
     </div>
   );
 }

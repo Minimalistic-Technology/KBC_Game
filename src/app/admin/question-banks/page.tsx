@@ -13,6 +13,7 @@ import { PinVerificationModal } from '../components/question bank/PinVerificatio
 import { useAtomValue } from "jotai";
 import { authHydratedAtom, isAdminAtom } from "@/state/auth";
 import { Router } from 'next/router';
+import { pinSessionUtils } from '@/lib/pinSession';
 
 // Create QueryClient
 const queryClient = new QueryClient();
@@ -43,22 +44,29 @@ function QuestionBanksPageContent() {
   const [format, setFormat] = useState<"csv" | "xlsx" | "json">("csv");
   const [loading, setLoading] = useState(false);
 
-  
-    const hydrated = useAtomValue(authHydratedAtom);
-    const isAdmin = useAtomValue(isAdminAtom);
-    
-    // Redirect if not admin
-    useEffect(() => {
-        if (!hydrated) return; // wait for auth to load
-    
-        if (!isAdmin) {
-            router.replace("/auth/login");
-        }
-    }, [hydrated, isAdmin, router]);
+
+  const hydrated = useAtomValue(authHydratedAtom);
+  const isAdmin = useAtomValue(isAdminAtom);
+
+  // Redirect if not admin
+  useEffect(() => {
+    if (!hydrated) return; // wait for auth to load
+
+    if (!isAdmin) {
+      router.replace("/auth/login");
+    }
+  }, [hydrated, isAdmin, router]);
+
+  // Check sessionStorage for PIN verification on mount
+  useEffect(() => {
+    if (pinSessionUtils.isVerified()) {
+      setIsVerified(true);
+    }
+  }, []);
 
 
   const handleExport = async () => {
-    
+
     try {
       if (!bankId) {
         alert("Please select a Question Bank (single bank only).");
@@ -115,7 +123,7 @@ function QuestionBanksPageContent() {
   }) {
     const bankName = allBanks.find((b) => b._id === bankId)?.name ?? `bank_${bankId.slice(-6)}`;
     const statusTag = status === "all" ? "all-status" : status;
-    const ext = format === "xlsx" ? "xlsx" : format; 
+    const ext = format === "xlsx" ? "xlsx" : format;
     const stamp = new Date().toISOString().replace(/[:.]/g, "-");
     return `${slugify(bankName)}_${statusTag}_questions_${stamp}.${ext}`;
   }
@@ -185,7 +193,10 @@ function QuestionBanksPageContent() {
     setEditingBank(null);
   };
 
-  const handleVerificationSuccess = () => setIsVerified(true);
+  const handleVerificationSuccess = () => {
+    setIsVerified(true);
+    pinSessionUtils.setVerified();
+  };
 
   // Delete bank
   const handleDeleteBank = async (bankId: string) => {
@@ -281,29 +292,29 @@ function QuestionBanksPageContent() {
           <h3 className="text-lg font-bold text-slate-900">Export Questions</h3>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4 items-end">
-  
-              <div className="md:col-span-1">
-                <label
-                  htmlFor="bankSelect"
-                  className="block text-sm font-medium text-slate-700 mb-2"
-                >
-                  Question Bank
-                </label>
-                <select
-                  id="bankSelect"
-                  className="w-full h-10 px-3 border bg-white border-slate-300 rounded-lg text-slate-900"
-                  value={bankId}
-                  onChange={(e) => setBankId(e.target.value)}
-                >
-                  <option value="all">All Banks</option> {/* ✅ Supports global export */}
-                  {allBanks.map((bank) => (
-                    <option key={bank._id} value={bank._id}>
-                      {bank.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            
+
+            <div className="md:col-span-1">
+              <label
+                htmlFor="bankSelect"
+                className="block text-sm font-medium text-slate-700 mb-2"
+              >
+                Question Bank
+              </label>
+              <select
+                id="bankSelect"
+                className="w-full h-10 px-3 border bg-white border-slate-300 rounded-lg text-slate-900"
+                value={bankId}
+                onChange={(e) => setBankId(e.target.value)}
+              >
+                <option value="all">All Banks</option> {/* ✅ Supports global export */}
+                {allBanks.map((bank) => (
+                  <option key={bank._id} value={bank._id}>
+                    {bank.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
 
             <div className="md:col-span-1">
               <label htmlFor="statusSelect" className="block text-sm font-medium text-slate-700 mb-2">

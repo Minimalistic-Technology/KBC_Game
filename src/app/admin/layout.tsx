@@ -16,6 +16,8 @@ import {
   Trophy,
   LogOut,
   CircleUserRound,
+  Image,
+  KeyRound,
 } from 'lucide-react';
 
 import { Providers } from '@/lib/Providers';
@@ -38,11 +40,10 @@ const NavLink = ({ href, icon: Icon, children, isCollapsed }: any) => {
   return (
     <Link
       href={href}
-      className={`flex items-center gap-4 px-3 py-2 rounded-lg transition-colors duration-200 ${
-        isActive
-          ? 'bg-indigo-600 text-white font-semibold shadow'
-          : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
-      } ${isCollapsed ? 'justify-center' : ''}`}
+      className={`flex items-center gap-4 px-3 py-2 rounded-lg transition-colors duration-200 ${isActive
+        ? 'bg-indigo-600 text-white font-semibold shadow'
+        : 'text-slate-700 hover:bg-slate-100 hover:text-slate-900'
+        } ${isCollapsed ? 'justify-center' : ''}`}
       title={isCollapsed ? children : ''}
     >
       <Icon className="h-5 w-5 flex-shrink-0" />
@@ -76,9 +77,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="grid min-h-screen w-full md:grid-cols-[auto_1fr] bg-slate-100">
       {/* Sidebar */}
       <aside
-        className={`hidden md:flex flex-col border-r bg-white transition-all duration-300 ease-in-out ${
-          isCollapsed ? 'w-20' : 'w-64'
-        }`}
+        className={`hidden md:flex flex-col border-r bg-white transition-all duration-300 ease-in-out ${isCollapsed ? 'w-20' : 'w-64'
+          }`}
       >
         <div className="flex h-[60px] items-center border-b px-6">
           <Link href="/" className="flex items-center gap-2 font-semibold">
@@ -97,11 +97,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <NavLink href="/admin/game-config" icon={Settings} isCollapsed={isCollapsed}>
             Game Config
           </NavLink>
-           <NavLink href="/admin/scoreboard" icon={Trophy} isCollapsed={isCollapsed}>
+          <NavLink href="/admin/scoreboard" icon={Trophy} isCollapsed={isCollapsed}>
             Score Board
           </NavLink>
-          <NavLink href="/auth/create-pin" icon={Settings} isCollapsed={isCollapsed}>
-            PIN 
+          <NavLink href="/admin/backgrounds" icon={Image} isCollapsed={isCollapsed}>
+            Backgrounds
+          </NavLink>
+          <NavLink href="/auth/create-pin" icon={KeyRound} isCollapsed={isCollapsed}>
+            PIN
           </NavLink>
         </nav>
 
@@ -131,12 +134,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
           {/* Right side: admin info + logout */}
           <div className="flex items-center gap-4">
-        
+
 
             {/* Only show admin bits when auth is ready and user is admin */}
             {hydrated && loggedIn && isAdmin && (
               <>
-         
+
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-2 text-red-600 hover:text-red-800 transition-colors text-sm font-medium"
