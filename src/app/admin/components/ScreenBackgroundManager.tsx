@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
-import { updateScreenBackground } from '@/lib/backgroundApi';
+import React, { useState, useEffect } from 'react';
+import { updateScreenBackground, getScreenBackground } from '@/lib/backgroundApi';
 import { Upload, Check, Loader2, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
@@ -12,6 +12,28 @@ export const ScreenBackgroundManager = () => {
     const [file, setFile] = useState<File | null>(null);
     const [uploading, setUploading] = useState(false);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const [fetching, setFetching] = useState(false);
+
+    useEffect(() => {
+        const loadBackground = async () => {
+            setFetching(true);
+            setFile(null);
+            setPreviewUrl(null);
+            try {
+                const res = await getScreenBackground(selectedScreen);
+                // API returns { success: true, data: { mediaRef: { url: ... } } }
+                // getScreenBackground helper returns response.data
+                if (res && res.success && res.data && res.data.mediaRef?.url) {
+                    setPreviewUrl(res.data.mediaRef.url);
+                }
+            } catch (error) {
+                console.error("Failed to load background:", error);
+            } finally {
+                setFetching(false);
+            }
+        };
+        loadBackground();
+    }, [selectedScreen]);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0]) {
@@ -36,7 +58,12 @@ export const ScreenBackgroundManager = () => {
             await updateScreenBackground(selectedScreen, file);
             toast.success('Background updated successfully!', { id: loadingToast });
             setFile(null);
-            setPreviewUrl(null);
+            // Keep the preview url (it matches the uploaded file)
+            // Or re-fetch? Re-fetching is safer to confirm backend state.
+            const res = await getScreenBackground(selectedScreen);
+            if (res && res.success && res.data && res.data.mediaRef?.url) {
+                setPreviewUrl(res.data.mediaRef.url);
+            }
         } catch (error) {
             console.error(error);
             toast.error('Failed to update background', { id: loadingToast });
@@ -112,7 +139,12 @@ export const ScreenBackgroundManager = () => {
 
                 {/* Preview Area */}
                 <div className="relative aspect-video rounded-lg border-2 border-dashed border-slate-200 bg-slate-50 overflow-hidden flex items-center justify-center">
-                    {previewUrl ? (
+                    {fetching ? (
+                        <div className="flex flex-col items-center gap-2 text-slate-400">
+                            <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+                            <span className="text-sm">Loading background...</span>
+                        </div>
+                    ) : previewUrl ? (
                         <img
                             src={previewUrl}
                             alt="Preview"
@@ -124,7 +156,7 @@ export const ScreenBackgroundManager = () => {
                             <p className="text-sm text-slate-400">Image preview will appear here</p>
                         </div>
                     )}
-                    {selectedScreen && (
+                    {selectedScreen && !fetching && (
                         <div className="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded backdrop-blur-sm uppercase tracking-wider font-semibold">
                             {selectedScreen}
                         </div>
