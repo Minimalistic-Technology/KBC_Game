@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Poppins } from "next/font/google";
 import "./globals.css";
 import { Providers } from "@/lib/Providers";
-import Header from "@/components/Header"; // <-- add this
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -21,8 +20,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={`${poppins.variable} font-sans bg-slate-50`}>
+    <html lang="en" suppressHydrationWarning={true}>
+      <body className={`${poppins.variable} font-sans bg-slate-50`} suppressHydrationWarning={true}>
         <Providers>
           {children}
         </Providers>
