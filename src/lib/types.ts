@@ -16,6 +16,7 @@ export type QuestionBank = {
   slug: string;
   description: string;
   published: boolean;
+  assignedTo?: string[] | { _id: string; name: string; email: string; }[];
   categories: string[];
   ageGroup?: string;
   questionCount: number;

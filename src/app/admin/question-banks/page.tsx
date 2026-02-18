@@ -11,7 +11,7 @@ import { QuestionBankCard } from '../components/question bank/QuestionBankCard';
 import { BankEditorModal } from '../components/question bank/BankEditorModal';
 import { PinVerificationModal } from '../components/question bank/PinVerificationModal';
 import { useAtomValue } from "jotai";
-import { authHydratedAtom, isAdminAtom } from "@/state/auth";
+import { authHydratedAtom, isAdminAtom, isQuestionerAtom } from "@/state/auth";
 import { Router } from 'next/router';
 import { pinSessionUtils } from '@/lib/pinSession';
 
@@ -47,22 +47,32 @@ function QuestionBanksPageContent() {
 
   const hydrated = useAtomValue(authHydratedAtom);
   const isAdmin = useAtomValue(isAdminAtom);
+  const isQuestioner = useAtomValue(isQuestionerAtom);
 
   // Redirect if not admin
   useEffect(() => {
     if (!hydrated) return; // wait for auth to load
 
-    if (!isAdmin) {
+    if (!isAdmin && !isQuestioner) {
       router.replace("/auth/login");
     }
-  }, [hydrated, isAdmin, router]);
+  }, [hydrated, isAdmin, isQuestioner, router]);
 
   // Check sessionStorage for PIN verification on mount
   useEffect(() => {
+    if (!hydrated) return; // Wait for hydration
+
+    // Admins are auto-verified (bypass PIN)
+    if (isAdmin) {
+      setIsVerified(true);
+      return;
+    }
+
+    // Questioners check SessionStorage
     if (pinSessionUtils.isVerified()) {
       setIsVerified(true);
     }
-  }, []);
+  }, [hydrated, isAdmin]);
 
 
   const handleExport = async () => {
@@ -152,6 +162,7 @@ function QuestionBanksPageContent() {
         prizeMedia: b.prizeMedia || undefined,
       })) as QuestionBank[];
     },
+    enabled: isVerified || isAdmin,
   });
 
   const allTags = Array.from(new Set(allBanks.flatMap((b) => b.categories)));
@@ -225,6 +236,7 @@ function QuestionBanksPageContent() {
         questionCount: bank.questionCount,
         defaultTimer: bank.defaultTimer,
         prizeLadder: bank.prizeLadder,
+        assignedTo: bank.assignedTo,
       };
 
       let updatedBank: QuestionBank;
@@ -260,7 +272,9 @@ function QuestionBanksPageContent() {
 
 
 
-  if (!isVerified) return <PinVerificationModal onVerify={handleVerificationSuccess} />;
+  if (!hydrated) return <div className="text-center mt-10">Loading auth...</div>;
+  if (!isVerified && !isAdmin) return <PinVerificationModal onVerify={handleVerificationSuccess} />;
+
   if (isLoading) return <div className="text-center mt-10">Loading question banks...</div>;
   if (isError) return <div className="text-center mt-10 text-red-600">Failed to load question banks.</div>;
 
@@ -279,13 +293,15 @@ function QuestionBanksPageContent() {
             <h1 className="text-3xl font-bold tracking-tight text-slate-900">Question Banks</h1>
             <p className="text-slate-700 mt-1">Manage and organize your question collections.</p>
           </div>
-          <button
-            onClick={() => handleOpenEditor(null)}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 h-10 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700"
-          >
-            <Plus className="h-5 w-5" />
-            <span>Create New Question Bank</span>
-          </button>
+          {!isQuestioner && (
+            <button
+              onClick={() => handleOpenEditor(null)}
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 h-10 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700"
+            >
+              <Plus className="h-5 w-5" />
+              <span>Create New Question Bank</span>
+            </button>
+          )}
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
@@ -417,6 +433,7 @@ function QuestionBanksPageContent() {
                 isLast={index === filteredBanks.length - 1}
                 onEdit={(e) => { e.preventDefault(); handleOpenEditor(bank); }}
                 onDelete={(e) => { e.preventDefault(); if (bank._id) handleDeleteBank(bank._id); }}
+                isQuestioner={isQuestioner}
               />
             ))}
           </AnimatePresence>

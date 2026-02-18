@@ -44,15 +44,14 @@ function LoginPage() {
       console.log("Login response:", data);
 
       // direct, simple check
-      if (data?.role === "admin" || data?.status === "success") {
-        // set Jotai atom so UI updates immediately
-        console.log("Login: about to setLoggedInUser -> admin");
-        setLoggedInUser("admin");
-        console.log("Login: setLoggedInUser done");
+      // Check for success status
+      if (data?.status === "success" && data?.role) {
+        // set Jotai atom so UI updates immediately based on actual role
+        console.log(`Login: setting user role to ${data.role}`);
+        setLoggedInUser(data.role);
 
         console.log("Login: navigating to /admin");
         router.push("/admin");
-        console.log("DEBUG: stayed on page after setLoggedInUser");
         return;
       }
 

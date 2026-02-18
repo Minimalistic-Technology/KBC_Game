@@ -13,29 +13,30 @@ interface CardProps {
     onDelete: (e: React.MouseEvent) => void;
     isFirst: boolean;
     isLast: boolean;
+    isQuestioner?: boolean;
 }
 
-export const QuestionBankCard = ({ bank, index, onEdit, onDelete, isFirst, isLast }: CardProps) => {
+export const QuestionBankCard = ({ bank, index, onEdit, onDelete, isFirst, isLast, isQuestioner }: CardProps) => {
     const [questionCount, setQuestionCount] = useState('');
 
-     useEffect(() => {
-    const fetchQuestions = async () => {
-      try {
-        const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL_DEV}/api/questions`, {
-        params:{ bankId: bank._id },
-        withCredentials: true
-      });
+    useEffect(() => {
+        const fetchQuestions = async () => {
+            try {
+                const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL_DEV}/api/questions`, {
+                    params: { bankId: bank._id },
+                    withCredentials: true
+                });
 
-        const count = res.data.length;
-        setQuestionCount(count);
+                const count = res.data.length;
+                setQuestionCount(count);
 
-      } catch (error) {
-        console.error("Error fetching questions:", error);
-      }
-    };
+            } catch (error) {
+                console.error("Error fetching questions:", error);
+            }
+        };
 
-    fetchQuestions();
-  }, [bank._id]);
+        fetchQuestions();
+    }, [bank._id]);
 
 
     const statusClasses: { [key: string]: string } = {
@@ -84,10 +85,12 @@ export const QuestionBankCard = ({ bank, index, onEdit, onDelete, isFirst, isLas
                 <div className="flex items-center gap-4 text-slate-700 font-medium">
                     <span className="flex items-center gap-1.5" title="Number of questions"><FileText size={14} /> {questionCount}</span>
                 </div>
-                <div className="flex items-center gap-1">
-                    <button onClick={onEdit} className="p-2 rounded-md text-slate-500 hover:bg-slate-200" title="Edit"><Edit size={16} /></button>
-                    <button onClick={onDelete} className="p-2 rounded-md text-slate-500 hover:bg-red-100 hover:text-red-600" title="Delete"><Trash2 size={16} /></button>
-                </div>
+                {!isQuestioner && (
+                    <div className="flex items-center gap-1">
+                        <button onClick={onEdit} className="p-2 rounded-md text-slate-500 hover:bg-slate-200" title="Edit"><Edit size={16} /></button>
+                        <button onClick={onDelete} className="p-2 rounded-md text-slate-500 hover:bg-red-100 hover:text-red-600" title="Delete"><Trash2 size={16} /></button>
+                    </div>
+                )}
             </div>
         </motion.div>
     );

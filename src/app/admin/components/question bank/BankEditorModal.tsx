@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import type { QuestionBank } from '@/lib/types';
+import axiosInstance from '@/utils/axiosInstance';
 
 const FormInput = ({ label, id, children }: { label: string; id: string; children: React.ReactNode }) => (
     <div>
@@ -13,9 +14,27 @@ const FormInput = ({ label, id, children }: { label: string; id: string; childre
 );
 
 export const BankEditorModal = ({ bank, onSave, onClose }: { bank: QuestionBank, onSave: (bank: QuestionBank) => void, onClose: () => void }) => {
-    const [formData, setFormData] = useState<QuestionBank>(bank);
+    // Normalize assignedTo to array of strings
+    const normalizeAssignedTo = (assignedTo: any): string[] => {
+        if (!assignedTo) return [];
+        return assignedTo.map((u: any) => (typeof u === 'string' ? u : u._id));
+    };
 
-    useEffect(() => { setFormData(bank); }, [bank]);
+    const [formData, setFormData] = useState<QuestionBank>({
+        ...bank,
+        assignedTo: normalizeAssignedTo(bank.assignedTo)
+    });
+
+    const [questioners, setQuestioners] = useState<{ _id: string; name: string; email: string }[]>([]);
+
+    useEffect(() => {
+        // Fetch Questioners
+        axiosInstance.get('/auth/admins/questioners')
+            .then(res => setQuestioners(res.data))
+            .catch(err => console.error(err));
+    }, []);
+
+    useEffect(() => { setFormData({ ...bank, assignedTo: normalizeAssignedTo(bank.assignedTo) }); }, [bank]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value, type } = e.target;
@@ -55,7 +74,7 @@ export const BankEditorModal = ({ bank, onSave, onClose }: { bank: QuestionBank,
                         <div className="grid md:grid-cols-2 gap-6">
                             {/* --- UPDATED LABEL --- */}
                             <FormInput label="Question Bank Name" id="name"><input type="text" id="name" name="name" value={formData.name} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900" required /></FormInput>
-                            <FormInput label="Slug" id="slug"><input type="text" id="slug" name="slug" value={formData.slug} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900" required/></FormInput>
+                            <FormInput label="Slug" id="slug"><input type="text" id="slug" name="slug" value={formData.slug} onChange={handleChange} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900" required /></FormInput>
                         </div>
                         <FormInput label="Description" id="description"><textarea id="description" name="description" value={formData.description} onChange={handleChange} rows={3} className="w-full px-3 py-2 border border-slate-300 rounded-lg text-slate-900" /></FormInput>
 
@@ -65,7 +84,7 @@ export const BankEditorModal = ({ bank, onSave, onClose }: { bank: QuestionBank,
                                 <select
                                     name="ageGroup"
                                     id="ageGroup"
-                                    value={formData.ageGroup || 'adults'} 
+                                    value={formData.ageGroup || 'adults'}
                                     onChange={handleChange}
                                     className="w-full px-3 py-2 border bg-white border-slate-300 rounded-lg text-slate-900"
                                 >
@@ -95,6 +114,36 @@ export const BankEditorModal = ({ bank, onSave, onClose }: { bank: QuestionBank,
                                     <option value="true">Published</option>
                                 </select>
                             </FormInput>
+
+                        </div>
+
+                        {/* Questioner Assignment */}
+                        <div className="p-4 border rounded-lg bg-slate-50 space-y-4">
+                            <h4 className="font-semibold text-slate-900">Assign to Questioners</h4>
+                            <p className="text-sm text-slate-600">Select questioners who can manage this bank.</p>
+                            <div className="max-h-40 overflow-y-auto space-y-2 border p-2 rounded bg-white">
+                                {questioners.map(q => (
+                                    <label key={q._id} className="flex items-center space-x-2">
+                                        <input
+                                            type="checkbox"
+                                            checked={(formData.assignedTo as string[])?.includes(q._id)}
+                                            onChange={(e) => {
+                                                const checked = e.target.checked;
+                                                setFormData(prev => {
+                                                    const current = (prev.assignedTo as string[]) || [];
+                                                    const newAssigned = checked
+                                                        ? [...current, q._id]
+                                                        : current.filter(id => id !== q._id);
+                                                    return { ...prev, assignedTo: newAssigned };
+                                                });
+                                            }}
+                                            className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                                        />
+                                        <span className="text-sm text-slate-700">{q.name} ({q.email})</span>
+                                    </label>
+                                ))}
+                                {questioners.length === 0 && <p className="text-sm text-slate-500 italic">No questioners found.</p>}
+                            </div>
                         </div>
                     </div>
 
@@ -104,6 +153,6 @@ export const BankEditorModal = ({ bank, onSave, onClose }: { bank: QuestionBank,
                     </div>
                 </motion.form>
             </motion.div>
-        </AnimatePresence>
+        </AnimatePresence >
     );
 };

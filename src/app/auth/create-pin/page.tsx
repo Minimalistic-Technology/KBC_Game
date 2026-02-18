@@ -1,14 +1,25 @@
 'use client';
+import { useRouter } from 'next/navigation';
 
 import React, { useState, useEffect } from 'react';
 import { Lock, Save, RefreshCw, Info, ArrowLeft } from 'lucide-react';
 import axiosInstance from '@/utils/axiosInstance';
 import { toast } from 'react-hot-toast';
 import ManagePinLayout from '../_components/ManagePinLayout';
-import { useRouter } from 'next/navigation';
+import { useAtomValue } from "jotai";
+import { authHydratedAtom, isLoggedInAtom } from "@/state/auth";
 
 export default function CreatePinPage() {
   const router = useRouter();
+  const hydrated = useAtomValue(authHydratedAtom);
+  const loggedIn = useAtomValue(isLoggedInAtom);
+
+  useEffect(() => {
+    if (hydrated && !loggedIn) {
+      router.push('/auth/login');
+    }
+  }, [hydrated, loggedIn, router]);
+
   const [pinConfig, setPinConfig] = useState<(number | null)[]>([null, null, null, null]);
   const [currentPin, setCurrentPin] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
@@ -16,8 +27,8 @@ export default function CreatePinPage() {
 
   // Fetch current PIN configuration on mount
   useEffect(() => {
-    fetchPinConfig();
-  }, []);
+    if (loggedIn) fetchPinConfig();
+  }, [loggedIn]);
 
   const fetchPinConfig = async () => {
     try {

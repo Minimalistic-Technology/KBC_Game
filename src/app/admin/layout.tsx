@@ -18,15 +18,17 @@ import {
   CircleUserRound,
   Image,
   KeyRound,
+  Users,
 } from 'lucide-react';
 
-import { Providers } from '@/lib/Providers';
+
 
 import { useAtomValue, useSetAtom } from 'jotai';
 import {
   authHydratedAtom,
   isLoggedInAtom,
   isAdminAtom,
+  isQuestionerAtom,
   loggedInUserAtom,
 } from '@/state/auth';
 import axiosInstance from '@/utils/axiosInstance';
@@ -59,9 +61,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const hydrated = useAtomValue(authHydratedAtom);
   const loggedIn = useAtomValue(isLoggedInAtom);
   const isAdmin = useAtomValue(isAdminAtom);
+  const isQuestioner = useAtomValue(isQuestionerAtom);
   const adminUser = useAtomValue(loggedInUserAtom);
   const setLoggedInUser = useSetAtom(loggedInUserAtom);
   const router = useRouter();
+
+
 
   const handleLogout = async () => {
     try {
@@ -87,6 +92,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </Link>
         </div>
 
+
         <nav className="flex-1 space-y-2 p-4">
           <NavLink href="/admin" icon={Home} isCollapsed={isCollapsed}>
             Dashboard
@@ -94,18 +100,29 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <NavLink href="/admin/question-banks" icon={Package} isCollapsed={isCollapsed}>
             Question Banks
           </NavLink>
-          <NavLink href="/admin/game-config" icon={Settings} isCollapsed={isCollapsed}>
-            Game Config
-          </NavLink>
-          <NavLink href="/admin/scoreboard" icon={Trophy} isCollapsed={isCollapsed}>
-            Score Board
-          </NavLink>
-          <NavLink href="/admin/backgrounds" icon={Image} isCollapsed={isCollapsed}>
-            Backgrounds
-          </NavLink>
-          <NavLink href="/auth/create-pin" icon={KeyRound} isCollapsed={isCollapsed}>
-            PIN
-          </NavLink>
+
+          {isAdmin && (
+            <>
+              <NavLink href="/admin/game-config" icon={Settings} isCollapsed={isCollapsed}>
+                Game Config
+              </NavLink>
+              <NavLink href="/admin/scoreboard" icon={Trophy} isCollapsed={isCollapsed}>
+                Score Board
+              </NavLink>
+              <NavLink href="/admin/backgrounds" icon={Image} isCollapsed={isCollapsed}>
+                Backgrounds
+              </NavLink>
+              <NavLink href="/admin/questioners" icon={Users} isCollapsed={isCollapsed}>
+                Questioners
+              </NavLink>
+            </>
+          )}
+
+          {isAdmin && (
+            <NavLink href="/auth/create-pin" icon={KeyRound} isCollapsed={isCollapsed}>
+              PIN
+            </NavLink>
+          )}
         </nav>
 
         <div className="mt-auto border-t p-4">
@@ -137,7 +154,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
 
             {/* Only show admin bits when auth is ready and user is admin */}
-            {hydrated && loggedIn && isAdmin && (
+            {hydrated && loggedIn && (isAdmin || isQuestioner) && (
               <>
 
                 <button
@@ -151,7 +168,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             )}
 
             {/* (Optional) If not logged in / not admin – show login link */}
-            {hydrated && (!loggedIn || !isAdmin) && (
+            {hydrated && (!loggedIn || (!isAdmin && !isQuestioner)) && (
               <Link
                 href="/auth/login"
                 className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-indigo-700"
@@ -163,7 +180,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </header>
 
         <main className="flex-1 overflow-y-auto bg-slate-100 p-6">
-          <Providers>{children}</Providers>
+          {children}
         </main>
       </div>
     </div>
