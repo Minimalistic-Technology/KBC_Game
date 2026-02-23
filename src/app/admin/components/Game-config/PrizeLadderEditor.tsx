@@ -56,41 +56,41 @@ export const PrizeLadderEditor = ({ value, onChange, configId }: PrizeLadderEdit
     setPreviewUrls(prev => ({ ...prev, [levelId]: preview }));
   };
 
-const handleRemoveImage = async (id: number) => {
-  const level = value.find(l => l.id === id);
-  if (!level) return;
+  const handleRemoveImage = async (id: number) => {
+    const level = value.find(l => l.id === id);
+    if (!level) return;
 
-  if (!configId) {
-    alert('Config ID missing.');
-    return;
-  }
+    if (!configId) {
+      alert('Config ID missing.');
+      return;
+    }
 
-  if (!level.mongoId) {
-    alert('Please save the config first.');
-    return;
-  }
+    if (!level.mongoId) {
+      alert('Please save the config first.');
+      return;
+    }
 
-  try {
-    const { data } = await api.post('/api/v1/game-config/remove/PL-media', {
-      configId,
-      prizeLadderId: level.mongoId,
-    });
+    try {
+      const { data } = await api.post('/api/v1/game-config/remove/PL-media', {
+        configId,
+        prizeLadderId: level.mongoId,
+      });
 
-    onChange(
-      value.map(l =>
-        l.id === id ? { ...l, media: undefined } : l
-      )
-    );
+      onChange(
+        value.map(l =>
+          l.id === id ? { ...l, media: undefined } : l
+        )
+      );
 
-    setPendingFiles(prev => ({ ...prev, [id]: null }));
-    setPreviewUrls(prev => ({ ...prev, [id]: null }));
+      setPendingFiles(prev => ({ ...prev, [id]: null }));
+      setPreviewUrls(prev => ({ ...prev, [id]: null }));
 
-    alert(data?.message || 'Image removed.');
-  } catch (err: any) {
-    console.error(err);
-    alert(err?.response?.data?.message || 'Failed to remove image.');
-  }
-};
+      alert(data?.message || 'Image removed.');
+    } catch (err: any) {
+      console.error(err);
+      alert(err?.response?.data?.message || 'Failed to remove image.');
+    }
+  };
 
   // -------------------- Upload Image -------------------- //
 
@@ -145,19 +145,21 @@ const handleRemoveImage = async (id: number) => {
           return (
             <div
               key={level.id}
-              className={`p-2 rounded-md ${level.isSafe ? 'bg-indigo-100' : ''}`}
+              className={`p-3 rounded-lg border border-transparent transition-all ${level.isSafe ? 'bg-indigo-50 border-indigo-100' : 'bg-white border-slate-200'
+                }`}
             >
-              <div className="grid grid-cols-12 gap-2 items-center">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full">
                 {/* Number */}
-                <span className="col-span-1 text-center font-semibold text-slate-500">
-                  {index + 1}
-                </span>
+                <div className="flex items-center justify-between sm:justify-center w-full sm:w-8 shrink-0">
+                  <span className="font-bold text-slate-500 text-sm">#{index + 1}</span>
+                  {/* Mobile-only safe badge if needed, or keeping it simple */}
+                </div>
 
                 {/* Type */}
                 <select
                   value={level.type}
                   onChange={e => handleUpdateLevel(level.id, 'type', e.target.value)}
-                  className="col-span-3 px-2 py-2 border rounded-lg bg-white"
+                  className="w-full sm:w-32 px-3 py-2 border border-slate-300 rounded-lg bg-white text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
                 >
                   <option value="money">Money</option>
                   <option value="gift">Gift</option>
@@ -175,29 +177,27 @@ const handleRemoveImage = async (id: number) => {
                       level.type === 'money' ? Number(e.target.value) : e.target.value
                     )
                   }
-                  className="col-span-4 px-3 py-2 border rounded-lg"
+                  className="w-full sm:flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none"
                 />
 
                 {/* Safe point */}
-                <label className="col-span-3 flex items-center gap-2 cursor-pointer">
+                <label className="flex items-center gap-2 cursor-pointer w-full sm:w-auto shrink-0 select-none">
                   <input
                     type="checkbox"
                     checked={level.isSafe}
                     onChange={e => handleUpdateLevel(level.id, 'isSafe', e.target.checked)}
+                    className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
                   />
-                  Safe Point
+                  <span className="text-sm font-medium text-slate-700">Safe Point</span>
                 </label>
-
-                {/* Remove level column (kept empty so user can't delete) */}
-                <div className="col-span-1" />
               </div>
 
               {/* Gift Upload Section */}
               {level.type === 'gift' && (
-                <div className="mt-3 pl-14 flex flex-col gap-3">
-                  <div className="flex items-center gap-3">
+                <div className="mt-3 sm:pl-11 flex flex-col gap-3">
+                  <div className="flex flex-wrap items-center gap-3 bg-slate-50 p-2 rounded-lg border border-slate-200">
                     {/* Preview */}
-                    <div className="w-10 h-10 rounded border bg-slate-50 overflow-hidden flex items-center justify-center">
+                    <div className="w-10 h-10 rounded border bg-white overflow-hidden flex items-center justify-center shrink-0">
                       {preview ? (
                         <img src={preview} className="w-full h-full object-cover" />
                       ) : (
@@ -206,9 +206,9 @@ const handleRemoveImage = async (id: number) => {
                     </div>
 
                     {/* Choose file */}
-                    <label className="px-3 py-1.5 bg-indigo-100 text-indigo-600 text-xs rounded flex items-center gap-1 cursor-pointer">
-                      <ImagePlus size={14} />
-                      {hasPendingFile ? 'Change Image' : 'Choose Image'}
+                    <label className="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-medium rounded-md flex items-center gap-1.5 cursor-pointer transition-colors shadow-sm">
+                      <ImagePlus size={14} className="text-indigo-500" />
+                      {hasPendingFile ? 'Change' : 'Upload Image'}
                       <input
                         type="file"
                         accept="image/*"
@@ -223,7 +223,7 @@ const handleRemoveImage = async (id: number) => {
                     <button
                       onClick={() => handleSaveImage(level)}
                       disabled={!hasPendingFile || savingLevelId === level.id}
-                      className="px-3 py-1.5 bg-emerald-600 text-white rounded text-xs flex items-center gap-1 disabled:opacity-50"
+                      className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md text-xs font-medium flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-colors ml-auto sm:ml-0"
                     >
                       {savingLevelId === level.id ? (
                         <>
@@ -240,9 +240,10 @@ const handleRemoveImage = async (id: number) => {
                     {(level.media || preview) && (
                       <button
                         onClick={() => handleRemoveImage(level.id)}
-                        className="ml-auto text-red-500"
+                        className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors ml-2"
+                        title="Remove Image"
                       >
-                        <X size={14} />
+                        <X size={16} />
                       </button>
                     )}
                   </div>

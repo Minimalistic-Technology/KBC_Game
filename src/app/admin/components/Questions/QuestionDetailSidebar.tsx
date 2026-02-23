@@ -347,8 +347,8 @@ export const QuestionDetailSidebar = ({ question, onDelete, onEdit }: SidebarPro
   const StatusBadge = () => (
     <span
       className={`inline-flex items-center gap-1.5 text-xs font-bold capitalize px-3 py-1 rounded-full ${status === 'Published'
-          ? 'bg-green-100 text-green-800'
-          : 'bg-yellow-100 text-yellow-800'
+        ? 'bg-green-100 text-green-800'
+        : 'bg-yellow-100 text-yellow-800'
         }`}
     >
       {status === 'Published' ? <CheckCircle size={12} /> : <FileEdit size={12} />}
@@ -370,7 +370,7 @@ export const QuestionDetailSidebar = ({ question, onDelete, onEdit }: SidebarPro
   }
 
   return (
-    <div className="hidden lg:flex flex-col h-full bg-white rounded-xl shadow-sm border border-slate-200">
+    <div className="flex flex-col h-full bg-white rounded-xl shadow-sm border border-slate-200">
       {/* Header */}
       <div className="p-6 border-b flex justify-between items-center">
         <h3 className="text-lg font-bold text-slate-900">Details</h3>
@@ -386,10 +386,10 @@ export const QuestionDetailSidebar = ({ question, onDelete, onEdit }: SidebarPro
                 onClick={() => setActiveLang(k)}
                 disabled={!exists}
                 className={`px-2 py-1 text-xs rounded-md border transition-all ${activeLang === k
-                    ? 'bg-indigo-600 text-white border-indigo-600'
-                    : exists
-                      ? 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
-                      : 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
+                  ? 'bg-indigo-600 text-white border-indigo-600'
+                  : exists
+                    ? 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                    : 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
                   }`}
               >
                 {k.toUpperCase()}
@@ -462,8 +462,8 @@ export const QuestionDetailSidebar = ({ question, onDelete, onEdit }: SidebarPro
                   <li
                     key={index}
                     className={`flex items-center gap-3 text-sm p-3 rounded-md ${isCorrect
-                        ? 'bg-green-100 text-green-900 font-semibold'
-                        : 'bg-slate-100 text-slate-700'
+                      ? 'bg-green-100 text-green-900 font-semibold'
+                      : 'bg-slate-100 text-slate-700'
                       }`}
                   >
                     {isCorrect && (

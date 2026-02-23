@@ -190,16 +190,23 @@ export default function GameOverClient() {
       .sort((a, b) => a.level - b.level);
   }, [userResult]);
 
-  // 🔹 Prize to display = last safe prize from ladder
+  // 🔹 Prize to display = total money won (sum all money levels) or gift description
   const displayPrizeText = useMemo(() => {
     if (!wonPrizeLadder.length) return "0";
 
     const last = wonPrizeLadder[wonPrizeLadder.length - 1];
-    if (last.type === "money") {
-      const num = Number(last.value) || 0;
-      return `$${num.toLocaleString()}`;
+
+    // If the last prize is a gift, show it (gift takes priority as the headline prize)
+    if (last.type === "gift") {
+      return String(last.value || "Gift");
     }
-    return String(last.value || "Gift");
+
+    // Otherwise sum all money prizes in the won ladder
+    const totalMoney = wonPrizeLadder
+      .filter((item) => item.type === "money")
+      .reduce((sum, item) => sum + (Number(item.value) || 0), 0);
+
+    return `$${totalMoney.toLocaleString()}`;
   }, [wonPrizeLadder]);
 
   const finalIsWinner = userResult?.isWinner ?? false;
@@ -219,7 +226,7 @@ export default function GameOverClient() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
-          className="w-full max-w-lg mx-auto bg-white rounded-2xl shadow-lg border border-slate-200 p-8 text-center"
+          className="w-full max-w-lg mx-auto bg-white rounded-2xl shadow-lg border border-slate-200 p-4 sm:p-8 text-center"
         >
           <motion.div
             initial={{ scale: 0 }}
@@ -304,8 +311,8 @@ export default function GameOverClient() {
                         <div
                           key={item.level}
                           className={`rounded-xl px-4 py-3 border ${item.isSafe
-                              ? "bg-emerald-50 border-emerald-200"
-                              : "bg-slate-50 border-slate-200"
+                            ? "bg-emerald-50 border-emerald-200"
+                            : "bg-slate-50 border-slate-200"
                             }`}
                         >
                           {/* Gift Layout */}
@@ -352,7 +359,7 @@ export default function GameOverClient() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.5, ease: "easeOut" }}
-          className="w-full max-w-lg mx-auto bg-white rounded-2xl shadow-lg border border-slate-200 p-8 mt-8"
+          className="w-full max-w-lg mx-auto bg-white rounded-2xl shadow-lg border border-slate-200 p-4 sm:p-8 mt-8"
         >
           <div className="flex items-center justify-center gap-2 mb-6">
             <Trophy className="text-yellow-500" size={24} />

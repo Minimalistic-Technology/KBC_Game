@@ -7,11 +7,12 @@ interface TimerProps {
   duration: number;
   onTimeUp: () => void;
   isPaused: boolean;               // true when user selected an option
+  isFinal?: boolean;               // true only when the pause is permanent (answer locked)
   onTimeTaken?: (secs: number) => void; // called on pause or timeout
   questionKey?: string | number;   // change this per question to reset (e.g., question.id)
 }
 
-export const Timer = ({ duration, onTimeUp, isPaused, onTimeTaken, questionKey }: TimerProps) => {
+export const Timer = ({ duration, onTimeUp, isPaused, isFinal = false, onTimeTaken, questionKey }: TimerProps) => {
   const [timeLeft, setTimeLeft] = useState(duration);
   const firedRef = useRef(false);           // prevents multiple onTimeUp fires
   const prevPausedRef = useRef(isPaused);   // detect running -> paused transition
@@ -25,34 +26,35 @@ export const Timer = ({ duration, onTimeUp, isPaused, onTimeTaken, questionKey }
 
   // Countdown / timeout
   useEffect(() => {
-  if (isPaused || firedRef.current) return;
+    if (isPaused || firedRef.current) return;
 
-  if (timeLeft <= 0) {
-    firedRef.current = true;
-    onTimeUp();
-    return;
-  }
+    if (timeLeft <= 0) {
+      firedRef.current = true;
+      onTimeUp();
+      return;
+    }
 
-  const id = setInterval(() => {
-    setTimeLeft(t => Math.max(0, t - 1));
-  }, 1000);
-  return () => clearInterval(id);
+    const id = setInterval(() => {
+      setTimeLeft(t => Math.max(0, t - 1));
+    }, 1000);
+    return () => clearInterval(id);
 
-// ⬇️ remove onTimeTaken from deps
-}, [timeLeft, isPaused, onTimeUp, duration]);
+    // ⬇️ remove onTimeTaken from deps
+  }, [timeLeft, isPaused, onTimeUp, duration]);
 
-  // Detect answer selection: running -> paused
+  // Detect answer selection: running -> paused (FINAL only)
   useEffect(() => {
     const wasRunning = !prevPausedRef.current;
     const nowPaused = isPaused;
 
-    if (wasRunning && nowPaused && !firedRef.current) {
+    // Only fire onTimeTaken and lock firedRef when this is a FINAL pause
+    if (wasRunning && nowPaused && isFinal && !firedRef.current) {
       firedRef.current = true;
       const spent = Math.min(duration, Math.max(0, duration - timeLeft));
       onTimeTaken?.(spent);
     }
     prevPausedRef.current = isPaused;
-  }, [isPaused, duration, timeLeft, onTimeTaken]);
+  }, [isPaused, isFinal, duration, timeLeft, onTimeTaken]);
 
   return (
     <div className="bg-white/60 backdrop-blur-sm border border-slate-200 rounded-lg p-3 h-16 flex items-center gap-4">

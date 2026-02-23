@@ -130,7 +130,7 @@ export default function RegisterPage() {
       <Toaster />
 
       <div className="flex items-center justify-center min-h-screen bg-slate-50 p-4">
-        <div className="w-full max-w-lg bg-white shadow-xl rounded-2xl p-8 border border-slate-200">
+        <div className="w-full max-w-lg bg-white shadow-xl rounded-2xl p-4 sm:p-8 border border-slate-200">
 
           <div className="text-center mb-8">
             <div className="w-16 h-16 mx-auto rounded-full bg-indigo-100 flex items-center justify-center mb-4">

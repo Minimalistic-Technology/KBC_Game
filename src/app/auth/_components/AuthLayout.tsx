@@ -13,8 +13,8 @@ export default function AuthLayout({ title, children }: { title: string, childre
             </h1>
           </Link>
         </div>
-        <div className="bg-white p-8 rounded-2xl shadow-xl">
-           <h2 className="text-2xl font-bold text-center text-slate-800 mb-8">
+        <div className="bg-white p-5 sm:p-8 rounded-2xl shadow-xl">
+          <h2 className="text-xl sm:text-2xl font-bold text-center text-slate-800 mb-6 sm:mb-8">
             {title}
           </h2>
           {children}

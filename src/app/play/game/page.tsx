@@ -617,20 +617,36 @@ export default function GamePage() {
       )}
 
       <motion.main
-        className="grid grid-cols-1 lg:grid-cols-4 min-h-screen bg-gradient-to-br from-slate-50 to-indigo-100 text-slate-800 p-8 lg:p-12 gap-8"
+        className="grid grid-cols-1 lg:grid-cols-4 min-h-screen bg-gradient-to-br from-slate-50 to-indigo-100 text-slate-800 p-3 sm:p-6 lg:p-12 gap-4 lg:gap-8"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        <motion.div className="lg:col-span-3 flex flex-col gap-4" variants={itemVariants}>
+        {/* Mobile: Lifelines row shown at top */}
+        <div className="lg:hidden col-span-1">
+          <LifelineBar
+            lifelines={
+              activeConfig?.lifelines ?? {
+                '50:50': true,
+                'Double Dip': true,
+                'Expert Advice': true,
+                'Flip Question': true,
+              }
+            }
+            usedLifelines={usedLifelines}
+            onUseLifeline={handleUseLifeline}
+          />
+        </div>
+
+        <motion.div className="lg:col-span-3 flex flex-col gap-3 lg:gap-4" variants={itemVariants}>
           {/* Language Switcher + HUD */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
             <GameHUD
               currentQuestionIndex={currentQuestionIndex}
               totalQuestions={totalQuestions}
               bankTitle={bankTitle}
             />
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
               {(['en', 'hi', 'gu'] as LangKey[]).map(l => (
                 <button
                   key={l}
@@ -640,7 +656,7 @@ export default function GamePage() {
                       await api.put('/api/session/update', { lang: l });
                     } catch { }
                   }}
-                  className={`px-3 py-1 rounded-md border text-sm ${lang === l
+                  className={`px-2 sm:px-3 py-1 rounded-md border text-xs sm:text-sm ${lang === l
                     ? 'bg-indigo-600 text-white border-indigo-600'
                     : 'bg-white border-slate-300 text-slate-700'
                     }`}
@@ -652,7 +668,7 @@ export default function GamePage() {
             </div>
           </div>
 
-          <div className="relative flex-grow flex flex-col gap-6 bg-white border border-slate-200 rounded-lg p-6 shadow-md">
+          <div className="relative flex-grow flex flex-col gap-4 sm:gap-6 bg-white border border-slate-200 rounded-lg p-3 sm:p-6 shadow-md">
             <AnimatePresence mode="wait">
               <motion.div
                 key={currentQuestionRaw.id}
@@ -660,12 +676,16 @@ export default function GamePage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
-                className="flex flex-col gap-6"
+                className="flex flex-col gap-4 sm:gap-6"
               >
                 <Timer
                   duration={45}
                   questionKey={currentQuestionRaw.id}
                   isPaused={selectedOption !== null}
+                  isFinal={
+                    selectedOption !== null &&
+                    !(isDoubleDipActive && firstDoubleDipAnswer !== null && answerState === 'idle')
+                  }
                   onTimeUp={handleTimeUp}
                   onTimeTaken={handleTimeTaken}
                 />
@@ -682,7 +702,8 @@ export default function GamePage() {
           </div>
         </motion.div>
 
-        <motion.div className="lg:col-span-1 flex flex-col gap-6" variants={itemVariants}>
+        {/* Desktop: Lifelines + Prize Ladder in right column */}
+        <motion.div className="hidden lg:flex lg:col-span-1 flex-col gap-6" variants={itemVariants}>
           <LifelineBar
             lifelines={
               activeConfig?.lifelines ?? {
@@ -699,6 +720,11 @@ export default function GamePage() {
             <PrizeLadder prizeLadder={sessionPrizeLadder} currentLevel={currentQuestionIndex + 1} />
           </div>
         </motion.div>
+
+        {/* Mobile: Prize Ladder below question */}
+        <div className="lg:hidden col-span-1">
+          <PrizeLadder prizeLadder={sessionPrizeLadder} currentLevel={currentQuestionIndex + 1} />
+        </div>
       </motion.main>
     </>
   );

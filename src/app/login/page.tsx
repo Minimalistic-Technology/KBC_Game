@@ -95,7 +95,7 @@ export default function LoginPage() {
       <Toaster position="top-center" reverseOrder={false} />
 
       <div
-        className="flex items-center justify-center min-h-screen pt-16 text-slate-900 bg-cover bg-center bg-no-repeat"
+        className="flex items-center justify-center min-h-screen pt-16 px-4 text-slate-900 bg-cover bg-center bg-no-repeat"
         style={{
           backgroundImage: bgUrl ? `url(${bgUrl})` : undefined,
           backgroundColor: bgUrl ? undefined : '#f8fafc' // Fallback color (slate-50)
@@ -104,7 +104,7 @@ export default function LoginPage() {
         {/* Overlay for better readability if background is present */}
         {bgUrl && <div className="absolute inset-0 bg-black/30 backdrop-blur-[2px] z-0" />}
 
-        <div className="w-full max-w-md mx-auto bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border border-slate-200 p-8 z-10 relative">
+        <div className="w-full max-w-md mx-auto bg-white/95 backdrop-blur-sm rounded-2xl shadow-lg border border-slate-200 p-4 sm:p-8 z-10 relative">
 
           {/* Header */}
           <div className="text-center mb-8">

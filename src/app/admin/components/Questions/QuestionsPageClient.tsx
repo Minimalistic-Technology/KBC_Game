@@ -245,7 +245,7 @@ export default function QuestionsPageClient() {
 
       <div className="flex flex-col gap-8 h-full">
         {/* Header */}
-        <div className="flex-shrink-0 flex items-center justify-between">
+        <div className="flex-shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-slate-900">
               {activeBank?.name || 'Questions'}
@@ -257,7 +257,7 @@ export default function QuestionsPageClient() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
             {activeBank && (
               <>
                 <BulkExcelUpload
@@ -266,7 +266,7 @@ export default function QuestionsPageClient() {
                 />
                 <button
                   onClick={() => handleOpenEditor(null)}
-                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 h-10 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700"
+                  className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 h-10 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 flex-shrink-0"
                 >
                   <PlusCircle className="h-5 w-5" />
                   Add New Question
@@ -277,9 +277,9 @@ export default function QuestionsPageClient() {
         </div>
 
         {activeBank ? (
-          <div className="flex-grow grid grid-cols-1 lg:grid-cols-3 gap-8 min-h-0">
+          <div className="flex-grow grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-8 min-h-0">
             {/* Sidebar with questions */}
-            <div className="lg:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col">
+            <div className="lg:col-span-1 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col h-64 sm:h-80 lg:h-full">
               <div className="p-4 border-b">
                 <h3 className="text-lg font-bold text-slate-900">
                   All Questions ({questions.length})

@@ -30,7 +30,7 @@ const ImportPage = () => {
     // Here, we'll just move to the status screen to simulate it.
     setStep('status');
   };
-  
+
   const handleReset = () => {
     setStep('upload');
     setParsedData([]);
@@ -42,15 +42,15 @@ const ImportPage = () => {
     <div className="flex flex-col gap-8 h-full">
       <div>
         <Link href="/admin/question-banks" className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 mb-2">
-            <ArrowLeft size={16} /> Back to Question Banks
+          <ArrowLeft size={16} /> Back to Question Banks
         </Link>
         <h1 className="text-3xl font-bold tracking-tight text-slate-900">Import Questions</h1>
         <p className="text-slate-700 mt-1">Upload a CSV file to add new questions in bulk.</p>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-8">
         {step === 'upload' && <FileUploader onUpload={handleFileUploaded} />}
-        
+
         {step === 'map' && (
           <div className="space-y-8">
             <ColumnMapper headers={headers} data={parsedData} onMap={handleMappingComplete} />

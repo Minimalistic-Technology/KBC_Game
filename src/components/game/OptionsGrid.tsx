@@ -23,7 +23,7 @@ export const OptionsGrid = ({
 }: OptionsGridProps) => {
   const getButtonClass = (option: string) => {
     const baseClass =
-      'w-full text-left p-5 rounded-lg border-2 font-semibold transition-all duration-300 flex items-center gap-4 text-xl disabled:cursor-not-allowed min-h-[80px]';
+      'w-full text-left p-3 sm:p-5 rounded-lg border-2 font-semibold transition-all duration-300 flex items-center gap-3 sm:gap-4 text-base sm:text-xl disabled:cursor-not-allowed min-h-[60px] sm:min-h-[80px]';
 
     // Show first Double Dip wrong answer in red (without revealing correct answer)
     if (doubleDipWrongAnswer && option === doubleDipWrongAnswer && answerState === 'idle') {

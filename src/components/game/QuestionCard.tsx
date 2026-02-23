@@ -3,15 +3,15 @@
 interface QuestionCardProps {
   questionText: string;
   mediaUrl?: string | null;
-  mediaType?:string | null;
+  mediaType?: string | null;
 }
 
 export const QuestionCard = ({ questionText, mediaUrl, mediaType }: QuestionCardProps) => {
   return (
-    <div className="flex flex-col justify-center items-center p-6 flex-grow w-full">
+    <div className="flex flex-col justify-center items-center p-2 sm:p-6 flex-grow w-full">
       {/* Media section */}
       {mediaUrl && (
-        <div className="w-full flex justify-center mb-6">
+        <div className="w-full flex justify-center mb-4 sm:mb-6">
           {mediaType === "image" && (
             <img
               src={mediaUrl}
@@ -43,7 +43,7 @@ export const QuestionCard = ({ questionText, mediaUrl, mediaType }: QuestionCard
       )}
 
       {/* Question Text */}
-      <p className="text-2xl md:text-3xl font-bold text-center text-slate-900 leading-relaxed px-4">
+      <p className="text-xl sm:text-2xl md:text-3xl font-bold text-center text-slate-900 leading-relaxed px-2 sm:px-4">
         {questionText}
       </p>
     </div>

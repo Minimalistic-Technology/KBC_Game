@@ -83,7 +83,7 @@ export function ScoreboardClient() {
           </div>
         </div>
 
-        <div className="mt-6">
+        <div className="mt-6 overflow-x-auto">
           <ScoreTable scores={scores} />
         </div>
       </div>

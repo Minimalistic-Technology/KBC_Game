@@ -17,8 +17,8 @@ type QuestionLite = {
 
 type ApiScore = {
   _id: string;
-  gameConfigId?:string;
-  userName:string;
+  gameConfigId?: string;
+  userName: string;
   userId: string;
   finalScore: number;
   isWinner: boolean;
@@ -69,7 +69,7 @@ export const PlayerDetailModal = ({
   score: ApiScore;
   onClose: () => void;
 }) => {
-  
+
 
   const dateStr = (() => {
     try {
@@ -181,21 +181,26 @@ export const PlayerDetailModal = ({
       .sort((a, b) => a.level - b.level);
   }, [userResult]);
 
-const displayPrizeText = useMemo(() => {
-  if (!wonPrizeLadder.length) return "0";
+  const displayPrizeText = useMemo(() => {
+    if (!wonPrizeLadder.length) return "0";
 
-  const last = wonPrizeLadder[wonPrizeLadder.length - 1];
+    const last = wonPrizeLadder[wonPrizeLadder.length - 1];
 
-  if (last.type === "money") {
-    const amount = Number(last.value);
-    if (amount > 0) {
-      return `$${amount.toLocaleString()}`;
+    // If the last prize is a gift, show it (gift takes priority as headline prize)
+    if (last.type === "gift") {
+      return String(last.value || "Gift");
+    }
+
+    // Otherwise sum all money prizes in the won ladder
+    const totalMoney = wonPrizeLadder
+      .filter((item) => item.type === "money")
+      .reduce((sum, item) => sum + (Number(item.value) || 0), 0);
+
+    if (totalMoney > 0) {
+      return `$${totalMoney.toLocaleString()}`;
     }
     return "Gift";
-  }
-
-  return "Gift";
-}, [wonPrizeLadder]);
+  }, [wonPrizeLadder]);
 
   // ------------------------------------------------------------------ //
 
@@ -206,7 +211,7 @@ const displayPrizeText = useMemo(() => {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative bg-white rounded-xl shadow-xl w-full max-w-2xl transform transition-all"
+        className="relative bg-white rounded-xl shadow-xl w-full max-w-2xl mx-4 sm:mx-auto transform transition-all"
       >
         <div className="flex items-start justify-between p-5 border-b rounded-t">
           <div>
@@ -242,9 +247,8 @@ const displayPrizeText = useMemo(() => {
             </div>
             <div className="p-4 bg-slate-50 rounded-lg">
               <CheckCircle2
-                className={`mx-auto h-6 w-6 ${
-                  score.isWinner ? 'text-green-600' : 'text-slate-500'
-                }`}
+                className={`mx-auto h-6 w-6 ${score.isWinner ? 'text-green-600' : 'text-slate-500'
+                  }`}
               />
               <p className="text-2xl font-bold text-slate-800 mt-2">
                 {score.isWinner ? 'Winner' : 'Played'}
@@ -300,11 +304,10 @@ const displayPrizeText = useMemo(() => {
                       return (
                         <div
                           key={item.level}
-                          className={`rounded-md px-3 py-2 border ${
-                            item.isSafe
-                              ? 'bg-emerald-50 border-emerald-200'
-                              : 'bg-white border-slate-200'
-                          }`}
+                          className={`rounded-md px-3 py-2 border ${item.isSafe
+                            ? 'bg-emerald-50 border-emerald-200'
+                            : 'bg-white border-slate-200'
+                            }`}
                         >
                           {isGift && hasImage ? (
                             <div className="flex items-center justify-between gap-3">
@@ -342,7 +345,7 @@ const displayPrizeText = useMemo(() => {
             )}
           </div>
 
-          
+
         </div>
       </div>
     </div>

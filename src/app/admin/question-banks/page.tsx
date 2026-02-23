@@ -288,7 +288,7 @@ function QuestionBanksPageContent() {
 
       <div className="flex flex-col gap-8">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-slate-900">Question Banks</h1>
             <p className="text-slate-700 mt-1">Manage and organize your question collections.</p>
@@ -296,7 +296,7 @@ function QuestionBanksPageContent() {
           {!isQuestioner && (
             <button
               onClick={() => handleOpenEditor(null)}
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 h-10 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700"
+              className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-4 h-10 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 w-full sm:w-auto"
             >
               <Plus className="h-5 w-5" />
               <span>Create New Question Bank</span>

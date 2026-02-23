@@ -381,7 +381,7 @@ export default function GameConfigPage() {
   return (
     <>
       <div className="flex flex-col gap-8">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-slate-900">
               Game Configuration
@@ -391,7 +391,7 @@ export default function GameConfigPage() {
           <button
             onClick={handleSaveConfig}
             disabled={updateConfigMutation.isPending || !currentFullConfig}
-            className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-5 h-11 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-5 h-11 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 disabled:opacity-50 w-full sm:w-auto"
           >
             {updateConfigMutation.isPending ? (
               <Loader2 size={18} className="animate-spin" />
@@ -408,7 +408,7 @@ export default function GameConfigPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 lg:gap-8">
           {/* --- CONFIGURATION LIST SIDEBAR --- */}
           <div className="lg:col-span-1">
             <div className="flex items-center justify-between mb-4">
@@ -435,8 +435,8 @@ export default function GameConfigPage() {
                   <div
                     key={config.id}
                     className={`group flex items-center justify-between p-3 rounded-lg border-2 transition-all ${selectedConfigId === config.id
-                        ? 'border-indigo-500 bg-indigo-50'
-                        : 'border-transparent hover:bg-slate-50'
+                      ? 'border-indigo-500 bg-indigo-50'
+                      : 'border-transparent hover:bg-slate-50'
                       }`}
                   >
                     <button
@@ -445,7 +445,7 @@ export default function GameConfigPage() {
                     >
                       <p className="font-semibold text-slate-800">{config.name}</p>
                     </button>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 shrink-0">
                       {isMutating && <Loader2 size={16} className="animate-spin" />}
                       {config.isActive ? (
                         <span title="This is the active game configuration">
@@ -456,7 +456,7 @@ export default function GameConfigPage() {
                           onClick={() => handleSetActive(config.id)}
                           disabled={isMutating}
                           title="Set as active"
-                          className="p-1 text-slate-400 hover:text-green-600 opacity-0 group-hover:opacity-100 disabled:opacity-100"
+                          className="p-1 text-slate-400 hover:text-green-600 transition-colors disabled:opacity-50"
                         >
                           <CheckCircle size={18} />
                         </button>
@@ -465,7 +465,7 @@ export default function GameConfigPage() {
                         onClick={() => handleDeleteConfig(config.id)}
                         disabled={isMutating}
                         title="Delete"
-                        className="p-1 text-slate-400 hover:text-red-600 opacity-0 group-hover:opacity-100 disabled:opacity-100"
+                        className="p-1 text-slate-400 hover:text-red-600 transition-colors disabled:opacity-50"
                       >
                         <Trash2 size={16} />
                       </button>
@@ -477,7 +477,7 @@ export default function GameConfigPage() {
           </div>
 
           {/* --- CONFIGURATION EDITOR --- */}
-          <div className="lg:col-span-3 bg-white rounded-xl shadow-sm border border-slate-200 p-8 space-y-8 min-h-[500px]">
+          <div className="lg:col-span-3 bg-white rounded-xl shadow-sm border border-slate-200 p-4 sm:p-8 space-y-8 min-h-[500px]">
             {isEditorLoading ? (
               <div className="flex flex-col justify-center items-center text-center py-20">
                 <Loader2 size={48} className="mx-auto text-slate-300 animate-spin" />

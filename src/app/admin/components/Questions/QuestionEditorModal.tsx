@@ -298,8 +298,8 @@ export const QuestionEditorModal = ({
             </button>
           </div>
 
-          <div className="flex-grow grid grid-cols-1 md:grid-cols-3 overflow-hidden">
-            <form onSubmit={(e) => handleSubmit(e, 'Draft')} className="md:col-span-2 p-6 space-y-6 overflow-y-auto">
+          <div className="flex-grow flex flex-col md:grid md:grid-cols-3 overflow-y-auto md:overflow-hidden">
+            <form onSubmit={(e) => handleSubmit(e, 'Draft')} className="md:col-span-2 p-6 space-y-6 md:overflow-y-auto">
               <div className="flex gap-2 mb-2">
                 {(['en', 'hi', 'gu'] as LangKey[]).map((k) => (
                   <button
@@ -409,7 +409,7 @@ export const QuestionEditorModal = ({
               </div>
             </form>
 
-            <div className="md:col-span-1 bg-slate-50 border-l p-6 space-y-6 overflow-y-auto">
+            <div className="md:col-span-1 bg-slate-50 border-l p-6 space-y-6 md:overflow-y-auto">
               <div>
                 <h3 className="font-semibold text-slate-900 mb-4">Actions</h3>
                 <div className="flex flex-col gap-3">

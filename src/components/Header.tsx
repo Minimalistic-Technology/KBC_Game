@@ -18,34 +18,34 @@ export default function Header() {
   const isUser = useAtomValue(isUserAtom);
   const setLoggedInUser = useSetAtom(loggedInUserAtom);
 
-const router = useRouter();
+  const router = useRouter();
 
-const handleLogout = async () => {
-  try {
-    await axiosInstance.post("/api/auth/user/logout"); // <-- fixed leading slash
+  const handleLogout = async () => {
+    try {
+      await axiosInstance.post("/api/auth/user/logout"); // <-- fixed leading slash
 
-    setLoggedInUser(null);
+      setLoggedInUser(null);
 
-    // Redirect to login page
-    router.push("/login");
-  } catch (err) {
-    console.error("Logout error:", err);
-  }
-};
+      // Redirect to login page
+      router.push("/login");
+    } catch (err) {
+      console.error("Logout error:", err);
+    }
+  };
 
   // Show blank bar while hydrating (prevents layout shift)
   if (!hydrated) {
     return (
       <header className="fixed inset-x-0 top-0 z-50 bg-white/80 backdrop-blur-lg shadow-sm border-b">
-        <div className="h-16 container mx-auto px-6 py-4" />
+        <div className="h-16 container mx-auto px-4 sm:px-6 py-4" />
       </header>
     );
   }
 
   return (
     <header className="fixed inset-x-0 top-0 z-50 bg-white/80 backdrop-blur-lg shadow-sm border-b">
-      <div className="h-16 container mx-auto px-6 py-4 flex items-center">
-        
+      <div className="h-16 container mx-auto px-4 sm:px-6 py-4 flex items-center">
+
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
           <Gamepad2 className="text-indigo-600" size={28} />
